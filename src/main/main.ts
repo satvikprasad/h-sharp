@@ -1,8 +1,16 @@
 // NOTE: Naming conventions follow js standards,
 // PascalCase are instantiable constructors, whereas
 // camelCase are non-instantiable.
-const { app, BrowserWindow, ipcMain } = require('electron/main');
+const { app, BrowserWindow, ipcMain, session, desktopCapturer } = require('electron');
+const { spawn } = require('child_process')
 const path = require('node:path');
+
+let currentChunk: Buffer<Uint8Array> = null;
+
+const systemAudioCapturer = spawn(path.join(__dirname, '../bin/listener'));
+systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
+    currentChunk = chunk
+})
 
 function getSize(win: any): [Number, Number] {
     return win.getSize();
@@ -34,6 +42,10 @@ app.whenReady().then(() => {
         const win = BrowserWindow.fromWebContents(webContents);
         return getSize(win);
     });
+
+    ipcMain.handle('get-audio-buffer', (event) => {
+        return currentChunk;
+    })
 });
 
 app.on('window-all-closed', () => {

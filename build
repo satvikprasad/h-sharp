@@ -1,0 +1,15 @@
+#!/bin/bash
+echo -e "\033[0;32mCompiling typescript..."
+./node_modules/.bin/tsc # Compile typescript
+
+echo -e "\033[0;32mBundling..."
+./node_modules/.bin/webpack # Bundle renderer.ts
+
+# Copy html to dist
+echo -e "\033[0;32mCopying source..."
+cp src/index.html dist/
+cp src/styles.css dist/
+
+# Source environment variables
+echo -e "\033[32mLoading environment...\033[0m"
+source .env

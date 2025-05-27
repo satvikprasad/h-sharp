@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "main": "main.js",
     "scripts": {
-        "build": "./node_modules/.bin/tsc && ./node_modules/.bin/webpack && source .env && cp src/index.html dist/ && cp src/styles.css dist/",
+        "build": "./build",
         "debug": "npm run build && electron --enable-logging --inspect=9229 dist/main/main.js",
         "start": "npm run build && electron --enable-logging dist/main/main.js",
         "test": "echo \"Error: no test specified\" && exit 1"
