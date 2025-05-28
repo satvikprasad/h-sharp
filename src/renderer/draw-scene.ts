@@ -28,7 +28,7 @@ const drawScene = (
     mat4.translate(
         mvMat,
         mvMat,
-        [-0.0, 0.0, -6.0],
+        [-0.0, 0.0, -6],
     );
 
     mat4.rotate(

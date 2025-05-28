@@ -6,6 +6,9 @@ const { spawn } = require('child_process')
 const path = require('node:path');
 const fs = require('fs');
 
+// TODO: make this better
+let hasWindow = false;
+
 function getSize(win: any): [Number, Number] {
     return win.getSize();
 }
@@ -19,6 +22,8 @@ const createWindow = () => {
         },
     });
 
+    hasWindow = true;
+
     win.loadFile(path.join(__dirname, '/../index.html'));
 
     return win
@@ -31,8 +36,17 @@ app.whenReady().then(() => {
     const systemAudioCapturer = spawn(path.join(__dirname, '../bin/listener'));
 
     systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
-        win.webContents.send('audio.system-audio-update', chunk);
+        if (hasWindow) {
+            win.webContents.send('audio.on-listener', chunk);
+        }
     });
+
+    win.on('will-resize', (_event, newBounds: any, _details) => {
+        win.webContents.send('frame.resized', { 
+            width: newBounds.width, 
+            height: newBounds.height 
+        });
+    })
 
     // Create new window on macOS platforms if no windows are present.
     app.on('activate', () => {
@@ -62,4 +76,5 @@ app.on('window-all-closed', () => {
     // Close application if all windows are closed and the
     // user is on Windows or Linux
     app.quit(); 
+    hasWindow = false;
 });

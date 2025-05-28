@@ -1,11 +1,24 @@
-type OnSystemAudioUpdateCallback = (buffer: Buffer<Uint8Array>) => void;
+type AudioOnListenerCallback = (buffer: Buffer<Uint8Array>) => void;
+
+type FrameOnResizedCallback = (dim: {
+    width: number,
+    height: number
+}) => void;
 
 export interface IElectronAPI {
-    getSize: () => Promise<[Number, Number]>,
+    audio: {
+        onListener: (
+            callback: AudioOnListenerCallback
+        ) => Promise<void>,
+    }
 
-    onSystemAudioUpdate: (
-        callback: OnSystemAudioUpdateCallback
-    ) => Promise<void>,
+    frame: {
+        getSize: () => Promise<[Number, Number]>,
+
+        onResized: (
+            callback: FrameOnResizedCallback
+        ) => Promise<void>
+    }
 
     fs: IFileSystemAPI,
 }

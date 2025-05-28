@@ -53,6 +53,7 @@ const initShaderProgram = async (
     return shaderProgram;
 }
 
+// TODO: This is still shader-specific
 const getShaderProgramInfo = (
     gl: WebGLRenderingContext,
     program: WebGLProgram
