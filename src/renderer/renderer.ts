@@ -3,37 +3,12 @@ import { drawScene } from "./draw-scene";
 import { initBuffers } from "./init-buffers";
 import { 
     AData, 
-    getMagnitudeAtHz, 
     initialiseAudioData, 
     updateAudioData, 
     updateSystemAudioData
 } from "./audio";
 
 let deltaTime = 0;
-
-// Vertex shader program
-const vsSource = `
-    attribute vec4 aVertexPosition;
-    attribute vec4 aVertexColor;
-
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
-
-    varying lowp vec4 vColor;
-
-    void main() {
-        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-        vColor = aVertexColor;
-    }
-  `;
-
-const fsSource = `
-    varying lowp vec4 vColor;
-
-    void main() {
-        gl_FragColor = vColor;
-    }
-  `;
 
 const resizeCanvas = async (
     canvas: HTMLCanvasElement
@@ -70,27 +45,37 @@ const main = (): void => {
 
         let then = 0;
 
-        const programInfo = getShaderProgramInfo(
-            gl, initShaderProgram(gl, vsSource, fsSource)
-        );
+        console.log(typeof(window.electronAPI.path))
 
-        const buffers = initBuffers(gl);
+        initShaderProgram(
+            gl, 
+            "vertex-shader.glsl", 
+            "fragment-shader.glsl",
+            window.electronAPI.path,
+            window.electronAPI.fs
+        ).then((program: WebGLProgram) => {
+            const programInfo = getShaderProgramInfo(
+                gl, program
+            );
 
-        const render: FrameRequestCallback = (now: number) => {
-            updateAudioData(audioData);
+            const buffers = initBuffers(gl);
 
-            now *= 0.001; // Convert to seconds.
-            deltaTime = now - then;
-            then = now;
-            
-            t += deltaTime;
+            const render: FrameRequestCallback = (now: number) => {
+                updateAudioData(audioData);
 
-            drawScene(gl, programInfo, buffers,t);
+                now *= 0.001; // Convert to seconds.
+                deltaTime = now - then;
+                then = now;
+
+                t += deltaTime;
+
+                drawScene(gl, programInfo, buffers,t);
+
+                requestAnimationFrame(render);
+            }
 
             requestAnimationFrame(render);
-        }
-
-        requestAnimationFrame(render);
+        });
     });
 };
 

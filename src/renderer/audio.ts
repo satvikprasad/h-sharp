@@ -122,5 +122,4 @@ export {
     initialiseAudioData, 
     updateAudioData, 
     updateSystemAudioData,
-    getMagnitudeAtHz,
 };

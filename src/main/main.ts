@@ -4,6 +4,7 @@
 const { app, BrowserWindow, ipcMain, session, desktopCapturer } = require('electron');
 const { spawn } = require('child_process')
 const path = require('node:path');
+const fs = require('fs');
 
 function getSize(win: any): [Number, Number] {
     return win.getSize();
@@ -44,10 +45,26 @@ app.whenReady().then(() => {
         const win = BrowserWindow.fromWebContents(webContents);
         return getSize(win);
     });
+
+    ipcMain.handle('path.join', (_event, ...args: any) => {
+        return path.join(...args);
+    });
+
+    ipcMain.handle('path.dirname', (_event, ...args: any) => {
+        return path.dirname(...args);
+    });
+
+    ipcMain.handle('fs.readFileSync', (_event, ...args: any) => {
+        return fs.readFileSync(...args);
+    });
+
+    ipcMain.handle('fs.getWorkingDir', (_event) => {
+        return path.join(__dirname, "../");
+    });
 });
 
 app.on('window-all-closed', () => {
     // Close application if all windows are closed and the
     // user is on Windows or Linux
-    if (process.platform != 'darwin') app.quit(); 
+    app.quit(); 
 });
