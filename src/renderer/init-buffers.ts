@@ -43,10 +43,10 @@ const initPositionBuffer = (
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
 
     const positions = [
-        1.0, 1.0, 
-        -1.0, 1.0,
-        1.0, -1.0,
-        -1.0, -1.0
+        1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, -1.0, 0.0,
     ];
 
     gl.bufferData(

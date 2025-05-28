@@ -5,13 +5,6 @@ const { app, BrowserWindow, ipcMain, session, desktopCapturer } = require('elect
 const { spawn } = require('child_process')
 const path = require('node:path');
 
-let currentChunk: Buffer<Uint8Array> = null;
-
-const systemAudioCapturer = spawn(path.join(__dirname, '../bin/listener'));
-systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
-    currentChunk = chunk
-})
-
 function getSize(win: any): [Number, Number] {
     return win.getSize();
 }
@@ -20,16 +13,25 @@ const createWindow = () => {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
-		webPreferences: {
-			preload: path.join(__dirname, '/../preload/preload.js'),
-		},
+        webPreferences: {
+            preload: path.join(__dirname, '/../preload/preload.js'),
+        },
     });
 
     win.loadFile(path.join(__dirname, '/../index.html'));
+
+    return win
 }
 
 app.whenReady().then(() => {
-    createWindow();
+    let win = createWindow();
+
+    // Begin system audio capture
+    const systemAudioCapturer = spawn(path.join(__dirname, '../bin/listener'));
+
+    systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
+        win.webContents.send('audio.system-audio-update', chunk);
+    });
 
     // Create new window on macOS platforms if no windows are present.
     app.on('activate', () => {
@@ -42,10 +44,6 @@ app.whenReady().then(() => {
         const win = BrowserWindow.fromWebContents(webContents);
         return getSize(win);
     });
-
-    ipcMain.handle('get-audio-buffer', (event) => {
-        return currentChunk;
-    })
 });
 
 app.on('window-all-closed', () => {

@@ -1,6 +1,8 @@
+type OnSystemAudioUpdateCallback = (buffer: Buffer<Uint8Array>) => void;
+
 export interface IElectronAPI {
     getSize: () => Promise<[Number, Number]>,
-    getAudioBuffer: () => Promise<Buffer<Uint8Array>>,
+    onSystemAudioUpdate: (callback: OnSystemAudioUpdateCallback) => Promise<void>,
 }
 
 declare global {
