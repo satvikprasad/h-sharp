@@ -1,4 +1,4 @@
-import { IFileSystemAPI, IPathAPI } from "../../interface";
+import { IFileSystemAPI } from "../../interface";
 
 // Stores a shader program and it's
 // attrib and uniform locations
@@ -16,32 +16,14 @@ interface ProgramInfo {
     }
 };
 
-const readShaderSource = async (
-    relPath: string, 
-    path: IPathAPI,
-    fs: IFileSystemAPI
-): Promise<string> => {
-    let workingDir = await fs.getWorkingDir()
-    let p = await path.join([workingDir, "renderer/shaders/", relPath]);
- 
-    let buf = await fs.readFileSync(p, { encoding: "utf8" });
-
-    if (typeof(buf) == "string") {
-        return buf;
-    }
-
-    return "";
-}
-
 const initShaderProgram = async (
     gl: WebGLRenderingContext,
     vsRelPath: string,
     fsRelPath: string,
-    path: IPathAPI,
     fs: IFileSystemAPI,
 ): Promise<WebGLProgram> => {
-    let vsSource = await readShaderSource(vsRelPath, path, fs);
-    let fsSource = await readShaderSource(fsRelPath, path, fs);
+    let vsSource = await fs.readFileRelPath(["shaders", vsRelPath]);
+    let fsSource = await fs.readFileRelPath(["shaders", fsRelPath]);
 
     const vertexShader = loadShader(
         gl, gl.VERTEX_SHADER, vsSource);

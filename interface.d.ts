@@ -1,5 +1,3 @@
-import * as fs from "fs"
-
 type OnSystemAudioUpdateCallback = (buffer: Buffer<Uint8Array>) => void;
 
 export interface IElectronAPI {
@@ -9,21 +7,13 @@ export interface IElectronAPI {
         callback: OnSystemAudioUpdateCallback
     ) => Promise<void>,
 
-    path: IPathAPI,
     fs: IFileSystemAPI,
 }
 
-export interface IPathAPI {
-    join: (paths: string[]) => Promise<string>,
-    dirname: (p: string[]) => Promise<string>,
-}
-
 export interface IFileSystemAPI {
-    readFileSync: (
-        path: fs.PathOrFileDescriptor, options?
-    ) => Promise<NonSharedBuffer | string>,
-
-    getWorkingDir: () => Promise<string>,
+    readFileRelPath: (
+        path: string[]
+    ) => Promise<string>,
 }
 
 declare global {

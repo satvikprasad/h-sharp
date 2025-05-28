@@ -45,13 +45,10 @@ const main = (): void => {
 
         let then = 0;
 
-        console.log(typeof(window.electronAPI.path))
-
         initShaderProgram(
             gl, 
             "vertex-shader.glsl", 
             "fragment-shader.glsl",
-            window.electronAPI.path,
             window.electronAPI.fs
         ).then((program: WebGLProgram) => {
             const programInfo = getShaderProgramInfo(

@@ -46,20 +46,15 @@ app.whenReady().then(() => {
         return getSize(win);
     });
 
-    ipcMain.handle('path.join', (_event, ...args: any) => {
-        return path.join(...args);
-    });
+    ipcMain.handle('fs.readFileRelPath', (_event, ...args: any) => {
+        let p = path.join(__dirname, "../renderer/", ...args);
+        let buf = fs.readFileSync(p, { encoding: "utf8" });        
 
-    ipcMain.handle('path.dirname', (_event, ...args: any) => {
-        return path.dirname(...args);
-    });
+        if (typeof(buf) == "string") {
+            return buf;
+        }
 
-    ipcMain.handle('fs.readFileSync', (_event, ...args: any) => {
-        return fs.readFileSync(...args);
-    });
-
-    ipcMain.handle('fs.getWorkingDir', (_event) => {
-        return path.join(__dirname, "../");
+        throw Error(`Incorrect encoding while reading ${p}`);
     });
 });
 
