@@ -6,7 +6,7 @@ const drawScene = (
     gl: WebGLRenderingContext,
     programInfo: ProgramInfo,
     buffers: VertexBuffer,
-    squareRotation: number,
+    t: number,
 ) => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
@@ -34,9 +34,10 @@ const drawScene = (
     mat4.rotate(
         mvMat,
         mvMat,
-        squareRotation,
-        [0, 1, 1],
+        t,
+        [0, 1, 0]
     );
+
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
@@ -69,7 +70,7 @@ const setPositionAttribute = (
 
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexPosition,
-        2,
+        3,
         gl.FLOAT,
         false,
         0,

@@ -1,13 +1,15 @@
 import { getShaderProgramInfo, initShaderProgram } from "./shader";
 import { drawScene } from "./draw-scene";
 import { initBuffers } from "./init-buffers";
+import { 
+    AData, 
+    getMagnitudeAtHz, 
+    initialiseAudioData, 
+    updateAudioData, 
+    updateSystemAudioData
+} from "./audio";
 
-let squareRotation = 0.0;
 let deltaTime = 0;
-
-interface AudioData {
-    currentChunk: Buffer | null;
-}
 
 // Vertex shader program
 const vsSource = `
@@ -45,9 +47,16 @@ const resizeCanvas = async (
 const main = (): void => {
     // Get canvas
     const canvas: HTMLCanvasElement = document.querySelector("#gl-canvas");
-    const audioData: AudioData = {
-        currentChunk: null
-    };
+
+    const audioData: AData = initialiseAudioData();
+
+    window.electronAPI.onSystemAudioUpdate(
+        (buffer: Buffer<Uint8Array>) => {
+            // Update buffer
+            updateSystemAudioData(audioData, buffer);
+        });
+
+    let t = 0;
 
     resizeCanvas(canvas).then(() => {
         // Get gl context
@@ -68,21 +77,15 @@ const main = (): void => {
         const buffers = initBuffers(gl);
 
         const render: FrameRequestCallback = (now: number) => {
-            window.electronAPI.getAudioBuffer().then((buffer: Buffer) => {
-                audioData.currentChunk = buffer
-            })
-           
-            if (audioData.currentChunk) {
-                console.log([...audioData.currentChunk])
-            }
+            updateAudioData(audioData);
 
             now *= 0.001; // Convert to seconds.
             deltaTime = now - then;
             then = now;
+            
+            t += deltaTime;
 
-            squareRotation += deltaTime;
-                
-            drawScene(gl, programInfo, buffers, squareRotation);
+            drawScene(gl, programInfo, buffers,t);
 
             requestAnimationFrame(render);
         }

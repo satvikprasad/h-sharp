@@ -102,6 +102,7 @@ struct Listener: @unchecked Sendable {
         streamConfig.height = display.height
         streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 60)
         streamConfig.queueDepth = 5
+        streamConfig.sampleRate = 44100
 
         return streamConfig
     }
