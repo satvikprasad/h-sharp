@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix";
-import { VertexBuffer } from "./init-buffers";
+import { FrequencyWaveformBuffer, VertexBuffer } from "./init-buffers";
 import { ProgramInfo } from "./shader";
 import { HSData } from "./h-sharp";
 
@@ -31,11 +31,18 @@ const drawScene = (
         [-0.0, 0.0, -6],
     );
 
-    mat4.rotate(
-        mvMat,
-        mvMat,
-        hsData.t,
-        [0, 1, 0]
+    gl.bindBuffer(
+        gl.ARRAY_BUFFER,
+        hsData.frequencyWaveformBufferData.vBuffer.position,
+    );
+
+    gl.bufferSubData(
+        gl.ARRAY_BUFFER,
+        0,
+        FrequencyWaveformBuffer.generateVertices(
+            100, 
+            hsData.audioData.inputs[0].frequencyBuffer,
+        )
     );
 
     // Tell WebGL how to pull out the positions from the position

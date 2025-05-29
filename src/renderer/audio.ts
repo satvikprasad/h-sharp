@@ -3,14 +3,14 @@ import { CMath as cx } from "./math/complex";
 
 enum AType {
     MIDI = 0,
-    Audio,
+        Audio,
 };
 
 interface AInput {
     buffer: Buffer<Uint8Array> | null;
     frequencyBuffer: Array<number> | null;
     sampleRate: number,
-    audioType: AType;
+        audioType: AType;
 };
 
 interface AData {
@@ -66,7 +66,7 @@ const generateFrequencyBufferFromInput = (
         return [];
     }
 
-    let cxBuffer: Array<cx.CInt>;
+    let cxBuffer: Array<cx.CInt> = [];
 
     switch (input.audioType) {
         case AType.Audio: 
@@ -81,27 +81,21 @@ const generateFrequencyBufferFromInput = (
             return [];
     }
 
-    return cxBuffer
-        .map((value: cx.CInt, _index: number) => {
-            return cx.mod(value);
-        });
-}
+    let reBuffer = cxBuffer.slice(1, 4096/2).map(v => cx.mod(v));
 
-const getMagnitudeAtHz = (
-    input: AInput, hz: number
-): number => {
-    if (input.buffer == null) {
-        return 0
+    let max = 0;
+    for (let k = 0; k < 4096; ++k) {
+        if (reBuffer[k] > max) {
+            max = reBuffer[k];
+        }
     }
 
-    let hzPerBin = input.sampleRate / input.buffer.length;
-    let i = Math.floor(hz / hzPerBin)
-
-    if (i < input.frequencyBuffer.length && i >= 0) {
-        return input.frequencyBuffer[i] 
+    if (max != 0) {
+        // Ensure magnitudes of frequencies are normalised.
+        return reBuffer.map(v => v/max);
     }
 
-    return 0
+    return reBuffer;
 }
 
 const updateAudioData = (

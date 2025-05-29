@@ -84,24 +84,29 @@ namespace TestBuffer {
 };
 
 namespace FrequencyWaveformBuffer {
-    const generateVertices = (
+    export const generateVertices = (
         fidelity: number,
         frequencyBuffer?: Array<number>,
     ): Float32Array => {
-        if (!frequencyBuffer) {
-            let positions: Array<number> = [];
+        let positions: Array<number> = [];
 
-            for (let k = 0; k <= fidelity; ++k) {
-                let x = k/fidelity * 2.0 - 1.0;
+        // No frequency buffer provided
+        for (let k = 0; k <= fidelity; ++k) {
+            let x = k/fidelity * 2.0 - 1.0;
 
-                positions.push(x, 0.0, 0.0);
+            positions.push(x, 0.0, 0.0);
+
+            if (!frequencyBuffer) {
                 positions.push(x, 1.0, 0.0);
-            }
+            } else {
+                let i = Math.floor(k/fidelity * frequencyBuffer.length);
+                i = Math.min(i, frequencyBuffer.length - 1); // Ensure no overflow
 
-            return new Float32Array(positions);
+                positions.push(x, frequencyBuffer[i], 0.0);
+            }
         }
 
-        return new Float32Array();
+        return new Float32Array(positions);
     }
 
     const generateColors = (
