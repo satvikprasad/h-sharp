@@ -1,44 +1,11 @@
-import { getShaderProgramInfo, initShaderProgram } from "./shader";
-import { drawScene } from "./draw-scene";
-import { initBuffers } from "./init-buffers";
-import { 
-    AData, 
-    getMagnitudeAtHz, 
-    initialiseAudioData, 
-    updateAudioData, 
-    updateSystemAudioData
-} from "./audio";
+import { HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
 
 let deltaTime = 0;
-
-// Vertex shader program
-const vsSource = `
-    attribute vec4 aVertexPosition;
-    attribute vec4 aVertexColor;
-
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
-
-    varying lowp vec4 vColor;
-
-    void main() {
-        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-        vColor = aVertexColor;
-    }
-  `;
-
-const fsSource = `
-    varying lowp vec4 vColor;
-
-    void main() {
-        gl_FragColor = vColor;
-    }
-  `;
 
 const resizeCanvas = async (
     canvas: HTMLCanvasElement
 ): Promise<void> => {
-    let size: [Number, Number] = await window.electronAPI.getSize();
+    let size: [Number, Number] = await window.electronAPI.frame.getSize();
 
     canvas.setAttribute("width", String(size[0]));
     canvas.setAttribute("height", String(size[1]));
@@ -48,49 +15,44 @@ const main = (): void => {
     // Get canvas
     const canvas: HTMLCanvasElement = document.querySelector("#gl-canvas");
 
-    const audioData: AData = initialiseAudioData();
-
-    window.electronAPI.onSystemAudioUpdate(
-        (buffer: Buffer<Uint8Array>) => {
-            // Update buffer
-            updateSystemAudioData(audioData, buffer);
-        });
-
-    let t = 0;
-
-    resizeCanvas(canvas).then(() => {
-        // Get gl context
-        const gl: WebGLRenderingContext = canvas.getContext("webgl");
-
-        if (!gl) {
-            alert(`Unable to initialise WebGL.\
+    // Get gl context
+    const gl: WebGLRenderingContext = canvas.getContext("webgl");
+    
+    if (!gl) {
+        alert(`Unable to initialise WebGL.\
             Your browser or machine may not support it.`);
-            return;
-        }
+        return;
+    }
 
-        let then = 0;
+    window.electronAPI.frame.onResized((dim) => {
+        canvas.setAttribute("width", String(dim.width))
+        canvas.setAttribute("height", String(dim.height))
 
-        const programInfo = getShaderProgramInfo(
-            gl, initShaderProgram(gl, vsSource, fsSource)
-        );
+        gl.viewport(0, 0, dim.width, dim.height);
+    });
 
-        const buffers = initBuffers(gl);
+    hsInitialise(window.electronAPI, gl).then((hsData: HSData) => {
+        // Resize canvas to width of view
+        resizeCanvas(canvas).then(() => {
+            // Resize viewport
+            gl.viewport(0, 0, canvas.width, canvas.height);
 
-        const render: FrameRequestCallback = (now: number) => {
-            updateAudioData(audioData);
+            let then = 0;
 
-            now *= 0.001; // Convert to seconds.
-            deltaTime = now - then;
-            then = now;
-            
-            t += deltaTime;
+            const tick: FrameRequestCallback = (now: number) => {
+                hsUpdate(hsData, deltaTime);
 
-            drawScene(gl, programInfo, buffers,t);
+                hsRender(hsData, deltaTime);
 
-            requestAnimationFrame(render);
-        }
+                now *= 0.001; // Convert to seconds.
+                deltaTime = now - then;
+                then = now;
 
-        requestAnimationFrame(render);
+                requestAnimationFrame(tick);
+            }
+
+            requestAnimationFrame(tick);
+        });
     });
 };
 

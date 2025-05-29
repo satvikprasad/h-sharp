@@ -1,4 +1,7 @@
 #!/bin/bash
+echo -e "\033[0;32mCleaning dist..."
+rm -r dist
+
 echo -e "\033[0;32mCompiling typescript..."
 ./node_modules/.bin/tsc # Compile typescript
 
@@ -9,6 +12,16 @@ echo -e "\033[0;32mBundling..."
 echo -e "\033[0;32mCopying source..."
 cp src/index.html dist/
 cp src/styles.css dist/
+
+# Copy shaders
+echo -e "\033[0;32mCopying shaders..."
+mkdir dist/renderer/shaders
+find src/renderer/shaders -name \*.glsl -exec cp {} dist/renderer/shaders \;
+
+# Copy auxiliary apps
+echo -e "\033[0;32mCopying auxiliary plugins"
+mkdir dist/bin
+cp bin/* ./dist/bin
 
 # Source environment variables
 echo -e "\033[32mLoading environment...\033[0m"

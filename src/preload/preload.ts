@@ -1,14 +1,32 @@
-import { OnSystemAudioUpdateCallback } from "../../interface";
+import { FrameOnResizedCallback, AudioOnListenerCallback } from "../../interface";
 
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-    getSize: () => ipcRenderer.invoke('get-win-size'),
+    audio: {
+        onListener: (
+            callback: AudioOnListenerCallback
+        ) => ipcRenderer.on(
+            'audio.on-listener',
+            (_event, value: Buffer<Uint8Array>) => callback(value)
+        ),
+    },
 
-    onSystemAudioUpdate: (
-        callback: OnSystemAudioUpdateCallback
-    ) => ipcRenderer.on(
-        'audio.system-audio-update',
-        (_event, value: Buffer<Uint8Array>) => callback(value)
-    ),
+    frame: {
+        getSize: () => ipcRenderer.invoke('get-win-size'),
+
+        onResized: (callback: FrameOnResizedCallback) => ipcRenderer.on(
+            'frame.resized',
+            (_event, value: {
+                width: number,
+                height: number
+            }) => callback(value)
+        )
+    },
+
+    fs: {
+        readFileRelPath: (
+            path: string[]
+        ) => ipcRenderer.invoke('fs.readFileRelPath', ...path),
+    }
 });
