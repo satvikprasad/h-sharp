@@ -1,16 +1,13 @@
 import { mat4 } from "gl-matrix";
 import { VertexBuffer } from "./init-buffers";
 import { ProgramInfo } from "./shader";
-
-// Temporary
-let t = 0;
+import { HSData } from "./h-sharp";
 
 const drawScene = (
-    gl: WebGLRenderingContext,
-    programInfo: ProgramInfo,
-    buffers: VertexBuffer,
-    t: number,
+    hsData: HSData,
 ) => {
+    let gl = hsData.gl;
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -37,43 +34,49 @@ const drawScene = (
     mat4.rotate(
         mvMat,
         mvMat,
-        t,
+        hsData.t,
         [0, 1, 0]
     );
 
-    const positions = [
-        1.0, t, 0.0,
-        -1.0, 1.0, 0.0,
-        1.0, -1.0, 0.0,
-        -1.0, -1.0, 0.0,
-    ];
-    t += 0.1;
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positions));
-
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
-    setPositionAttribute(gl, programInfo, buffers);
-    setColorAttribute(gl, programInfo, buffers);
+    setPositionAttribute(
+        gl, 
+        hsData.programInfo, 
+        hsData.frequencyWaveformBufferData.vBuffer
+    );
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+    setColorAttribute(
+        gl, 
+        hsData.programInfo, 
+        hsData.frequencyWaveformBufferData.vBuffer
+    );
 
-    gl.useProgram(programInfo.program);
+    gl.bindBuffer(
+        gl.ELEMENT_ARRAY_BUFFER, 
+        hsData.frequencyWaveformBufferData.vBuffer.indices
+    );
+
+    gl.useProgram(hsData.programInfo.program);
 
     gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projMat,
+        hsData.programInfo.uniformLocations.projMat,
         false,
         projMat
     );
 
     gl.uniformMatrix4fv(
-        programInfo.uniformLocations.mvMat,
+        hsData.programInfo.uniformLocations.mvMat,
         false,
         mvMat
     );
 
-    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(
+        gl.TRIANGLES, 
+        hsData.frequencyWaveformBufferData.indexCount,
+        gl.UNSIGNED_SHORT, 
+        0
+    );
 };
 
 const setPositionAttribute = (

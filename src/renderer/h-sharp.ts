@@ -1,14 +1,22 @@
 import { IElectronAPI } from "../../interface";
 import { AData, initialiseAudioData, updateAudioData, updateSystemAudioData } from "./audio";
 import { drawScene } from "./draw-scene";
-import { initBuffers, VertexBuffer } from "./init-buffers";
+import { FrequencyWaveformBuffer, TestBuffer, VertexBuffer } from "./init-buffers";
 import { getShaderProgramInfo, initShaderProgram, ProgramInfo } from "./shader";
 
 interface HSData {
     audioData: AData;
 
     gl: WebGLRenderingContext;
-    buffers: VertexBuffer;
+
+    // Test square vertex buffer
+    testBuffers: VertexBuffer; 
+
+    frequencyWaveformBufferData: {
+        vBuffer: VertexBuffer,
+        indexCount: number,
+    };
+    
     programInfo: ProgramInfo;
 
     // Temporaries
@@ -38,13 +46,18 @@ const hsInitialise = async (
 
     const programInfo = getShaderProgramInfo(gl, shadProgram);
 
-    const buffers = initBuffers(gl);
+    const testBuffers = TestBuffer.initBuffers(gl);
+    const frequencyWaveformBufferData = FrequencyWaveformBuffer
+        .initBuffers(gl, 100);
 
     return {
         audioData: audioData,
 
         gl: gl,
-        buffers: buffers,
+
+        testBuffers: testBuffers,
+        frequencyWaveformBufferData: frequencyWaveformBufferData,
+
         programInfo: programInfo,
 
         t: 0,
@@ -58,12 +71,7 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {
-    drawScene(
-        hsData.gl, 
-        hsData.programInfo, 
-        hsData.buffers, 
-        hsData.t
-    );
+    drawScene(hsData);
 }
 
 export {

@@ -1,3 +1,4 @@
+import { FrequencyWaveformBuffer } from "./init-buffers";
 import { CMath as cx } from "./math/complex";
 
 enum AType {
