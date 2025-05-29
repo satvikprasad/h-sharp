@@ -1,6 +1,7 @@
 interface VertexBuffer {
     position: WebGLBuffer,
     color: WebGLBuffer,
+    indices: WebGLBuffer,
 };
 
 const initBuffers = (
@@ -8,7 +9,8 @@ const initBuffers = (
 ): VertexBuffer => {
     return {
         position: initPositionBuffer(gl),
-        color: initColorBuffer(gl)
+        color: initColorBuffer(gl),
+        indices: initIndexBuffer(gl),
     };
 }
 
@@ -56,6 +58,27 @@ const initPositionBuffer = (
     );
 
     return posBuffer;
+}
+
+const initIndexBuffer = (
+    gl: WebGLRenderingContext
+): WebGLBuffer => {
+    const idxBuffer = gl.createBuffer();
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuffer);
+
+    const indices = [
+        0, 1, 2,
+        1, 2, 3
+    ];
+
+    gl.bufferData(
+        gl.ELEMENT_ARRAY_BUFFER,
+        new Uint16Array(indices),
+        gl.STATIC_DRAW
+    );
+
+    return idxBuffer;
 }
 
 export { initBuffers, VertexBuffer };

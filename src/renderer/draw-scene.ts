@@ -2,6 +2,9 @@ import { mat4 } from "gl-matrix";
 import { VertexBuffer } from "./init-buffers";
 import { ProgramInfo } from "./shader";
 
+// Temporary
+let t = 0;
+
 const drawScene = (
     gl: WebGLRenderingContext,
     programInfo: ProgramInfo,
@@ -38,11 +41,23 @@ const drawScene = (
         [0, 1, 0]
     );
 
+    const positions = [
+        1.0, t, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, -1.0, 0.0,
+    ];
+    t += 0.1;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(positions));
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
     setPositionAttribute(gl, programInfo, buffers);
     setColorAttribute(gl, programInfo, buffers);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
     gl.useProgram(programInfo.program);
 
@@ -58,7 +73,7 @@ const drawScene = (
         mvMat
     );
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 };
 
 const setPositionAttribute = (
