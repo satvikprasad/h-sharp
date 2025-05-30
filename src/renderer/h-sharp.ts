@@ -11,8 +11,8 @@ import {
 import { drawScene } from "./draw-scene";
 
 import { 
-    getDefaultShaderProgramInfo, 
-    getWaveformShaderProgramInfo, 
+    getTestShaderData, 
+    getWaveformShaderData, 
     initShaderProgram,
 } from "./shader";
 
@@ -32,8 +32,8 @@ interface HSData {
         indexCount: number,
     };
     
-    testProgramInfo: TestShader.ProgramInfo;
-    waveformProgramInfo: WaveformShader.ProgramInfo;
+    testShaderData: TestShader.Data;
+    waveformShaderData: WaveformShader.Data;
 
     // Temporaries
     t: number;
@@ -65,7 +65,7 @@ const hsInitialise = async (
         throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
     }
 
-    const testProgramInfo = getDefaultShaderProgramInfo(
+    const testShaderData = getTestShaderData(
         gl, defaultShadProgram
     );
 
@@ -83,7 +83,7 @@ const hsInitialise = async (
         );
     }
 
-    const waveformProgramInfo = getWaveformShaderProgramInfo(
+    const waveformShaderData = getWaveformShaderData(
         gl, waveformShadProgram
     );
 
@@ -93,15 +93,14 @@ const hsInitialise = async (
         .initBuffers(gl, 100);
 
     return {
-        audioData: audioData,
+        audioData,
+        gl,
 
-        gl: gl,
+        testBuffers,
+        frequencyWaveformBufferData,
 
-        testBuffers: testBuffers,
-        frequencyWaveformBufferData: frequencyWaveformBufferData,
-
-        testProgramInfo: testProgramInfo,
-        waveformProgramInfo: waveformProgramInfo,
+        testShaderData,
+        waveformShaderData,
 
         t: 0,
     };

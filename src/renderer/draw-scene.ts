@@ -51,19 +51,19 @@ const drawScene = (
     // buffer into the vertexPosition attribute.
     WaveformShader.setPositionAttribute(
         gl, 
-        hsData.waveformProgramInfo, 
+        hsData.waveformShaderData, 
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
     WaveformShader.setColorAttribute(
         gl, 
-        hsData.waveformProgramInfo, 
+        hsData.waveformShaderData, 
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
     WaveformShader.setValueAttribute(
         gl,
-        hsData.waveformProgramInfo,
+        hsData.waveformShaderData,
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
@@ -72,16 +72,16 @@ const drawScene = (
         hsData.frequencyWaveformBufferData.vBuffer.indices
     );
 
-    gl.useProgram(hsData.waveformProgramInfo.program);
+    gl.useProgram(hsData.waveformShaderData.program);
 
     gl.uniformMatrix4fv(
-        hsData.waveformProgramInfo.uniformLocations.projMat,
+        hsData.waveformShaderData.uniformLocations.projMat,
         false,
         projMat
     );
 
     gl.uniformMatrix4fv(
-        hsData.waveformProgramInfo.uniformLocations.mvMat,
+        hsData.waveformShaderData.uniformLocations.mvMat,
         false,
         mvMat
     );

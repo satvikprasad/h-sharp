@@ -1,5 +1,5 @@
 namespace TestShader {
-    export interface ProgramInfo {
+    export interface Data {
         program: WebGLProgram;
 
         attribLocations: {
@@ -98,13 +98,13 @@ namespace TestShader {
 
     export const setPositionAttribute = (
         gl: WebGLRenderingContext,
-        programInfo: ProgramInfo,
+        data: Data,
         buffers: VertexBuffer
     ) => {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
 
         gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexPosition,
+            data.attribLocations.vertexPosition,
             3,
             gl.FLOAT,
             false,
@@ -112,18 +112,18 @@ namespace TestShader {
             0
         );
 
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+        gl.enableVertexAttribArray(data.attribLocations.vertexPosition);
     }
 
     export const setColorAttribute = (
         gl: WebGLRenderingContext,
-        programInfo: ProgramInfo,
+        data: Data,
         buffers: VertexBuffer
     ) => {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
 
         gl.vertexAttribPointer(
-            programInfo.attribLocations.vertexColor,
+            data.attribLocations.vertexColor,
             4,
             gl.FLOAT,
             false,
@@ -131,7 +131,7 @@ namespace TestShader {
             0
         );
 
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+        gl.enableVertexAttribArray(data.attribLocations.vertexColor);
     }
 };
 

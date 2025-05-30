@@ -50,10 +50,10 @@ const initShaderProgram = async (
 }
 
 // TODO: This is still shader-specific
-const getDefaultShaderProgramInfo = (
+const getTestShaderData = (
     gl: WebGLRenderingContext,
     program: WebGLProgram
-): TestShader.ProgramInfo => {
+): TestShader.Data => {
     const projMatLoc = gl.getUniformLocation(
         program, "uProjectionMatrix");
     const mvMatLoc = gl.getUniformLocation(
@@ -84,10 +84,10 @@ const getDefaultShaderProgramInfo = (
     };
 }
 
-const getWaveformShaderProgramInfo = (
+const getWaveformShaderData = (
     gl: WebGLRenderingContext,
     program: WebGLProgram
-): WaveformShader.ProgramInfo => {
+): WaveformShader.Data => {
     const projMatLoc = gl.getUniformLocation(
         program,
         "uProjectionMatrix"
@@ -165,6 +165,6 @@ const loadShader = (
 export { 
     initShaderProgram, 
 
-    getDefaultShaderProgramInfo,
-    getWaveformShaderProgramInfo
+    getTestShaderData,
+    getWaveformShaderData
 };
