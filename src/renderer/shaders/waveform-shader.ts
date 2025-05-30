@@ -16,9 +16,9 @@ namespace WaveformShader {
 
     export interface VertexBuffer {
         position: WebGLBuffer,
-        color: WebGLBuffer,
-        indices: WebGLBuffer,
-        value: WebGLBuffer,
+            color: WebGLBuffer,
+            indices: WebGLBuffer,
+            value: WebGLBuffer,
     };
 
     export const generateValues = (
@@ -94,7 +94,7 @@ namespace WaveformShader {
         fidelity: number
     ): { 
         indices: Uint16Array,
-        indexCount: number
+            indexCount: number
     } => {
         let indices: Array<number> = [];
 
@@ -166,7 +166,7 @@ namespace WaveformShader {
         fidelity: number,
     ): {
         indexBuffer: WebGLBuffer,
-        indexCount: number,
+            indexCount: number,
     } => {
         const indexBuffer = gl.createBuffer();
 
@@ -191,7 +191,7 @@ namespace WaveformShader {
         fidelity: number,
     ): { 
         vBuffer: VertexBuffer,
-        indexCount: number,
+            indexCount: number,
     } => {
         let indexOut = initIndexBuffer(gl, fidelity);
 
@@ -263,6 +263,53 @@ namespace WaveformShader {
         gl.enableVertexAttribArray(
             data.attribLocations.vertexValue
         );
+    }
+
+    export const initialise = (
+        gl: WebGLRenderingContext,
+        program: WebGLProgram
+    ): WaveformShader.Data => {
+        const projMatLoc = gl.getUniformLocation(
+            program,
+            "uProjectionMatrix"
+        );
+
+        const mvMatLoc = gl.getUniformLocation(
+            program,
+            "uModelViewMatrix"
+        );
+
+        if (!projMatLoc) {
+            throw Error(`Could not find uniform location\
+            for uProjectionMatrix`);
+        }
+
+        if (!mvMatLoc) {
+            throw Error(`Could not find uniform location\
+            for uModelViewMatrix`);
+        }
+
+        return {
+            program: program,
+            attribLocations: {
+                vertexPosition: gl.getAttribLocation(
+                    program,
+                    "aVertexPosition"
+                ),
+                vertexColor: gl.getAttribLocation(
+                    program,
+                    "aVertexColor"
+                ),
+                vertexValue: gl.getAttribLocation(
+                    program,
+                    "aVertexValue"
+                ),
+            },
+            uniformLocations: {
+                projMat: projMatLoc,
+                mvMat: mvMatLoc,
+            },
+        };
     }
 };
 

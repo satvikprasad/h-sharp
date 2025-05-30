@@ -9,13 +9,7 @@ import {
 } from "./audio";
 
 import { drawScene } from "./draw-scene";
-
-import { 
-    getTestShaderData, 
-    getWaveformShaderData, 
-    initShaderProgram,
-} from "./shader";
-
+import { initShaderProgram } from "./shader";
 import { TestShader } from "./shaders/test-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 
@@ -65,7 +59,7 @@ const hsInitialise = async (
         throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
     }
 
-    const testShaderData = getTestShaderData(
+    const testShaderData = TestShader.initialise(
         gl, defaultShadProgram
     );
 
@@ -83,7 +77,7 @@ const hsInitialise = async (
         );
     }
 
-    const waveformShaderData = getWaveformShaderData(
+    const waveformShaderData = WaveformShader.initialise(
         gl, waveformShadProgram
     );
 

@@ -133,6 +133,40 @@ namespace TestShader {
 
         gl.enableVertexAttribArray(data.attribLocations.vertexColor);
     }
+
+    export const initialise = (
+        gl: WebGLRenderingContext,
+        program: WebGLProgram
+    ): TestShader.Data => {
+        const projMatLoc = gl.getUniformLocation(
+            program, "uProjectionMatrix");
+        const mvMatLoc = gl.getUniformLocation(
+            program, "uModelViewMatrix");
+
+        if (!projMatLoc) {
+            throw Error(`Could not find uniform location\
+            for uProjectionMatrix`);
+        }
+
+        if (!mvMatLoc) {
+            throw Error(`Could not find uniform location\
+            for uModelViewMatrix`);
+        }
+
+        return {
+            program: program,
+            attribLocations: {
+                vertexPosition: gl.getAttribLocation(
+                    program, "aVertexPosition"),
+                vertexColor: gl.getAttribLocation(
+                    program, "aVertexColor"),
+            },
+            uniformLocations: {
+                projMat: projMatLoc,
+                mvMat: mvMatLoc,
+            },
+        };
+    }
 };
 
 export { TestShader };
