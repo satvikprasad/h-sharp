@@ -1,7 +1,7 @@
 import { mat4 } from "gl-matrix";
-import { FrequencyWaveformBuffer, VertexBuffer } from "./init-buffers";
-import { ProgramInfo } from "./shader";
-import { HSData } from "./h-sharp";
+import { FrequencyWaveformBuffer, type VertexBuffer } from "./init-buffers";
+import { type DefaultProgramInfo } from "./shader";
+import { type HSData } from "./h-sharp";
 
 const drawScene = (
     hsData: HSData,
@@ -31,31 +31,34 @@ const drawScene = (
         [-0.0, 0.0, -6],
     );
 
-    gl.bindBuffer(
-        gl.ARRAY_BUFFER,
-        hsData.frequencyWaveformBufferData.vBuffer.position,
-    );
+    if (hsData.audioData.inputs[0].frequencyBuffer) {
+        // We have frequency information
+        gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            hsData.frequencyWaveformBufferData.vBuffer.position,
+        );
 
-    gl.bufferSubData(
-        gl.ARRAY_BUFFER,
-        0,
-        FrequencyWaveformBuffer.generateVertices(
-            100, 
-            hsData.audioData.inputs[0].frequencyBuffer,
-        )
-    );
+        gl.bufferSubData(
+            gl.ARRAY_BUFFER,
+            0,
+            FrequencyWaveformBuffer.generateVertices(
+                100, 
+                hsData.audioData.inputs[0].frequencyBuffer,
+            )
+        );
+    }
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
     setPositionAttribute(
         gl, 
-        hsData.programInfo, 
+        hsData.defaultProgramInfo, 
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
     setColorAttribute(
         gl, 
-        hsData.programInfo, 
+        hsData.defaultProgramInfo, 
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
@@ -64,16 +67,16 @@ const drawScene = (
         hsData.frequencyWaveformBufferData.vBuffer.indices
     );
 
-    gl.useProgram(hsData.programInfo.program);
+    gl.useProgram(hsData.defaultProgramInfo.program);
 
     gl.uniformMatrix4fv(
-        hsData.programInfo.uniformLocations.projMat,
+        hsData.defaultProgramInfo.uniformLocations.projMat,
         false,
         projMat
     );
 
     gl.uniformMatrix4fv(
-        hsData.programInfo.uniformLocations.mvMat,
+        hsData.defaultProgramInfo.uniformLocations.mvMat,
         false,
         mvMat
     );
@@ -88,7 +91,7 @@ const drawScene = (
 
 const setPositionAttribute = (
     gl: WebGLRenderingContext,
-    programInfo: ProgramInfo,
+    programInfo: DefaultProgramInfo,
     buffers: VertexBuffer
 ) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
@@ -107,7 +110,7 @@ const setPositionAttribute = (
 
 const setColorAttribute = (
     gl: WebGLRenderingContext,
-    programInfo: ProgramInfo,
+    programInfo: DefaultProgramInfo,
     buffers: VertexBuffer
 ) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);

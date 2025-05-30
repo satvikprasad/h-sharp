@@ -1,4 +1,4 @@
-import { FrameOnResizedCallback, AudioOnListenerCallback } from "../../interface";
+import type { FrameOnResizedCallback, AudioOnListenerCallback } from "../../interface";
 
 const { contextBridge, ipcRenderer } = require('electron');
 

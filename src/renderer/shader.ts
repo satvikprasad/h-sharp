@@ -1,8 +1,8 @@
-import { IFileSystemAPI } from "../../interface";
+import { type IFileSystemAPI } from "../../interface";
 
 // Stores a shader program and it's
 // attrib and uniform locations
-interface ProgramInfo {
+interface DefaultProgramInfo {
     program: WebGLProgram;
 
     attribLocations: {
@@ -13,7 +13,20 @@ interface ProgramInfo {
     uniformLocations: {
         projMat: WebGLUniformLocation;
         mvMat: WebGLUniformLocation;
-    }
+    };
+};
+
+interface WaveformProgramInfo {
+    program: WebGLProgram;
+
+    attribLocations: {
+        vertexPosition: GLint;
+        vertexColor: GLint;
+        vertexValue: GLint;
+    };
+
+    uniformLocations: {
+    };
 };
 
 const initShaderProgram = async (
@@ -21,15 +34,23 @@ const initShaderProgram = async (
     vsRelPath: string,
     fsRelPath: string,
     fs: IFileSystemAPI,
-): Promise<WebGLProgram> => {
+): Promise<WebGLProgram | null> => {
     let vsSource = await fs.readFileRelPath(["shaders", vsRelPath]);
     let fsSource = await fs.readFileRelPath(["shaders", fsRelPath]);
 
     const vertexShader = loadShader(
         gl, gl.VERTEX_SHADER, vsSource);
 
+    if (vertexShader == null) {
+        throw Error(`Could not load vertex shader ${vsRelPath}`);
+    }
+
     const fragShader = loadShader(
         gl, gl.FRAGMENT_SHADER, fsSource);
+
+    if (fragShader == null) {
+        throw Error(`Could not load vertex shader ${vsRelPath}`);
+    }
 
     const shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
@@ -54,27 +75,23 @@ const initShaderProgram = async (
 }
 
 // TODO: This is still shader-specific
-const getShaderProgramInfo = (
+const getDefaultShaderProgramInfo = (
     gl: WebGLRenderingContext,
     program: WebGLProgram
-): ProgramInfo => {
+): DefaultProgramInfo => {
     const projMatLoc = gl.getUniformLocation(
         program, "uProjectionMatrix");
     const mvMatLoc = gl.getUniformLocation(
         program, "uModelViewMatrix");
 
     if (!projMatLoc) {
-        alert(`Could not find uniform location\
+        throw Error(`Could not find uniform location\
             for uProjectionMatrix`);
-
-        return null;
     }
 
     if (!mvMatLoc) {
-        alert(`Could not find uniform location\
+        throw Error(`Could not find uniform location\
             for uModelViewMatrix`);
-
-        return null;
     }
 
     return {
@@ -96,8 +113,14 @@ const loadShader = (
     gl: WebGLRenderingContext,
     shadType: GLenum,
     source: string
-): WebGLShader => {
+): WebGLShader | null => {
     const shader = gl.createShader(shadType);
+
+    if (shader == null) {
+        throw Error(
+            `gl.createShader(${shadType}) returned null`
+        );
+    }
 
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
@@ -117,4 +140,9 @@ const loadShader = (
     return shader;
 }
 
-export { ProgramInfo, initShaderProgram, getShaderProgramInfo };
+export { 
+    type DefaultProgramInfo, 
+
+    initShaderProgram, 
+    getDefaultShaderProgramInfo 
+};

@@ -1,14 +1,18 @@
 { 
     "compilerOptions": {
+        "strict": true,
         "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "forceConsistentCasingInFileNames": true,
+        "useUnknownInCatchVariables": true,
         "esModuleInterop": true,
         "removeComments": true,
         "esModuleInterop": true,
+        "noImplicitOverride": true,
         "noImplicitAny": false,
         "outDir": "dist"
     },

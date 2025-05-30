@@ -1,7 +1,6 @@
-import { FrequencyWaveformBuffer } from "./init-buffers";
 import { CMath as cx } from "./math/complex";
 
-enum AType {
+export enum AType {
     MIDI = 0,
         Audio,
 };
@@ -10,7 +9,7 @@ interface AInput {
     buffer: Buffer<Uint8Array> | null;
     frequencyBuffer: Array<number> | null;
     sampleRate: number,
-        audioType: AType;
+    audioType: AType;
 };
 
 interface AData {
@@ -113,7 +112,8 @@ const updateSystemAudioData = (
 }
 
 export { 
-    AData, 
+    type AData,
+
     initialiseAudioData, 
     updateAudioData, 
     updateSystemAudioData,

@@ -1,4 +1,4 @@
-import { HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
+import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
 
 let deltaTime = 0;
 
@@ -13,15 +13,16 @@ const resizeCanvas = async (
 
 const main = (): void => {
     // Get canvas
-    const canvas: HTMLCanvasElement = document.querySelector("#gl-canvas");
+    const canvas: HTMLCanvasElement | null = document.querySelector("#gl-canvas");
+    if (canvas == null) {
+        throw Error("Could not find canvas element");
+    }
 
     // Get gl context
-    const gl: WebGLRenderingContext = canvas.getContext("webgl");
-    
-    if (!gl) {
-        alert(`Unable to initialise WebGL.\
+    const gl: WebGLRenderingContext | null = canvas.getContext("webgl");
+    if (gl == null) {
+        throw Error(`Unable to initialise WebGL.\
             Your browser or machine may not support it.`);
-        return;
     }
 
     window.electronAPI.frame.onResized((dim) => {

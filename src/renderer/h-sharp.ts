@@ -1,8 +1,28 @@
-import { IElectronAPI } from "../../interface";
-import { AData, initialiseAudioData, updateAudioData, updateSystemAudioData } from "./audio";
+import type { IElectronAPI } from "../../interface";
+
+import { 
+    type AData, 
+
+    initialiseAudioData, 
+    updateAudioData, 
+    updateSystemAudioData 
+} from "./audio";
+
 import { drawScene } from "./draw-scene";
-import { FrequencyWaveformBuffer, TestBuffer, VertexBuffer } from "./init-buffers";
-import { getShaderProgramInfo, initShaderProgram, ProgramInfo } from "./shader";
+
+import { 
+    type VertexBuffer,
+
+    TestBuffer, 
+    FrequencyWaveformBuffer, 
+} from "./init-buffers";
+
+import { 
+    type DefaultProgramInfo,
+
+    getDefaultShaderProgramInfo, 
+    initShaderProgram, 
+} from "./shader";
 
 interface HSData {
     audioData: AData;
@@ -17,7 +37,7 @@ interface HSData {
         indexCount: number,
     };
     
-    programInfo: ProgramInfo;
+    defaultProgramInfo: DefaultProgramInfo;
 
     // Temporaries
     t: number;
@@ -44,7 +64,11 @@ const hsInitialise = async (
         e.fs,
     );
 
-    const programInfo = getShaderProgramInfo(gl, shadProgram);
+    if (shadProgram == null) {
+        throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
+    }
+
+    const programInfo = getDefaultShaderProgramInfo(gl, shadProgram);
 
     const testBuffers = TestBuffer.initBuffers(gl);
     const frequencyWaveformBufferData = FrequencyWaveformBuffer
@@ -58,7 +82,7 @@ const hsInitialise = async (
         testBuffers: testBuffers,
         frequencyWaveformBufferData: frequencyWaveformBufferData,
 
-        programInfo: programInfo,
+        defaultProgramInfo: programInfo,
 
         t: 0,
     };
@@ -75,7 +99,7 @@ const hsRender = (hsData: HSData, _deltaTime: number) => {
 }
 
 export {
-    HSData,
+    type HSData,
 
     hsInitialise,
     hsUpdate,

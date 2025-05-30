@@ -227,8 +227,8 @@ namespace FrequencyWaveformBuffer {
 };
 
 export { 
+    type VertexBuffer,
+
     TestBuffer,
     FrequencyWaveformBuffer,
-
-    VertexBuffer 
 };
