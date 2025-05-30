@@ -1,33 +1,41 @@
-import { IElectronAPI } from "../../interface";
-import { AData, initialiseAudioData, updateAudioData, updateSystemAudioData } from "./audio";
-import { drawScene } from "./draw-scene";
-import { FrequencyWaveformBuffer, TestBuffer, VertexBuffer } from "./init-buffers";
-import { getShaderProgramInfo, initShaderProgram, ProgramInfo } from "./shader";
+import type { IElectronAPI } from "../../interface";
+
+import { 
+    type AData, 
+
+    initialiseAudioData, 
+    updateAudioData, 
+    updateSystemAudioData 
+} from "./audio";
+
+import { 
+    type SceneData,
+
+    drawScene, 
+    initialiseScene 
+} from "./scene";
+import { TestShader } from "./shaders/test-shader";
+import { WaveformShader } from "./shaders/waveform-shader";
 
 interface HSData {
     audioData: AData;
+    sceneData: SceneData;
 
     gl: WebGLRenderingContext;
-
-    // Test square vertex buffer
-    testBuffers: VertexBuffer; 
-
-    frequencyWaveformBufferData: {
-        vBuffer: VertexBuffer,
-        indexCount: number,
-    };
     
-    programInfo: ProgramInfo;
+    testShaderData: TestShader.Data;
+    waveformShaderData: WaveformShader.Data;
 
     // Temporaries
-    t: number;
+    time: number;
 }
 
 const hsInitialise = async (
     e: IElectronAPI,
     gl: WebGLRenderingContext,
 ): Promise<HSData> => {
-    const audioData: AData = initialiseAudioData();
+    const audioData = initialiseAudioData();
+    const sceneData = initialiseScene(gl);
 
     // Callback from main.ts whenever new 
     // system audio is received
@@ -37,37 +45,32 @@ const hsInitialise = async (
             updateSystemAudioData(audioData, buffer);
         });
 
-    const shadProgram = await initShaderProgram(
-        gl,
-        "vertex-shader.glsl",
-        "fragment-shader.glsl",
-        e.fs,
+    // Initialise shaders
+    const testShaderData = await TestShader.initialise(
+        gl, e.fs
     );
 
-    const programInfo = getShaderProgramInfo(gl, shadProgram);
-
-    const testBuffers = TestBuffer.initBuffers(gl);
-    const frequencyWaveformBufferData = FrequencyWaveformBuffer
-        .initBuffers(gl, 100);
+    const waveformShaderData = await WaveformShader.initialise(
+        gl, e.fs, 100
+    );
 
     return {
-        audioData: audioData,
+        audioData,
+        sceneData,
 
-        gl: gl,
+        gl,
 
-        testBuffers: testBuffers,
-        frequencyWaveformBufferData: frequencyWaveformBufferData,
+        testShaderData,
+        waveformShaderData,
 
-        programInfo: programInfo,
-
-        t: 0,
+        time: 0,
     };
 }
 
 const hsUpdate = (hsData: HSData, deltaTime: number) => {
     updateAudioData(hsData.audioData);
 
-    hsData.t += deltaTime;
+    hsData.time += deltaTime;
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {
@@ -75,7 +78,7 @@ const hsRender = (hsData: HSData, _deltaTime: number) => {
 }
 
 export {
-    HSData,
+    type HSData,
 
     hsInitialise,
     hsUpdate,
