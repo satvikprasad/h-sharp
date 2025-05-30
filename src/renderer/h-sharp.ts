@@ -8,12 +8,18 @@ import {
     updateSystemAudioData 
 } from "./audio";
 
-import { drawScene } from "./draw-scene";
+import { 
+    type SceneData,
+
+    drawScene, 
+    initialiseScene 
+} from "./scene";
 import { TestShader } from "./shaders/test-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 
 interface HSData {
     audioData: AData;
+    sceneData: SceneData;
 
     gl: WebGLRenderingContext;
     
@@ -21,7 +27,7 @@ interface HSData {
     waveformShaderData: WaveformShader.Data;
 
     // Temporaries
-    t: number;
+    time: number;
 }
 
 const hsInitialise = async (
@@ -29,6 +35,7 @@ const hsInitialise = async (
     gl: WebGLRenderingContext,
 ): Promise<HSData> => {
     const audioData = initialiseAudioData();
+    const sceneData = initialiseScene(gl);
 
     // Callback from main.ts whenever new 
     // system audio is received
@@ -49,19 +56,21 @@ const hsInitialise = async (
 
     return {
         audioData,
+        sceneData,
+
         gl,
 
         testShaderData,
         waveformShaderData,
 
-        t: 0,
+        time: 0,
     };
 }
 
 const hsUpdate = (hsData: HSData, deltaTime: number) => {
     updateAudioData(hsData.audioData);
 
-    hsData.t += deltaTime;
+    hsData.time += deltaTime;
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {

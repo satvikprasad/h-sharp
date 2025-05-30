@@ -8,18 +8,29 @@ const initShaderProgram = async (
     fsRelPath: string,
     fs: IFileSystemAPI,
 ): Promise<WebGLProgram | null> => {
-    let vsSource = await fs.readFileRelPath(["shaders/source", vsRelPath]);
-    let fsSource = await fs.readFileRelPath(["shaders/source", fsRelPath]);
+    let vsSource = await fs.readFileRelPath(
+        ["shaders/source", vsRelPath]
+    );
+
+    let fsSource = await fs.readFileRelPath(
+        ["shaders/source", fsRelPath]
+    );
 
     const vertexShader = loadShader(
-        gl, gl.VERTEX_SHADER, vsSource);
+        gl, 
+        gl.VERTEX_SHADER, 
+        vsSource
+    );
 
     if (vertexShader == null) {
         throw Error(`Could not load vertex shader ${vsRelPath}`);
     }
 
     const fragShader = loadShader(
-        gl, gl.FRAGMENT_SHADER, fsSource);
+        gl, 
+        gl.FRAGMENT_SHADER, 
+        fsSource
+    );
 
     if (fragShader == null) {
         throw Error(`Could not load vertex shader ${vsRelPath}`);

@@ -2,18 +2,14 @@ import { mat4 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { WaveformShader } from "./shaders/waveform-shader";
 
-const drawScene = (
-    hsData: HSData,
-) => {
-    let gl = hsData.gl;
+interface SceneData {
+    projMat: mat4;
+    mvMat: mat4;
+};
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clearDepth(1.0);
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+const initialiseScene = (
+    gl: WebGLRenderingContext
+): SceneData => {
     const fov = (45 * Math.PI) / 180;
     const aspect = gl.canvas.width / gl.canvas.height;
     const zNear = 0.1;
@@ -29,6 +25,21 @@ const drawScene = (
         mvMat,
         [-0.0, 0.0, -6],
     );
+
+    return { projMat, mvMat }
+}
+
+const drawScene = (
+    hsData: HSData,
+) => {
+    let gl = hsData.gl;
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearDepth(1.0);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     if (hsData.audioData.inputs[0].frequencyBuffer) {
         // We have frequency information
@@ -77,13 +88,13 @@ const drawScene = (
     gl.uniformMatrix4fv(
         hsData.waveformShaderData.uniformLocations.projMat,
         false,
-        projMat
+        hsData.sceneData.projMat
     );
 
     gl.uniformMatrix4fv(
         hsData.waveformShaderData.uniformLocations.mvMat,
         false,
-        mvMat
+        hsData.sceneData.mvMat
     );
 
     gl.drawElements(
@@ -94,4 +105,9 @@ const drawScene = (
     );
 };
 
-export { drawScene };
+export { 
+    type SceneData, 
+
+    drawScene, 
+    initialiseScene 
+};
