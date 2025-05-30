@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             callback: AudioOnListenerCallback
         ) => ipcRenderer.on(
             'audio.on-listener',
-            (_event, value: Array<number>) => callback(value)
+            (_event, value: Float32Array) => callback(value)
         ),
     },
 

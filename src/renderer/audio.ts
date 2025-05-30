@@ -6,8 +6,8 @@ export enum AType {
 };
 
 interface AInput {
-    buffer: Array<number> | null;
-    frequencyBuffer: Array<number> | null;
+    buffer: Float32Array | null;
+    frequencyBuffer: Float32Array | null;
     sampleRate: number,
     audioType: AType;
 };
@@ -60,9 +60,9 @@ const fastFourierTransform = (
 
 const generateFrequencyBufferFromInput = (
     input: AInput
-): Array<number> => {
+): Float32Array => {
     if (input.buffer == null) {
-        return [];
+        return new Float32Array([]);
     }
 
     let cxBuffer: Array<cx.CInt> = [];
@@ -77,7 +77,7 @@ const generateFrequencyBufferFromInput = (
             );
             break;
         default: 
-            return [];
+            return new Float32Array([]);
     }
 
     let reBuffer = cxBuffer.slice(1, 4096/2).map(v => cx.mod(v));
@@ -91,10 +91,10 @@ const generateFrequencyBufferFromInput = (
 
     if (max != 0) {
         // Ensure magnitudes of frequencies are normalised.
-        return reBuffer.map(v => v/max);
+        return new Float32Array(reBuffer.map(v => v/max));
     }
 
-    return reBuffer;
+    return new Float32Array(reBuffer);
 }
 
 const updateAudioData = (
@@ -106,7 +106,7 @@ const updateAudioData = (
 
 const updateSystemAudioData = (
     audioData: AData,
-    sysAudioBuffer: Array<number>
+    sysAudioBuffer: Float32Array
 ) => {
     audioData.inputs[0].buffer = sysAudioBuffer;
 }

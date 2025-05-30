@@ -41,7 +41,7 @@ const hsInitialise = async (
     // Callback from main.ts whenever new 
     // system audio is received
     e.audio.onListener(
-        (buffer: Array<number>) => {
+        (buffer: Float32Array) => {
             // Update buffer
             updateSystemAudioData(audioData, buffer);
         });

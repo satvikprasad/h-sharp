@@ -1,6 +1,9 @@
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
+// TODO: Convert all Array<number> operations here to 
+// Float32Array operations.
+
 namespace WaveformShader {
     export interface Data {
         program: WebGLProgram;
@@ -30,7 +33,7 @@ namespace WaveformShader {
 
     export const generateValues = (
         fidelity: number,
-        frequencyBuffer?: Array<number>,
+        frequencyBuffer?: Float32Array,
     ): Float32Array => {
         let values: Array<number> = [];
 

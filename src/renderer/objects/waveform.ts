@@ -5,7 +5,7 @@ const renderWaveform = (
     sceneData: SceneData,
     gl: WebGLRenderingContext,
     shader: WaveformShader.Data,
-    waveform: Array<number> | null,
+    waveform: Float32Array | null,
 ) => {
     if (waveform) {
         // We have frequency information

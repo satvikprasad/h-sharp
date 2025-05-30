@@ -41,7 +41,7 @@ app.whenReady().then(() => {
             let f = new Float32Array(buf)
             new Uint8Array(buf).set([...chunk])
 
-            win.webContents.send('audio.on-listener', [...f]);
+            win.webContents.send('audio.on-listener', f);
         }
     });
 

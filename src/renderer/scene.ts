@@ -54,7 +54,7 @@ const drawScene = (
             hsData.sceneData, 
             gl, 
             hsData.waveformShaderData,
-            [...hsData.audioData.inputs[0].buffer]
+            hsData.audioData.inputs[0].buffer
         );
     } else {
         renderWaveform(
