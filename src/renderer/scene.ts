@@ -1,6 +1,6 @@
 import { mat4 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
-import { WaveformShader } from "./shaders/waveform-shader";
+import { renderWaveform } from "./objects/waveform";
 
 interface SceneData {
     projMat: mat4;
@@ -41,67 +41,11 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (hsData.audioData.inputs[0].frequencyBuffer) {
-        // We have frequency information
-        gl.bindBuffer(
-            gl.ARRAY_BUFFER,
-            hsData.waveformShaderData.buffers.value,
-        );
-
-        gl.bufferSubData(
-            gl.ARRAY_BUFFER,
-            0,
-            WaveformShader.generateValues(
-                100, 
-                hsData.audioData.inputs[0].frequencyBuffer,
-            )
-        );
-    }
-
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertexPosition attribute.
-    WaveformShader.setPositionAttribute(
+    renderWaveform(
+        hsData.sceneData, 
         gl, 
-        hsData.waveformShaderData, 
-        hsData.waveformShaderData.buffers
-    );
-
-    WaveformShader.setColorAttribute(
-        gl, 
-        hsData.waveformShaderData, 
-        hsData.waveformShaderData.buffers
-    );
-
-    WaveformShader.setValueAttribute(
-        gl,
         hsData.waveformShaderData,
-        hsData.waveformShaderData.buffers
-    );
-
-    gl.bindBuffer(
-        gl.ELEMENT_ARRAY_BUFFER, 
-        hsData.waveformShaderData.buffers.indices
-    );
-
-    gl.useProgram(hsData.waveformShaderData.program);
-
-    gl.uniformMatrix4fv(
-        hsData.waveformShaderData.uniformLocations.projMat,
-        false,
-        hsData.sceneData.projMat
-    );
-
-    gl.uniformMatrix4fv(
-        hsData.waveformShaderData.uniformLocations.mvMat,
-        false,
-        hsData.sceneData.mvMat
-    );
-
-    gl.drawElements(
-        gl.TRIANGLES, 
-        hsData.waveformShaderData.buffers.indexCount,
-        gl.UNSIGNED_SHORT, 
-        0
+        hsData.audioData.inputs[0].frequencyBuffer
     );
 };
 
