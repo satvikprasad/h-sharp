@@ -34,6 +34,14 @@ const drawScene = (
 ) => {
     let gl = hsData.gl;
 
+    // Rotate the scene weirdly
+    mat4.rotate(
+        hsData.sceneData.mvMat,
+        hsData.sceneData.mvMat,
+        hsData.deltaTime,
+        [0, 1, 0]
+    );
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -41,12 +49,19 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (hsData.audioData.inputs[0].buffer) {
+    if (hsData.audioData.inputs[0].buffer && 1) {
         renderWaveform(
             hsData.sceneData, 
             gl, 
             hsData.waveformShaderData,
             [...hsData.audioData.inputs[0].buffer]
+        );
+    } else {
+        renderWaveform(
+            hsData.sceneData,
+            gl,
+            hsData.waveformShaderData,
+            hsData.audioData.inputs[0].frequencyBuffer
         );
     }
 };

@@ -6,7 +6,7 @@ export enum AType {
 };
 
 interface AInput {
-    buffer: Buffer<Uint8Array> | null;
+    buffer: Array<number> | null;
     frequencyBuffer: Array<number> | null;
     sampleRate: number,
     audioType: AType;
@@ -106,7 +106,7 @@ const updateAudioData = (
 
 const updateSystemAudioData = (
     audioData: AData,
-    sysAudioBuffer: Buffer<Uint8Array>
+    sysAudioBuffer: Array<number>
 ) => {
     audioData.inputs[0].buffer = sysAudioBuffer;
 }

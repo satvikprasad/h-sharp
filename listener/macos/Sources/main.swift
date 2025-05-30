@@ -64,7 +64,7 @@ class StreamOutput: NSObject, SCStreamOutput {
             let frameCapacity = Int(buffer?.frameCapacity ?? 0)
 
             let bytes = UnsafeBufferPointer(
-                start: buffer?.floatChannelData, count: frameCapacity)
+                start: buffer?.floatChannelData?.pointee, count: frameCapacity) // TODO: Make this stereo
 
             let data = Data(buffer: bytes)
             FileHandle.standardOutput.write(data)

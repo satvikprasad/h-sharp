@@ -37,7 +37,11 @@ app.whenReady().then(() => {
 
     systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
         if (hasWindow) {
-            win.webContents.send('audio.on-listener', chunk);
+            let buf = new ArrayBuffer(chunk.length)
+            let f = new Float32Array(buf)
+            new Uint8Array(buf).set([...chunk])
+
+            win.webContents.send('audio.on-listener', [...f]);
         }
     });
 
