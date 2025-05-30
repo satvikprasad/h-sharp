@@ -109,6 +109,43 @@ const getDefaultShaderProgramInfo = (
     };
 }
 
+const getWaveformShaderProgramInfo = (
+    gl: WebGLRenderingContext,
+    program: WebGLProgram
+): WaveformProgramInfo => {
+    const projMatLoc = gl.getUniformLocation(
+        program,
+        "uProjectionMatrix"
+    );
+
+    const mvMatLoc = gl.getUniformLocation(
+        program,
+        "uModelViewMatrix"
+    );
+
+    return {
+        program: program,
+        attribLocations: {
+            vertexPosition: gl.getAttribLocation(
+                program,
+                "aVertexPosition"
+            ),
+            vertexColor: gl.getAttribLocation(
+                program,
+                "aVertexColor"
+            ),
+            vertexValue: gl.getAttribLocation(
+                program,
+                "aVertexValue"
+            ),
+        },
+        uniformLocations: {
+            projMat: projMatLoc,
+            mvMat: mvMatLoc,
+        },
+    };
+}
+
 const loadShader = (
     gl: WebGLRenderingContext,
     shadType: GLenum,
@@ -142,7 +179,9 @@ const loadShader = (
 
 export { 
     type DefaultProgramInfo, 
+    type WaveformProgramInfo,
 
     initShaderProgram, 
-    getDefaultShaderProgramInfo 
+    getDefaultShaderProgramInfo,
+    getWaveformShaderProgramInfo
 };

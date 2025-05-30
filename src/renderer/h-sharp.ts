@@ -21,7 +21,9 @@ import {
     type DefaultProgramInfo,
 
     getDefaultShaderProgramInfo, 
-    initShaderProgram, 
+    getWaveformShaderProgramInfo, 
+    initShaderProgram,
+    WaveformProgramInfo, 
 } from "./shader";
 
 interface HSData {
@@ -38,6 +40,7 @@ interface HSData {
     };
     
     defaultProgramInfo: DefaultProgramInfo;
+    waveformProgramInfo: WaveformProgramInfo;
 
     // Temporaries
     t: number;
@@ -47,7 +50,7 @@ const hsInitialise = async (
     e: IElectronAPI,
     gl: WebGLRenderingContext,
 ): Promise<HSData> => {
-    const audioData: AData = initialiseAudioData();
+    const audioData = initialiseAudioData();
 
     // Callback from main.ts whenever new 
     // system audio is received
@@ -57,19 +60,41 @@ const hsInitialise = async (
             updateSystemAudioData(audioData, buffer);
         });
 
-    const shadProgram = await initShaderProgram(
+    // Get defaultShaderProgramInfo
+    const defaultShadProgram = await initShaderProgram(
         gl,
         "vertex-shader.glsl",
         "fragment-shader.glsl",
         e.fs,
     );
 
-    if (shadProgram == null) {
+    if (defaultShadProgram == null) {
         throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
     }
 
-    const programInfo = getDefaultShaderProgramInfo(gl, shadProgram);
+    const defaultProgramInfo = getDefaultShaderProgramInfo(
+        gl, defaultShadProgram
+    );
 
+    // Get waveformProgramInfo
+    const waveformShadProgram = await initShaderProgram(
+        gl,
+        "waveform-vertex.glsl",
+        "waveform-fragment.glsl",
+        e.fs
+    );
+
+    if (waveformShadProgram == null) {
+        throw Error(
+            `Exiting. H-Sharp was unable to initialise the waveform shader program.`
+        );
+    }
+
+    const waveformProgramInfo = getWaveformShaderProgramInfo(
+        gl, waveformShadProgram
+    );
+
+    // Setup position buffers
     const testBuffers = TestBuffer.initBuffers(gl);
     const frequencyWaveformBufferData = FrequencyWaveformBuffer
         .initBuffers(gl, 100);
@@ -82,7 +107,8 @@ const hsInitialise = async (
         testBuffers: testBuffers,
         frequencyWaveformBufferData: frequencyWaveformBufferData,
 
-        defaultProgramInfo: programInfo,
+        defaultProgramInfo: defaultProgramInfo,
+        waveformProgramInfo: waveformProgramInfo,
 
         t: 0,
     };

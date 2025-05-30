@@ -5,8 +5,10 @@ attribute float aVertexValue;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 
+varying lowp vec4 vColor;
+
 void main() {
-    adjustedPosition = aVertexPosition + vec4(0.0, aVertexValue, 0.0, 0.0);
+    vec4 adjustedPosition = aVertexPosition + vec4(0.0, aVertexValue, 0.0, 0.0);
 
     gl_Position = uProjectionMatrix * uModelViewMatrix * adjustedPosition;
 
