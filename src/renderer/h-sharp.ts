@@ -28,6 +28,7 @@ interface HSData {
 
     // Temporaries
     time: number;
+    deltaTime: number;
 }
 
 const hsInitialise = async (
@@ -40,7 +41,7 @@ const hsInitialise = async (
     // Callback from main.ts whenever new 
     // system audio is received
     e.audio.onListener(
-        (buffer: Buffer<Uint8Array>) => {
+        (buffer: Float32Array) => {
             // Update buffer
             updateSystemAudioData(audioData, buffer);
         });
@@ -64,6 +65,7 @@ const hsInitialise = async (
         waveformShaderData,
 
         time: 0,
+        deltaTime: 0,
     };
 }
 
@@ -71,6 +73,7 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
     updateAudioData(hsData.audioData);
 
     hsData.time += deltaTime;
+    hsData.deltaTime = deltaTime;
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {

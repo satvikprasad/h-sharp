@@ -1,4 +1,4 @@
-type AudioOnListenerCallback = (buffer: Buffer<Uint8Array>) => void;
+type AudioOnListenerCallback = (buffer: Float32Array) => void;
 
 type FrameOnResizedCallback = (dim: {
     width: number,
