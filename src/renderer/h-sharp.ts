@@ -47,38 +47,13 @@ const hsInitialise = async (
             updateSystemAudioData(audioData, buffer);
         });
 
-    // Get defaultShaderProgramInfo
-    const defaultShadProgram = await initShaderProgram(
-        gl,
-        "vertex-shader.glsl",
-        "fragment-shader.glsl",
-        e.fs,
+    // Initialise shaders
+    const testShaderData = await TestShader.initialise(
+        gl, e.fs
     );
 
-    if (defaultShadProgram == null) {
-        throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
-    }
-
-    const testShaderData = TestShader.initialise(
-        gl, defaultShadProgram
-    );
-
-    // Get waveformProgramInfo
-    const waveformShadProgram = await initShaderProgram(
-        gl,
-        "waveform-vertex.glsl",
-        "waveform-fragment.glsl",
-        e.fs
-    );
-
-    if (waveformShadProgram == null) {
-        throw Error(
-            `Exiting. H-Sharp was unable to initialise the waveform shader program.`
-        );
-    }
-
-    const waveformShaderData = WaveformShader.initialise(
-        gl, waveformShadProgram
+    const waveformShaderData = await WaveformShader.initialise(
+        gl, e.fs
     );
 
     // Setup position buffers

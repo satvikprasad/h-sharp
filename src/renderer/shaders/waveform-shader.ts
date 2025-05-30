@@ -1,3 +1,6 @@
+import { IFileSystemAPI } from "../../../interface";
+import { initShaderProgram } from "../shader";
+
 namespace WaveformShader {
     export interface Data {
         program: WebGLProgram;
@@ -265,10 +268,10 @@ namespace WaveformShader {
         );
     }
 
-    export const initialise = (
+    export const getData = (
         gl: WebGLRenderingContext,
         program: WebGLProgram
-    ): WaveformShader.Data => {
+    ) => {
         const projMatLoc = gl.getUniformLocation(
             program,
             "uProjectionMatrix"
@@ -310,6 +313,26 @@ namespace WaveformShader {
                 mvMat: mvMatLoc,
             },
         };
+    }
+
+    export const initialise = async (
+        gl: WebGLRenderingContext,
+        fs: IFileSystemAPI
+    ): Promise<Data> => {
+        const program = await initShaderProgram(
+            gl,
+            "waveform-vertex.glsl",
+            "waveform-fragment.glsl",
+            fs
+        );
+
+        if (program == null) {
+            throw Error(
+                `Exiting. H-Sharp was unable to initialise the waveform shader program.`
+            );
+        }
+
+        return getData(gl, program);
     }
 };
 

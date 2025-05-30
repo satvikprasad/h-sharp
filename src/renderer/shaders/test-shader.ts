@@ -1,3 +1,6 @@
+import { IFileSystemAPI } from "../../../interface";
+import { initShaderProgram } from "../shader";
+
 namespace TestShader {
     export interface Data {
         program: WebGLProgram;
@@ -134,10 +137,10 @@ namespace TestShader {
         gl.enableVertexAttribArray(data.attribLocations.vertexColor);
     }
 
-    export const initialise = (
+    const getData = (
         gl: WebGLRenderingContext,
         program: WebGLProgram
-    ): TestShader.Data => {
+    ): Data => {
         const projMatLoc = gl.getUniformLocation(
             program, "uProjectionMatrix");
         const mvMatLoc = gl.getUniformLocation(
@@ -166,6 +169,24 @@ namespace TestShader {
                 mvMat: mvMatLoc,
             },
         };
+    }
+
+    export const initialise = async (
+        gl: WebGLRenderingContext,
+        fs: IFileSystemAPI
+    ): Promise<Data> => {
+        const program = await initShaderProgram(
+            gl,
+            "vertex-shader.glsl",
+            "fragment-shader.glsl",
+            fs,
+        );
+
+        if (program == null) {
+            throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
+        }
+
+        return getData(gl, program);
     }
 };
 
