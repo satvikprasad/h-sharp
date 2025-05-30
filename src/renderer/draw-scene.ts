@@ -1,6 +1,6 @@
 import { mat4 } from "gl-matrix";
-import { FrequencyWaveformBuffer } from "./init-buffers";
 import { type HSData } from "./h-sharp";
+import { WaveformShader } from "./shaders/waveform-shader";
 
 const drawScene = (
     hsData: HSData,
@@ -40,7 +40,7 @@ const drawScene = (
         gl.bufferSubData(
             gl.ARRAY_BUFFER,
             0,
-            FrequencyWaveformBuffer.generateValues(
+            WaveformShader.generateValues(
                 100, 
                 hsData.audioData.inputs[0].frequencyBuffer,
             )
@@ -49,19 +49,19 @@ const drawScene = (
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
-    FrequencyWaveformBuffer.setPositionAttribute(
+    WaveformShader.setPositionAttribute(
         gl, 
         hsData.waveformProgramInfo, 
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
-    FrequencyWaveformBuffer.setColorAttribute(
+    WaveformShader.setColorAttribute(
         gl, 
         hsData.waveformProgramInfo, 
         hsData.frequencyWaveformBufferData.vBuffer
     );
 
-    FrequencyWaveformBuffer.setValueAttribute(
+    WaveformShader.setValueAttribute(
         gl,
         hsData.waveformProgramInfo,
         hsData.frequencyWaveformBufferData.vBuffer

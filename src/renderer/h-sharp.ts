@@ -11,18 +11,13 @@ import {
 import { drawScene } from "./draw-scene";
 
 import { 
-    TestBuffer, 
-    FrequencyWaveformBuffer, 
-} from "./init-buffers";
-
-import { 
-    type DefaultProgramInfo,
-
     getDefaultShaderProgramInfo, 
     getWaveformShaderProgramInfo, 
     initShaderProgram,
-    WaveformProgramInfo, 
 } from "./shader";
+
+import { TestShader } from "./shaders/test-shader";
+import { WaveformShader } from "./shaders/waveform-shader";
 
 interface HSData {
     audioData: AData;
@@ -30,15 +25,15 @@ interface HSData {
     gl: WebGLRenderingContext;
 
     // Test square vertex buffer
-    testBuffers: TestBuffer.VertexBuffer; 
+    testBuffers: TestShader.VertexBuffer; 
 
     frequencyWaveformBufferData: {
-        vBuffer: FrequencyWaveformBuffer.VertexBuffer,
+        vBuffer: WaveformShader.VertexBuffer,
         indexCount: number,
     };
     
-    defaultProgramInfo: DefaultProgramInfo;
-    waveformProgramInfo: WaveformProgramInfo;
+    testProgramInfo: TestShader.ProgramInfo;
+    waveformProgramInfo: WaveformShader.ProgramInfo;
 
     // Temporaries
     t: number;
@@ -70,7 +65,7 @@ const hsInitialise = async (
         throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
     }
 
-    const defaultProgramInfo = getDefaultShaderProgramInfo(
+    const testProgramInfo = getDefaultShaderProgramInfo(
         gl, defaultShadProgram
     );
 
@@ -93,8 +88,8 @@ const hsInitialise = async (
     );
 
     // Setup position buffers
-    const testBuffers = TestBuffer.initBuffers(gl);
-    const frequencyWaveformBufferData = FrequencyWaveformBuffer
+    const testBuffers = TestShader.initBuffers(gl);
+    const frequencyWaveformBufferData = WaveformShader
         .initBuffers(gl, 100);
 
     return {
@@ -105,7 +100,7 @@ const hsInitialise = async (
         testBuffers: testBuffers,
         frequencyWaveformBufferData: frequencyWaveformBufferData,
 
-        defaultProgramInfo: defaultProgramInfo,
+        testProgramInfo: testProgramInfo,
         waveformProgramInfo: waveformProgramInfo,
 
         t: 0,

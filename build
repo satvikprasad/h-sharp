@@ -15,8 +15,8 @@ cp src/styles.css dist/
 
 # Copy shaders
 echo -e "\033[0;32mCopying shaders..."
-mkdir dist/renderer/shaders
-find src/renderer/shaders -name \*.glsl -exec cp {} dist/renderer/shaders \;
+mkdir "dist/renderer/shaders" "dist/renderer/shaders/source"
+find "src/renderer/shaders/source" -name \*.glsl -exec cp {} "dist/renderer/shaders/source" \;
 
 # Copy auxiliary apps
 echo -e "\033[0;32mCopying auxiliary plugins"

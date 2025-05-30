@@ -1,44 +1,17 @@
 import { type IFileSystemAPI } from "../../interface";
+import { TestShader } from "./shaders/test-shader";
+import { WaveformShader } from "./shaders/waveform-shader";
 
 // Stores a shader program and it's
 // attrib and uniform locations
-interface DefaultProgramInfo {
-    program: WebGLProgram;
-
-    attribLocations: {
-        vertexPosition: GLint;
-        vertexColor: GLint;
-    };
-
-    uniformLocations: {
-        projMat: WebGLUniformLocation;
-        mvMat: WebGLUniformLocation;
-    };
-};
-
-interface WaveformProgramInfo {
-    program: WebGLProgram;
-
-    attribLocations: {
-        vertexPosition: GLint;
-        vertexColor: GLint;
-        vertexValue: GLint;
-    };
-
-    uniformLocations: {
-        projMat: WebGLUniformLocation;
-        mvMat: WebGLUniformLocation;
-    };
-};
-
 const initShaderProgram = async (
     gl: WebGLRenderingContext,
     vsRelPath: string,
     fsRelPath: string,
     fs: IFileSystemAPI,
 ): Promise<WebGLProgram | null> => {
-    let vsSource = await fs.readFileRelPath(["shaders", vsRelPath]);
-    let fsSource = await fs.readFileRelPath(["shaders", fsRelPath]);
+    let vsSource = await fs.readFileRelPath(["shaders/source", vsRelPath]);
+    let fsSource = await fs.readFileRelPath(["shaders/source", fsRelPath]);
 
     const vertexShader = loadShader(
         gl, gl.VERTEX_SHADER, vsSource);
@@ -80,7 +53,7 @@ const initShaderProgram = async (
 const getDefaultShaderProgramInfo = (
     gl: WebGLRenderingContext,
     program: WebGLProgram
-): DefaultProgramInfo => {
+): TestShader.ProgramInfo => {
     const projMatLoc = gl.getUniformLocation(
         program, "uProjectionMatrix");
     const mvMatLoc = gl.getUniformLocation(
@@ -114,7 +87,7 @@ const getDefaultShaderProgramInfo = (
 const getWaveformShaderProgramInfo = (
     gl: WebGLRenderingContext,
     program: WebGLProgram
-): WaveformProgramInfo => {
+): WaveformShader.ProgramInfo => {
     const projMatLoc = gl.getUniformLocation(
         program,
         "uProjectionMatrix"
@@ -190,10 +163,8 @@ const loadShader = (
 }
 
 export { 
-    type DefaultProgramInfo, 
-    type WaveformProgramInfo,
-
     initShaderProgram, 
+
     getDefaultShaderProgramInfo,
     getWaveformShaderProgramInfo
 };
