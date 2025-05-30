@@ -41,12 +41,14 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    renderWaveform(
-        hsData.sceneData, 
-        gl, 
-        hsData.waveformShaderData,
-        hsData.audioData.inputs[0].frequencyBuffer
-    );
+    if (hsData.audioData.inputs[0].buffer) {
+        renderWaveform(
+            hsData.sceneData, 
+            gl, 
+            hsData.waveformShaderData,
+            [...hsData.audioData.inputs[0].buffer]
+        );
+    }
 };
 
 export { 

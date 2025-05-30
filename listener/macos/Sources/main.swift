@@ -16,24 +16,57 @@ class StreamOutput: NSObject, SCStreamOutput {
         switch outputType {
         case .screen:
             break
-        case .audio:        
-            let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer)
+        case .audio:
+            var bufferListSizeNeeded: Int = 0;
+
+            CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(
+                sampleBuffer,
+                bufferListSizeNeededOut: &bufferListSizeNeeded,
+                bufferListOut: nil,
+                bufferListSize: 0,
+                blockBufferAllocator: nil,
+                blockBufferMemoryAllocator: nil,
+                flags: 0,
+                blockBufferOut: nil)
+
+            let bufferList: UnsafeMutablePointer<AudioBufferList> =
+                UnsafeMutablePointer
+                .allocate(capacity: bufferListSizeNeeded)
+
+            var blockBuffer: CMBlockBuffer?
+
+            let status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(
+                sampleBuffer,
+                bufferListSizeNeededOut: nil,
+                bufferListOut: bufferList, bufferListSize: bufferListSizeNeeded,
+                blockBufferAllocator: nil, blockBufferMemoryAllocator: nil,
+                flags: 0, blockBufferOut: &blockBuffer)
+
+            if (status != noErr) {
+                NSLog(
+                    NSError.init(domain: NSOSStatusErrorDomain, code: Int(status))
+                        .localizedDescription)
+            }
 
             if blockBuffer == nil {
                 NSLog("Could not unpack data from CMBlockBuffer")
             }
 
-            let blockBufferDataLength = CMBlockBufferGetDataLength(blockBuffer!)
-            var blockBufferData = [UInt8](repeating: 0, count: blockBufferDataLength)
+            let format = AVAudioFormat.init(standardFormatWithSampleRate: 44100, channels: 2)
 
-            let status = CMBlockBufferCopyDataBytes(
-                blockBuffer!, atOffset: 0, dataLength: blockBufferDataLength,
-                destination: &blockBufferData)
+            if (format == nil) {
+                NSLog("Could not create AVAudioFormat.")
+            }
 
-            guard status == noErr else { return }
+            let buffer = AVAudioPCMBuffer.init(
+                pcmFormat: format!, bufferListNoCopy: bufferList)
 
-            let data = Data(bytes: blockBufferData, count: blockBufferDataLength)
+            let frameCapacity = Int(buffer?.frameCapacity ?? 0)
 
+            let bytes = UnsafeBufferPointer(
+                start: buffer?.floatChannelData, count: frameCapacity)
+
+            let data = Data(buffer: bytes)
             FileHandle.standardOutput.write(data)
             break
         case .microphone:
@@ -55,7 +88,7 @@ struct Listener: @unchecked Sendable {
         var mainDisplay: SCDisplay?
 
         do {
-            let availableContent = try await SCShareableContent.current            
+            let availableContent = try await SCShareableContent.current
             mainDisplay = Listener.getMainDisplay(availableContent: availableContent)
         } catch {
             throw ListenerError("Could not find shareable content.")
@@ -110,7 +143,7 @@ struct Listener: @unchecked Sendable {
     func begin() async throws {
         try await stream.startCapture()
     }
-    
+
     func stop() async throws {
         try await stream.stopCapture()
     }
