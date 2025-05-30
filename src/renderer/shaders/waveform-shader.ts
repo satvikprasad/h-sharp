@@ -15,13 +15,17 @@ namespace WaveformShader {
             projMat: WebGLUniformLocation;
             mvMat: WebGLUniformLocation;
         };
+
+        buffers: VertexBuffer;
     };
 
     export interface VertexBuffer {
         position: WebGLBuffer,
-            color: WebGLBuffer,
-            indices: WebGLBuffer,
-            value: WebGLBuffer,
+        color: WebGLBuffer,
+        value: WebGLBuffer,
+
+        indices: WebGLBuffer,
+        indexCount: number,
     };
 
     export const generateValues = (
@@ -61,7 +65,6 @@ namespace WaveformShader {
 
     const generateVertices = (
         fidelity: number,
-        frequencyBuffer?: Array<number>,
     ): Float32Array => {
         let positions: Array<number> = [];
 
@@ -192,19 +195,14 @@ namespace WaveformShader {
     export const initBuffers = (
         gl: WebGLRenderingContext,
         fidelity: number,
-    ): { 
-        vBuffer: VertexBuffer,
-            indexCount: number,
-    } => {
+    ): VertexBuffer => {
         let indexOut = initIndexBuffer(gl, fidelity);
 
         return {
-            vBuffer: {
-                position: initPositionBuffer(gl, fidelity),
-                value: initValueBuffer(gl, fidelity),
-                color: initColorBuffer(gl, fidelity),
-                indices: indexOut.indexBuffer,
-            },
+            position: initPositionBuffer(gl, fidelity),
+            value: initValueBuffer(gl, fidelity),
+            color: initColorBuffer(gl, fidelity),
+            indices: indexOut.indexBuffer,
             indexCount: indexOut.indexCount,
         };
     }
@@ -270,7 +268,8 @@ namespace WaveformShader {
 
     export const getData = (
         gl: WebGLRenderingContext,
-        program: WebGLProgram
+        program: WebGLProgram,
+        fidelity: number,
     ) => {
         const projMatLoc = gl.getUniformLocation(
             program,
@@ -312,12 +311,15 @@ namespace WaveformShader {
                 projMat: projMatLoc,
                 mvMat: mvMatLoc,
             },
+
+            buffers: initBuffers(gl, fidelity),
         };
     }
 
     export const initialise = async (
         gl: WebGLRenderingContext,
-        fs: IFileSystemAPI
+        fs: IFileSystemAPI,
+        fidelity: number,
     ): Promise<Data> => {
         const program = await initShaderProgram(
             gl,
@@ -332,7 +334,7 @@ namespace WaveformShader {
             );
         }
 
-        return getData(gl, program);
+        return getData(gl, program, fidelity);
     }
 };
 

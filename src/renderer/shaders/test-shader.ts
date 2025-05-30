@@ -14,6 +14,8 @@ namespace TestShader {
             projMat: WebGLUniformLocation;
             mvMat: WebGLUniformLocation;
         };
+
+        buffers: VertexBuffer;
     };
 
     export interface VertexBuffer {
@@ -168,6 +170,7 @@ namespace TestShader {
                 projMat: projMatLoc,
                 mvMat: mvMatLoc,
             },
+            buffers: initBuffers(gl),
         };
     }
 

@@ -34,7 +34,7 @@ const drawScene = (
         // We have frequency information
         gl.bindBuffer(
             gl.ARRAY_BUFFER,
-            hsData.frequencyWaveformBufferData.vBuffer.value,
+            hsData.waveformShaderData.buffers.value,
         );
 
         gl.bufferSubData(
@@ -52,24 +52,24 @@ const drawScene = (
     WaveformShader.setPositionAttribute(
         gl, 
         hsData.waveformShaderData, 
-        hsData.frequencyWaveformBufferData.vBuffer
+        hsData.waveformShaderData.buffers
     );
 
     WaveformShader.setColorAttribute(
         gl, 
         hsData.waveformShaderData, 
-        hsData.frequencyWaveformBufferData.vBuffer
+        hsData.waveformShaderData.buffers
     );
 
     WaveformShader.setValueAttribute(
         gl,
         hsData.waveformShaderData,
-        hsData.frequencyWaveformBufferData.vBuffer
+        hsData.waveformShaderData.buffers
     );
 
     gl.bindBuffer(
         gl.ELEMENT_ARRAY_BUFFER, 
-        hsData.frequencyWaveformBufferData.vBuffer.indices
+        hsData.waveformShaderData.buffers.indices
     );
 
     gl.useProgram(hsData.waveformShaderData.program);
@@ -88,7 +88,7 @@ const drawScene = (
 
     gl.drawElements(
         gl.TRIANGLES, 
-        hsData.frequencyWaveformBufferData.indexCount,
+        hsData.waveformShaderData.buffers.indexCount,
         gl.UNSIGNED_SHORT, 
         0
     );

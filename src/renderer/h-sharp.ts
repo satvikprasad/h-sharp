@@ -9,7 +9,6 @@ import {
 } from "./audio";
 
 import { drawScene } from "./draw-scene";
-import { initShaderProgram } from "./shader";
 import { TestShader } from "./shaders/test-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 
@@ -17,14 +16,6 @@ interface HSData {
     audioData: AData;
 
     gl: WebGLRenderingContext;
-
-    // Test square vertex buffer
-    testBuffers: TestShader.VertexBuffer; 
-
-    frequencyWaveformBufferData: {
-        vBuffer: WaveformShader.VertexBuffer,
-        indexCount: number,
-    };
     
     testShaderData: TestShader.Data;
     waveformShaderData: WaveformShader.Data;
@@ -53,20 +44,12 @@ const hsInitialise = async (
     );
 
     const waveformShaderData = await WaveformShader.initialise(
-        gl, e.fs
+        gl, e.fs, 100
     );
-
-    // Setup position buffers
-    const testBuffers = TestShader.initBuffers(gl);
-    const frequencyWaveformBufferData = WaveformShader
-        .initBuffers(gl, 100);
 
     return {
         audioData,
         gl,
-
-        testBuffers,
-        frequencyWaveformBufferData,
 
         testShaderData,
         waveformShaderData,
