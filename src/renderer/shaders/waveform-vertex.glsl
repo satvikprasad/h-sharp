@@ -12,5 +12,5 @@ void main() {
 
     gl_Position = uProjectionMatrix * uModelViewMatrix * adjustedPosition;
 
-    vColor = aVertexColor * vec4(aVertexValue, aVertexValue, 1.0, 1.0);
+    vColor = aVertexColor * vec4(1.0, sqrt(sqrt(aVertexValue)), 1.0, 1.0);
 }

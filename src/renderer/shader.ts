@@ -26,6 +26,8 @@ interface WaveformProgramInfo {
     };
 
     uniformLocations: {
+        projMat: WebGLUniformLocation;
+        mvMat: WebGLUniformLocation;
     };
 };
 
@@ -122,6 +124,16 @@ const getWaveformShaderProgramInfo = (
         program,
         "uModelViewMatrix"
     );
+
+    if (!projMatLoc) {
+        throw Error(`Could not find uniform location\
+            for uProjectionMatrix`);
+    }
+
+    if (!mvMatLoc) {
+        throw Error(`Could not find uniform location\
+            for uModelViewMatrix`);
+    }
 
     return {
         program: program,

@@ -11,8 +11,6 @@ import {
 import { drawScene } from "./draw-scene";
 
 import { 
-    type VertexBuffer,
-
     TestBuffer, 
     FrequencyWaveformBuffer, 
 } from "./init-buffers";
@@ -32,10 +30,10 @@ interface HSData {
     gl: WebGLRenderingContext;
 
     // Test square vertex buffer
-    testBuffers: VertexBuffer; 
+    testBuffers: TestBuffer.VertexBuffer; 
 
     frequencyWaveformBufferData: {
-        vBuffer: VertexBuffer,
+        vBuffer: FrequencyWaveformBuffer.VertexBuffer,
         indexCount: number,
     };
     

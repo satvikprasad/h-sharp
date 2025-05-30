@@ -1,10 +1,13 @@
-interface VertexBuffer {
-    position: WebGLBuffer,
-    color: WebGLBuffer,
-    indices: WebGLBuffer,
-};
+import { argv0 } from "process";
+import { DefaultProgramInfo, WaveformProgramInfo } from "./shader";
 
 namespace TestBuffer {
+    export interface VertexBuffer {
+        position: WebGLBuffer,
+        color: WebGLBuffer,
+        indices: WebGLBuffer,
+    };
+
     export const initBuffers = (
         gl: WebGLRenderingContext
     ): VertexBuffer => {
@@ -81,10 +84,90 @@ namespace TestBuffer {
 
         return indexBuffer;
     }
+
+    export const setPositionAttribute = (
+        gl: WebGLRenderingContext,
+        programInfo: DefaultProgramInfo,
+        buffers: VertexBuffer
+    ) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            3,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+    }
+
+    export const setColorAttribute = (
+        gl: WebGLRenderingContext,
+        programInfo: DefaultProgramInfo,
+        buffers: VertexBuffer
+    ) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexColor,
+            4,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+    }
 };
 
 namespace FrequencyWaveformBuffer {
-    export const generateVertices = (
+    export interface VertexBuffer {
+        position: WebGLBuffer,
+        color: WebGLBuffer,
+        indices: WebGLBuffer,
+        value: WebGLBuffer,
+    };
+
+    export const generateValues = (
+        fidelity: number,
+        frequencyBuffer?: Array<number>,
+    ): Float32Array => {
+        let values: Array<number> = [];
+
+        let max: number = 1.0;
+
+        if (frequencyBuffer) {
+            max = Math.max(...frequencyBuffer);
+        }
+
+        // No frequency buffer provided
+        for (let k = 0; k <= fidelity; ++k) {
+            if (frequencyBuffer) {
+                let i = Math.floor(
+                    k/fidelity * frequencyBuffer.length
+                );
+
+                i = Math.min(frequencyBuffer.length, i);
+
+                // Push normalised value.
+                values.push(
+                    0,
+                    frequencyBuffer[i]/max // Normalising         
+                );
+            } else {
+                values.push(0);
+                values.push(1);
+            }
+        }
+
+        return new Float32Array(values);
+    }
+
+    const generateVertices = (
         fidelity: number,
         frequencyBuffer?: Array<number>,
     ): Float32Array => {
@@ -94,16 +177,10 @@ namespace FrequencyWaveformBuffer {
         for (let k = 0; k <= fidelity; ++k) {
             let x = k/fidelity * 2.0 - 1.0;
 
-            positions.push(x, 0.0, 0.0);
-
-            if (!frequencyBuffer) {
-                positions.push(x, 1.0, 0.0);
-            } else {
-                let i = Math.floor(k/fidelity * frequencyBuffer.length);
-                i = Math.min(i, frequencyBuffer.length - 1); // Ensure no overflow
-
-                positions.push(x, frequencyBuffer[i], 0.0);
-            }
+            positions.push(
+                x, 0.0, 0.0, 
+                x, 0.0, 0.0
+            );
         }
 
         return new Float32Array(positions);
@@ -117,8 +194,8 @@ namespace FrequencyWaveformBuffer {
         for (let k = 0; k <= fidelity; ++k) {
             let t = k/fidelity;
 
-            colors.push(t, 0.0, 0, 1.0);
-            colors.push(t, 0.0, t^2, 1.0);
+            colors.push(1.0, 1.0, t, 1.0);
+            colors.push(1.0, 1.0, t, 1.0);
         }
 
         return new Float32Array(colors);
@@ -144,6 +221,22 @@ namespace FrequencyWaveformBuffer {
         }
     }
 
+    const initValueBuffer = (
+        gl: WebGLRenderingContext,
+        fidelity: number
+    ) => {
+        const valueBuffer = gl.createBuffer();
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, valueBuffer);
+
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            generateValues(fidelity),
+            gl.STATIC_DRAW
+        );
+
+        return valueBuffer;
+    }
 
     const initColorBuffer = (
         gl: WebGLRenderingContext,
@@ -218,17 +311,75 @@ namespace FrequencyWaveformBuffer {
         return {
             vBuffer: {
                 position: initPositionBuffer(gl, fidelity),
+                value: initValueBuffer(gl, fidelity),
                 color: initColorBuffer(gl, fidelity),
                 indices: indexOut.indexBuffer,
             },
             indexCount: indexOut.indexCount,
         };
     }
+
+    export const setPositionAttribute = (
+        gl: WebGLRenderingContext,
+        programInfo: WaveformProgramInfo,
+        buffers: VertexBuffer
+    ) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            3,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+    }
+
+    export const setColorAttribute = (
+        gl: WebGLRenderingContext,
+        programInfo: WaveformProgramInfo,
+        buffers: VertexBuffer
+    ) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
+
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexColor,
+            4,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+    }
+
+    export const setValueAttribute = (
+        gl: WebGLRenderingContext,
+        programInfo: WaveformProgramInfo,
+        buffers: VertexBuffer
+    ) => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.value);
+
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexValue,
+            1,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
+
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexValue
+        );
+    }
 };
 
 export { 
-    type VertexBuffer,
-
     TestBuffer,
     FrequencyWaveformBuffer,
 };
