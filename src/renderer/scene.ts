@@ -1,10 +1,13 @@
-import { mat4, vec3 } from "gl-matrix";
+import { mat3, mat4, vec3 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
 
 interface SceneData {
     projMat: mat4;
     viewMat: mat4;
+
+    viewMatXRot: number;
+    viewMatYRot: number;
 };
 
 const initialiseScene = (
@@ -33,19 +36,38 @@ const initialiseScene = (
         [1, 0, 0]
     );
 
-    return { projMat, viewMat }
+    return { 
+        projMat, 
+        viewMat,
+
+        viewMatXRot: 0,
+        viewMatYRot: 0,
+    }
 }
 
 const drawScene = (
     hsData: HSData,
 ) => {
     let gl = hsData.gl;
+    let sceneData = hsData.sceneData;
 
-    // Rotate the scene weirdly
+    // TODO: Find a better way to do this.
+    sceneData.viewMatXRot += hsData.canvasData.mouseWheel.deltaY
+        *hsData.deltaTime;
+
+    sceneData.viewMatYRot += -hsData.canvasData.mouseWheel.deltaX * hsData.deltaTime;
+
     mat4.rotate(
-        hsData.sceneData.viewMat,
-        hsData.sceneData.viewMat,
-        hsData.deltaTime,
+        sceneData.viewMat,
+        mat4.fromTranslation(sceneData.viewMat, [0, 0, -6.0]),
+        sceneData.viewMatXRot,
+        [1, 0, 0]
+    );
+
+    mat4.rotate(
+        sceneData.viewMat,
+        sceneData.viewMat,
+        sceneData.viewMatYRot,
         [0, 1, 0]
     );
 

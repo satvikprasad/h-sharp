@@ -17,7 +17,6 @@ const main = (): void => {
     if (canvas == null) {
         throw Error("Could not find canvas element");
     }
-
     // Get gl context
     const gl: WebGLRenderingContext | null = canvas.getContext("webgl");
     if (gl == null) {
@@ -32,7 +31,11 @@ const main = (): void => {
         gl.viewport(0, 0, dim.width, dim.height);
     });
 
-    hsInitialise(window.electronAPI, gl).then((hsData: HSData) => {
+    hsInitialise(
+        window.electronAPI, 
+        gl,
+        canvas
+    ).then((hsData: HSData) => {
         // Resize canvas to width of view
         resizeCanvas(canvas).then(() => {
             // Resize viewport

@@ -7,6 +7,7 @@ import {
     updateAudioData, 
     updateSystemAudioData 
 } from "./audio";
+import { CNum } from "./math/number";
 
 import { 
     type SceneData,
@@ -17,9 +18,17 @@ import {
 import { TestShader } from "./shaders/test-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 
+interface CanvasData {
+    mouseWheel: {
+        deltaX: number;
+        deltaY: number;
+    };
+};
+
 interface HSData {
     audioData: AData;
     sceneData: SceneData;
+    canvasData: CanvasData;
 
     gl: WebGLRenderingContext;
     
@@ -31,12 +40,29 @@ interface HSData {
     deltaTime: number;
 }
 
+const initialiseCanvas = (_canvas: HTMLCanvasElement): CanvasData => {
+    return {
+        mouseWheel: {
+            deltaX: 0, 
+            deltaY: 0
+        }
+    };
+}
+
 const hsInitialise = async (
     e: IElectronAPI,
     gl: WebGLRenderingContext,
+    canvas: HTMLCanvasElement,
 ): Promise<HSData> => {
     const audioData = initialiseAudioData();
     const sceneData = initialiseScene(gl);
+    const canvasData = initialiseCanvas(canvas);
+
+    // Listen to mouse events
+    canvas.addEventListener('wheel', (event) => {
+        canvasData.mouseWheel.deltaX = event.deltaX;
+        canvasData.mouseWheel.deltaY = -event.deltaY;
+    });
 
     // Callback from main.ts whenever new 
     // system audio is received
@@ -58,6 +84,7 @@ const hsInitialise = async (
     return {
         audioData,
         sceneData,
+        canvasData,
 
         gl,
 
@@ -74,6 +101,9 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
 
     hsData.time += deltaTime;
     hsData.deltaTime = deltaTime;
+
+    hsData.canvasData.mouseWheel.deltaX = CNum.lerp(hsData.canvasData.mouseWheel.deltaX, 0, 0.05);
+    hsData.canvasData.mouseWheel.deltaY = CNum.lerp(hsData.canvasData.mouseWheel.deltaY, 0, 0.05);
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {
