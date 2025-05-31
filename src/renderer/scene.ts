@@ -49,19 +49,19 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (hsData.audioData.inputs[0].buffer && 0) {
+    if (hsData.audioData.inputs[0].raw.buffer && 0) {
         renderWaveform(
             hsData.sceneData, 
             gl, 
             hsData.waveformShaderData,
-            hsData.audioData.inputs[0].buffer
+            hsData.audioData.inputs[0].raw
         );
     } else {
         renderWaveform(
             hsData.sceneData,
             gl,
             hsData.waveformShaderData,
-            hsData.audioData.inputs[0].frequencyBuffer
+            hsData.audioData.inputs[0].frequencySpectrum
         );
     }
 };
