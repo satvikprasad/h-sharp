@@ -1,10 +1,10 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
 
 interface SceneData {
     projMat: mat4;
-    mvMat: mat4;
+    viewMat: mat4;
 };
 
 const initialiseScene = (
@@ -18,15 +18,22 @@ const initialiseScene = (
     const projMat = mat4.create();
     mat4.perspective(projMat, fov, aspect, zNear, zFar);
 
-    const mvMat = mat4.create();
+    const viewMat = mat4.create();
 
     mat4.translate(
-        mvMat,
-        mvMat,
-        [-0.0, 0.0, -6],
+        viewMat,
+        viewMat,
+        [-0.0, 0.0, -10],
     );
 
-    return { projMat, mvMat }
+    mat4.rotate(
+        viewMat,
+        viewMat,
+        45/180 * Math.PI,
+        [1, 0, 0]
+    );
+
+    return { projMat, viewMat }
 }
 
 const drawScene = (
@@ -35,14 +42,12 @@ const drawScene = (
     let gl = hsData.gl;
 
     // Rotate the scene weirdly
-    /**
     mat4.rotate(
-        hsData.sceneData.mvMat,
-        hsData.sceneData.mvMat,
+        hsData.sceneData.viewMat,
+        hsData.sceneData.viewMat,
         hsData.deltaTime,
         [0, 1, 0]
     );
-    **/
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
@@ -51,21 +56,21 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (hsData.audioData.inputs[0].raw.buffer && 0) {
-        renderWaveform(
-            hsData.sceneData, 
-            gl, 
-            hsData.waveformShaderData,
-            hsData.audioData.inputs[0].raw
-        );
-    } else {
-        renderWaveform(
-            hsData.sceneData,
-            gl,
-            hsData.waveformShaderData,
-            hsData.audioData.inputs[0].frequencySpectrum
-        );
-    }
+    renderWaveform(
+        gl, 
+        hsData.sceneData, 
+        hsData.waveformShaderData,
+        hsData.audioData.inputs[0].raw,
+        [0, 0, 0]
+    );
+
+    renderWaveform(
+        gl,
+        hsData.sceneData,
+        hsData.waveformShaderData,
+        hsData.audioData.inputs[0].frequencySpectrum,
+        [0, 0, 3]
+    );
 };
 
 export { 

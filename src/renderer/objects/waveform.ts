@@ -1,12 +1,14 @@
+import { mat4, vec3 } from "gl-matrix";
 import { AWaveformData } from "../audio";
 import { SceneData } from "../scene";
 import { WaveformShader } from "../shaders/waveform-shader";
 
 const renderWaveform = (
-    sceneData: SceneData,
     gl: WebGLRenderingContext,
+    sceneData: SceneData,
     shader: WaveformShader.Data,
-    waveform: AWaveformData
+    waveform: AWaveformData,
+    center: vec3 = [0, 0, 0],
 ) => {
     if (waveform.buffer) {
         // We have frequency information
@@ -60,9 +62,22 @@ const renderWaveform = (
     );
 
     gl.uniformMatrix4fv(
-        shader.uniformLocations.mvMat,
+        shader.uniformLocations.viewMat,
         false,
-        sceneData.mvMat
+        sceneData.viewMat
+    );
+
+    let model = mat4.create();
+    mat4.translate(
+        model,
+        model,
+        center,
+    )
+
+    gl.uniformMatrix4fv(
+        shader.uniformLocations.modelMat,
+        false,
+        model,
     );
 
     gl.drawElements(
@@ -73,4 +88,6 @@ const renderWaveform = (
     );
 }
 
-export { renderWaveform };
+export { 
+    renderWaveform 
+};
