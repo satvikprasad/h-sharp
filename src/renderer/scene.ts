@@ -35,12 +35,14 @@ const drawScene = (
     let gl = hsData.gl;
 
     // Rotate the scene weirdly
+    /**
     mat4.rotate(
         hsData.sceneData.mvMat,
         hsData.sceneData.mvMat,
         hsData.deltaTime,
         [0, 1, 0]
     );
+    **/
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);

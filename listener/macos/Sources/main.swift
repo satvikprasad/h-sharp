@@ -1,7 +1,8 @@
 import ScreenCaptureKit
 
 struct Constants {
-    static let outputFrameLength: Int = 1024;
+    static let outputFrameLength: Int = 2048;
+    static let sampleRate: Int = 48000;
 }
 
 struct ListenerError: Error, CustomDebugStringConvertible {
@@ -121,7 +122,7 @@ class StreamOutput: NSObject, SCStreamOutput {
                 NSLog("Could not unpack data from CMBlockBuffer")
             }
 
-            let format = AVAudioFormat.init(standardFormatWithSampleRate: 44100, channels: 2)
+            let format = AVAudioFormat.init(standardFormatWithSampleRate: Double(Constants.sampleRate), channels: 2)
 
             if (format == nil) {
                 NSLog("Could not create AVAudioFormat.")
@@ -202,7 +203,7 @@ struct Listener: @unchecked Sendable {
         streamConfig.height = display.height
         streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 60)
         streamConfig.queueDepth = 5
-        streamConfig.sampleRate = 44100
+        streamConfig.sampleRate = Constants.sampleRate
 
         return streamConfig
     }

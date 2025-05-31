@@ -49,7 +49,7 @@ const initialiseAudioData = (): AData => {
     let systemAudioInput: AInput = {
         sampleRate: 44100,
         raw: initWaveformData(4),
-        frequencySpectrum: initWaveformData(1000),
+        frequencySpectrum: initWaveformData(512),
         audioType: AType.Audio,
     }
 
