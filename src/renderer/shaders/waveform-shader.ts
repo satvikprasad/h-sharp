@@ -16,7 +16,8 @@ namespace WaveformShader {
 
         uniformLocations: {
             projMat: WebGLUniformLocation;
-            mvMat: WebGLUniformLocation;
+            viewMat: WebGLUniformLocation;
+            modelMat: WebGLUniformLocation;
         };
 
         buffers: VertexBuffer;
@@ -284,9 +285,14 @@ namespace WaveformShader {
             "uProjectionMatrix"
         );
 
-        const mvMatLoc = gl.getUniformLocation(
+        const viewMatLoc = gl.getUniformLocation(
             program,
-            "uModelViewMatrix"
+            "uViewMatrix"
+        );
+
+        const modelMatLoc = gl.getUniformLocation(
+            program,
+            "uModelMatrix"
         );
 
         if (!projMatLoc) {
@@ -294,9 +300,14 @@ namespace WaveformShader {
             for uProjectionMatrix`);
         }
 
-        if (!mvMatLoc) {
+        if (!viewMatLoc) {
             throw Error(`Could not find uniform location\
-            for uModelViewMatrix`);
+            for uViewMatrix`);
+        }
+
+        if (!modelMatLoc) {
+            throw Error(`Could not find uniform location\
+            for uModelMatrix`);
         }
 
         return {
@@ -317,7 +328,8 @@ namespace WaveformShader {
             },
             uniformLocations: {
                 projMat: projMatLoc,
-                mvMat: mvMatLoc,
+                viewMat: viewMatLoc,
+                modelMat: modelMatLoc,
             },
 
             buffers: initBuffers(gl, fidelity),
