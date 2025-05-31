@@ -49,7 +49,7 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (hsData.audioData.inputs[0].buffer && 1) {
+    if (hsData.audioData.inputs[0].buffer && 0) {
         renderWaveform(
             hsData.sceneData, 
             gl, 

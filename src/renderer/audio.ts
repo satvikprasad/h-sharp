@@ -1,4 +1,5 @@
 import { CMath as cx } from "./math/complex";
+import { CNum as cn } from "./math/number";
 
 export enum AType {
     MIDI = 0,
@@ -40,7 +41,11 @@ const fastFourierTransform = (
     }
 
     // Compute integer division
-    let halfN = Math.floor(N/2);
+    if (N/2 % 1 != 0) {
+        throw Error("FFT: Input length was not a power of 2.");
+    }
+
+    let halfN = N/2;
 
     let even = fastFourierTransform(input, halfN, 2*stride);
     let odd = fastFourierTransform(input.slice(stride, input.length), halfN, 2*stride);
@@ -65,34 +70,36 @@ const generateFrequencyBufferFromInput = (
         return new Float32Array([]);
     }
 
+    let N = cn.floorPow2(input.buffer.length);
+
     let cxBuffer: Array<cx.CInt> = [];
 
     switch (input.audioType) {
         case AType.Audio: 
-            let arr = cx.fromRealArray([...input.buffer])
+            let arr = cx.fromRealArray([...input.buffer].slice(0, N));
 
             cxBuffer = fastFourierTransform(
                 arr, 
-                input.buffer.length, 
+                N, 
             );
             break;
         default: 
             return new Float32Array([]);
     }
 
-    let reBuffer = cxBuffer.slice(1, 4096/2).map(v => cx.mod(v));
+    // Symmetry of fft
+    cxBuffer = cxBuffer.slice(0, N/2);
 
-    let max = 0;
-    for (let k = 0; k < 4096; ++k) {
-        if (reBuffer[k] > max) {
-            max = reBuffer[k];
-        }
-    }
+    let phi = N/2 - 1;
+    let k = 0.015;
+    let a = phi/(Math.exp(k*phi) - 1)
+    let b = -a
 
-    if (max != 0) {
-        // Ensure magnitudes of frequencies are normalised.
-        return new Float32Array(reBuffer.map(v => v/max));
-    }
+    cxBuffer = cxBuffer.map((_v, i) => {
+        return cxBuffer[Math.floor(a*Math.exp(k*i) - a)]
+    });
+
+    let reBuffer = cxBuffer.map((v) => cx.mod(v));
 
     return new Float32Array(reBuffer);
 }

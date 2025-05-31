@@ -49,4 +49,12 @@ export namespace CMath {
     export const mod = (c1: CInt): number => {
         return Math.sqrt(modSquared(c1));
     }
+
+    export const arg = (c1: CInt): number => {
+        if (c1.real == 0) {
+            return Math.sign(c1.real) * Math.PI/2;
+        }
+
+        return Math.atan2(c1.imag, c1.real)
+    }
 }
