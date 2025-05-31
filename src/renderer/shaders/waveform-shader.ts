@@ -34,13 +34,18 @@ namespace WaveformShader {
     export const generateValues = (
         fidelity: number,
         frequencyBuffer?: Float32Array,
+        max?: number,
     ): Float32Array => {
         let values: Array<number> = [];
 
-        let max: number = 1.0;
-
-        if (frequencyBuffer) {
-            max = Math.max(...frequencyBuffer);
+        let norm = 0
+        
+        if (max) {
+            norm = max
+        } else {
+            if (frequencyBuffer) {
+                norm = Math.max(...frequencyBuffer);
+            }
         }
 
         // No frequency buffer provided
@@ -55,7 +60,7 @@ namespace WaveformShader {
                 // Push normalised value.
                 values.push(
                     0,
-                    frequencyBuffer[i]/max // Normalising         
+                    frequencyBuffer[i]/norm // Normalising         
                 );
             } else {
                 values.push(0);

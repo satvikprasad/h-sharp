@@ -1,13 +1,27 @@
 import { CMath as cx } from "./math/complex";
+import { CNum as cn } from "./math/number";
+import { DoubleStack, DoubleStackNode } from "./structures/double-stack";
 
 export enum AType {
     MIDI = 0,
-        Audio,
+    Audio,
+};
+
+interface AWaveformData {
+    buffer: Float32Array | null;
+
+    maximums: DoubleStack<number>;
+    rollingMaximum: DoubleStack<number>;
+
+    timeWeightedMax: number;
+
+    numMaximums: number;
 };
 
 interface AInput {
-    buffer: Float32Array | null;
-    frequencyBuffer: Float32Array | null;
+    raw: AWaveformData;
+    frequencySpectrum: AWaveformData;
+
     sampleRate: number,
     audioType: AType;
 };
@@ -16,11 +30,26 @@ interface AData {
     inputs: AInput[]
 };
 
+const initWaveformData = (
+    numMaximums: number
+): AWaveformData => {
+    return {
+        buffer: null,
+
+        maximums: new DoubleStack<number>(),
+        rollingMaximum: new DoubleStack<number>(),
+
+        timeWeightedMax: 0,
+
+        numMaximums
+    }
+}
+
 const initialiseAudioData = (): AData => {
     let systemAudioInput: AInput = {
         sampleRate: 44100,
-        buffer: null,
-        frequencyBuffer: null,
+        raw: initWaveformData(4),
+        frequencySpectrum: initWaveformData(512),
         audioType: AType.Audio,
     }
 
@@ -40,7 +69,11 @@ const fastFourierTransform = (
     }
 
     // Compute integer division
-    let halfN = Math.floor(N/2);
+    if (N/2 % 1 != 0) {
+        throw Error("FFT: Input length was not a power of 2.");
+    }
+
+    let halfN = N/2;
 
     let even = fastFourierTransform(input, halfN, 2*stride);
     let odd = fastFourierTransform(input.slice(stride, input.length), halfN, 2*stride);
@@ -58,61 +91,121 @@ const fastFourierTransform = (
     return out;
 }
 
-const generateFrequencyBufferFromInput = (
+const updateFrequencySpectrumForInput = (
     input: AInput
-): Float32Array => {
-    if (input.buffer == null) {
-        return new Float32Array([]);
+) => {
+    // Update buffer
+    if (input.raw.buffer == null) {
+        return 
     }
+
+    let N = cn.floorPow2(input.raw.buffer.length);
 
     let cxBuffer: Array<cx.CInt> = [];
 
     switch (input.audioType) {
         case AType.Audio: 
-            let arr = cx.fromRealArray([...input.buffer])
+            let arr = cx.fromRealArray([...input.raw.buffer].slice(0, N));
 
             cxBuffer = fastFourierTransform(
                 arr, 
-                input.buffer.length, 
+                N, 
             );
             break;
         default: 
-            return new Float32Array([]);
+            return
     }
 
-    let reBuffer = cxBuffer.slice(1, 4096/2).map(v => cx.mod(v));
+    // Symmetry of fft
+    cxBuffer = cxBuffer.slice(0, N/2);
 
-    let max = 0;
-    for (let k = 0; k < 4096; ++k) {
-        if (reBuffer[k] > max) {
-            max = reBuffer[k];
+    let phi = N/2 - 1;
+    let k = 0.019;
+    let a = phi/(Math.exp(k*phi) - 1)
+    let b = -a
+
+    cxBuffer = cxBuffer.map((_v, i) => {
+        return cxBuffer[Math.floor(a*Math.exp(k*i) - a)]
+    });
+
+    let reBuffer = cxBuffer.map((v) => cx.mod(v));
+
+    input.frequencySpectrum.buffer = new Float32Array(reBuffer);
+
+    // Update maximums
+    updateMaximums(input.frequencySpectrum);
+    //updateMaximums(input.raw);
+}
+
+const updateMaximums = (waveformData: AWaveformData) => {
+    if (!waveformData.buffer) {
+        return;
+    }
+
+    let currMax = Math.max(...waveformData.buffer);
+    waveformData.maximums.pushBack(currMax);
+    waveformData.rollingMaximum.pushBack(currMax);
+
+    if (waveformData.maximums.length != 
+        waveformData.rollingMaximum.length) {
+        throw Error("maximums.length != rollingMaximum.length");
+    }
+
+    if (waveformData.maximums.length > 
+        waveformData.numMaximums) {
+        // Exceeded length
+        waveformData.maximums.popFront();
+        let popped = waveformData.rollingMaximum.popFront();
+
+        if (popped == null) {
+            throw Error("Contradiction while updating maximums");
+        }
+
+        waveformData.timeWeightedMax = popped;
+    } else {
+        let read = waveformData.rollingMaximum.readFront();
+
+        if (read) {
+            waveformData.timeWeightedMax = read;
         }
     }
 
-    if (max != 0) {
-        // Ensure magnitudes of frequencies are normalised.
-        return new Float32Array(reBuffer.map(v => v/max));
-    }
+    waveformData.rollingMaximum.iterateBackwards(
+        (node: DoubleStackNode<number>) => {
+            if (currMax >= node.data) {
+                node.data = currMax
+                return true
+            }
 
-    return new Float32Array(reBuffer);
+            return false
+        })
+}
+
+const updateInput = (
+    input: AInput
+) => {
+    updateFrequencySpectrumForInput(input);
 }
 
 const updateAudioData = (
     audioData: AData
 ) => {
-    audioData.inputs[0].frequencyBuffer = 
-        generateFrequencyBufferFromInput(audioData.inputs[0]);
+    for (let k = 0; k < audioData.inputs.length; ++k) {
+        updateInput(audioData.inputs[k]);
+    }
 }
 
 const updateSystemAudioData = (
     audioData: AData,
     sysAudioBuffer: Float32Array
 ) => {
-    audioData.inputs[0].buffer = sysAudioBuffer;
+    audioData.inputs[0].raw.buffer = sysAudioBuffer;
 }
 
 export { 
     type AData,
+    type AInput,
+    type AWaveformData,
 
     initialiseAudioData, 
     updateAudioData, 

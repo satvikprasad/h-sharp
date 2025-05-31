@@ -1,3 +1,4 @@
+import { AWaveformData } from "../audio";
 import { SceneData } from "../scene";
 import { WaveformShader } from "../shaders/waveform-shader";
 
@@ -5,9 +6,9 @@ const renderWaveform = (
     sceneData: SceneData,
     gl: WebGLRenderingContext,
     shader: WaveformShader.Data,
-    waveform: Float32Array | null,
+    waveform: AWaveformData
 ) => {
-    if (waveform) {
+    if (waveform.buffer) {
         // We have frequency information
         gl.bindBuffer(
             gl.ARRAY_BUFFER,
@@ -18,8 +19,9 @@ const renderWaveform = (
             gl.ARRAY_BUFFER,
             0,
             WaveformShader.generateValues(
-                100, 
-                waveform,
+                100, // TODO: Make not hardcoded
+                waveform.buffer,
+                waveform.timeWeightedMax,
             )
         );
     }

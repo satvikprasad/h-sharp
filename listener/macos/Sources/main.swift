@@ -1,5 +1,10 @@
 import ScreenCaptureKit
 
+struct Constants {
+    static let outputFrameLength: Int = 2048;
+    static let sampleRate: Int = 48000;
+}
+
 struct ListenerError: Error, CustomDebugStringConvertible {
     var debugDescription: String
     init(_ debugDescription: String) { self.debugDescription = debugDescription }
@@ -7,6 +12,71 @@ struct ListenerError: Error, CustomDebugStringConvertible {
 
 @available(macOS 14.0, *)
 class StreamOutput: NSObject, SCStreamOutput {
+    private var buffer: UnsafeMutablePointer<Float> = UnsafeMutablePointer<Float>.allocate(
+        capacity: MemoryLayout.size(ofValue: Float.self) * Constants.outputFrameLength)
+
+    private var bufferLength: Int = 0;
+
+    func outputBuffer(toOutput: UnsafePointer<Float>) {
+        let bytes = Data(bytes: toOutput, count: Constants.outputFrameLength)
+
+        do {
+            try FileHandle.standardOutput.write(contentsOf: bytes)
+        } catch {
+            NSLog("Could not write to standard output: %s", error.localizedDescription)
+        }
+    }
+
+    func _printBuffer(toPrint: UnsafePointer<Float>) {
+        var p = "["
+
+        for v in 0...self.bufferLength-2 {
+            p += String(self.buffer[v]) + ", "
+        }
+        
+        p += String(self.buffer[self.bufferLength - 1]) + "]"
+
+        NSLog(p)
+    }
+
+    func writeBuffer(toWrite: UnsafePointer<Float>, lengthToWrite: Int) {
+        if (lengthToWrite <= Constants.outputFrameLength - self.bufferLength) {
+            self.buffer.advanced(by: self.bufferLength).update(
+                from: toWrite,
+                count: lengthToWrite
+            );
+
+            bufferLength += lengthToWrite
+
+            if (bufferLength == Constants.outputFrameLength) {
+                outputBuffer(toOutput: self.buffer)
+                self.bufferLength = 0
+            }
+
+            return 
+        } 
+        
+        let newLengthToWrite = Constants.outputFrameLength - self.bufferLength
+
+        self.buffer.advanced(by: self.bufferLength).update(
+            from: toWrite,
+            count: newLengthToWrite
+        );
+
+        outputBuffer(toOutput: self.buffer)
+        self.bufferLength = 0
+
+        let remainingLength =
+            lengthToWrite - newLengthToWrite
+
+        if (remainingLength > 0) {
+            let remaining = toWrite.advanced(
+                by: newLengthToWrite)
+
+            writeBuffer(toWrite: remaining, lengthToWrite: remainingLength)
+        }
+    }
+
     func stream(
         _ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
         of outputType: SCStreamOutputType
@@ -52,7 +122,7 @@ class StreamOutput: NSObject, SCStreamOutput {
                 NSLog("Could not unpack data from CMBlockBuffer")
             }
 
-            let format = AVAudioFormat.init(standardFormatWithSampleRate: 44100, channels: 2)
+            let format = AVAudioFormat.init(standardFormatWithSampleRate: Double(Constants.sampleRate), channels: 2)
 
             if (format == nil) {
                 NSLog("Could not create AVAudioFormat.")
@@ -63,11 +133,9 @@ class StreamOutput: NSObject, SCStreamOutput {
 
             let frameCapacity = Int(buffer?.frameCapacity ?? 0)
 
-            let bytes = UnsafeBufferPointer(
-                start: buffer?.floatChannelData?.pointee, count: frameCapacity) // TODO: Make this stereo
-
-            let data = Data(buffer: bytes)
-            FileHandle.standardOutput.write(data)
+            writeBuffer(
+                toWrite: UnsafePointer<Float>(buffer?.floatChannelData?.pointee)!,
+                lengthToWrite: frameCapacity)
             break
         case .microphone:
             break
@@ -135,7 +203,7 @@ struct Listener: @unchecked Sendable {
         streamConfig.height = display.height
         streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 60)
         streamConfig.queueDepth = 5
-        streamConfig.sampleRate = 44100
+        streamConfig.sampleRate = Constants.sampleRate
 
         return streamConfig
     }
@@ -160,7 +228,9 @@ struct Main {
 
             let listener = try await Listener()
             try await listener.begin()
-            _ = readLine()
+            while true {
+
+            }
             try await listener.stop()
         } catch {
             NSLog("Error during recording: %s", error.localizedDescription)
