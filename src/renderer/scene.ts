@@ -1,10 +1,13 @@
 import { mat4, vec3 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
+import { CameraData } from "./objects/camera";
 
 interface SceneData {
     projMat: mat4;
     viewMat: mat4;
+
+    cameraData: CameraData;
 };
 
 const initialiseScene = (
@@ -15,39 +18,32 @@ const initialiseScene = (
     const zNear = 0.1;
     const zFar = 100.0;
 
-    const projMat = mat4.create();
-    mat4.perspective(projMat, fov, aspect, zNear, zFar);
+    return { 
+        projMat: mat4.perspective(
+            mat4.create(),
+            fov,
+            aspect,
+            zNear,
+            zFar
+        ), 
+        viewMat: mat4.create(),
 
-    const viewMat = mat4.create();
+        cameraData: {
+            xRot: 0,
+            yRot: 0,
 
-    mat4.translate(
-        viewMat,
-        viewMat,
-        [-0.0, 0.0, -10],
-    );
+            radius: 6,
 
-    mat4.rotate(
-        viewMat,
-        viewMat,
-        45/180 * Math.PI,
-        [1, 0, 0]
-    );
-
-    return { projMat, viewMat }
+            focus: vec3.fromValues(0, 0, 1.5),
+        }
+    }
 }
 
 const drawScene = (
     hsData: HSData,
 ) => {
     let gl = hsData.gl;
-
-    // Rotate the scene weirdly
-    mat4.rotate(
-        hsData.sceneData.viewMat,
-        hsData.sceneData.viewMat,
-        hsData.deltaTime,
-        [0, 1, 0]
-    );
+    let sceneData = hsData.sceneData;
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
