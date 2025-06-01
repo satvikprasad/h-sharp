@@ -2,6 +2,7 @@ import { mat4, vec3 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
 import { CameraData } from "./objects/camera";
+import { renderGridlines } from "./objects/gridlines";
 
 interface SceneData {
     projMat: mat4;
@@ -51,6 +52,11 @@ const drawScene = (
     gl.depthFunc(gl.LEQUAL);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    renderGridlines(gl, 
+        hsData.sceneData, hsData.gridlinesShaderData,
+        1000,
+    );
 
     renderWaveform(
         gl, 

@@ -10,6 +10,8 @@ const renderWaveform = (
     waveform: AWaveformData,
     center: vec3 = [0, 0, 0],
 ) => {
+    gl.useProgram(shader.program);
+
     if (waveform.buffer) {
         // We have frequency information
         gl.bindBuffer(
