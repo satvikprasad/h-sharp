@@ -7,7 +7,10 @@ import {
     updateAudioData, 
     updateSystemAudioData 
 } from "./audio";
+
 import { CNum } from "./math/number";
+
+import { createViewMatFromCamera } from "./objects/camera";
 
 import { 
     type SceneData,
@@ -106,12 +109,28 @@ const hsInitialise = async (
     };
 }
 
-const hsUpdate = (hsData: HSData, deltaTime: number) => {
-    updateAudioData(hsData.audioData);
+const updateScene = (hsData: HSData) => {
+    let sceneData = hsData.sceneData;
 
-    hsData.time += deltaTime;
-    hsData.deltaTime = deltaTime;
+    sceneData.cameraData.xRot += hsData.inputData.mouseWheel.deltaY
+        *hsData.deltaTime;
 
+    sceneData.cameraData.yRot += -hsData.inputData.mouseWheel.deltaX * hsData.deltaTime;
+
+    sceneData.cameraData.xRot = CNum.clamp(
+        sceneData.cameraData.xRot,
+        -1/3 * Math.PI,
+        1/3 * Math.PI
+    );
+
+    sceneData.viewMat = createViewMatFromCamera(
+        sceneData.cameraData
+    );
+
+    sceneData.cameraData.radius += 5*hsData.inputData.deltaZoom * hsData.deltaTime;
+}
+
+const updateInputs = (hsData: HSData) => {
     hsData.inputData.mouseWheel.deltaX = CNum.lerp(
         hsData.inputData.mouseWheel.deltaX, 0, 0.05
     );
@@ -123,6 +142,15 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
     hsData.inputData.deltaZoom = CNum.lerp(
         hsData.inputData.deltaZoom, 0, 0.05
     );
+}
+
+const hsUpdate = (hsData: HSData, deltaTime: number) => {
+    hsData.deltaTime = deltaTime;
+    hsData.time += hsData.deltaTime;
+
+    updateAudioData(hsData.audioData);
+    updateInputs(hsData);
+    updateScene(hsData);
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {
