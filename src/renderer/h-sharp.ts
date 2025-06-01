@@ -1,3 +1,4 @@
+import { vec4 } from "gl-matrix";
 import type { IElectronAPI } from "../../interface";
 
 import { 
@@ -18,7 +19,8 @@ import {
     drawScene, 
     initialiseScene 
 } from "./scene";
-import { TestShader } from "./shaders/test-shader";
+import { DefaultShader } from "./shaders/default-shader";
+import { GridlinesShader } from "./shaders/gridlines-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 
 interface InputData {
@@ -37,8 +39,9 @@ interface HSData {
 
     gl: WebGLRenderingContext;
     
-    testShaderData: TestShader.Data;
+    defaultShaderData: DefaultShader.Data;
     waveformShaderData: WaveformShader.Data;
+    gridlinesShaderData: GridlinesShader.Data;
 
     // Temporaries
     time: number;
@@ -86,12 +89,16 @@ const hsInitialise = async (
         });
 
     // Initialise shaders
-    const testShaderData = await TestShader.initialise(
+    const defaultShaderData = await DefaultShader.initialise(
         gl, e.fs
     );
 
     const waveformShaderData = await WaveformShader.initialise(
         gl, e.fs, 100
+    );
+
+    const gridlinesShaderData = await GridlinesShader.initialise(
+        gl, e.fs, 1000, vec4.fromValues(1.0, 1.0, 1.0, 1.0)
     );
 
     return {
@@ -101,8 +108,9 @@ const hsInitialise = async (
 
         gl,
 
-        testShaderData,
+        defaultShaderData,
         waveformShaderData,
+        gridlinesShaderData,
 
         time: 0,
         deltaTime: 0,

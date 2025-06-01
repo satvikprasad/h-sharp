@@ -1,7 +1,7 @@
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
-namespace TestShader {
+namespace DefaultShader {
     export interface Data {
         program: WebGLProgram;
 
@@ -12,7 +12,8 @@ namespace TestShader {
 
         uniformLocations: {
             projMat: WebGLUniformLocation;
-            mvMat: WebGLUniformLocation;
+            viewMat: WebGLUniformLocation;
+            modelMat: WebGLUniformLocation;
         };
 
         buffers: VertexBuffer;
@@ -145,17 +146,24 @@ namespace TestShader {
     ): Data => {
         const projMatLoc = gl.getUniformLocation(
             program, "uProjectionMatrix");
-        const mvMatLoc = gl.getUniformLocation(
-            program, "uModelViewMatrix");
+        const viewMatLoc = gl.getUniformLocation(
+            program, "uViewMatrix");
+        const modelMatLoc = gl.getUniformLocation(
+            program, "uModelMatrix");
 
         if (!projMatLoc) {
             throw Error(`Could not find uniform location\
             for uProjectionMatrix`);
         }
 
-        if (!mvMatLoc) {
+        if (!viewMatLoc) {
             throw Error(`Could not find uniform location\
-            for uModelViewMatrix`);
+            for uViewMatrix`);
+        }
+
+        if (!modelMatLoc) {
+            throw Error(`Could not find uniform location\
+            for uModelMatrix`);
         }
 
         return {
@@ -168,7 +176,8 @@ namespace TestShader {
             },
             uniformLocations: {
                 projMat: projMatLoc,
-                mvMat: mvMatLoc,
+                viewMat: viewMatLoc,
+                modelMat: modelMatLoc,
             },
             buffers: initBuffers(gl),
         };
@@ -180,8 +189,8 @@ namespace TestShader {
     ): Promise<Data> => {
         const program = await initShaderProgram(
             gl,
-            "vertex-shader.glsl",
-            "fragment-shader.glsl",
+            "default-vertex.glsl",
+            "default-fragment.glsl",
             fs,
         );
 
@@ -193,4 +202,4 @@ namespace TestShader {
     }
 };
 
-export { TestShader };
+export { DefaultShader };
