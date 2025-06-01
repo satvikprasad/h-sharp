@@ -6,21 +6,8 @@ const renderGridlines = (
     gl: WebGLRenderingContext,
     sceneData: SceneData,
     shader: GridlinesShader.Data,
-    size: number,
 ) => {
     gl.useProgram(shader.program);
-
-    GridlinesShader.setPositionAttribute(
-        gl,
-        shader,
-        shader.buffers,
-    );
-
-    GridlinesShader.setColorAttribute(
-        gl, 
-        shader,
-        shader.buffers
-    );
 
     gl.uniformMatrix4fv(
         shader.uniformLocations.projMat,
@@ -34,23 +21,10 @@ const renderGridlines = (
         sceneData.viewMat
     );
 
-    let modelMat = mat4.create();
-    mat4.scale(
-        modelMat,
-        modelMat,
-        [size, size, size],
-    );
-
-    gl.uniformMatrix4fv(
-        shader.uniformLocations.modelMat,
-        false,
-        modelMat,
-    );
-
     gl.drawArrays(
-        gl.LINES,
+        gl.TRIANGLES,
         0,
-        shader.buffers.positionCount,
+        6,
     );
 }
 
