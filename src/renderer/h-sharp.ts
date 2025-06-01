@@ -18,17 +18,19 @@ import {
 import { TestShader } from "./shaders/test-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 
-interface CanvasData {
+interface InputData {
     mouseWheel: {
         deltaX: number;
         deltaY: number;
     };
+
+    deltaZoom: number;
 };
 
 interface HSData {
     audioData: AData;
     sceneData: SceneData;
-    canvasData: CanvasData;
+    inputData: InputData;
 
     gl: WebGLRenderingContext;
     
@@ -40,12 +42,14 @@ interface HSData {
     deltaTime: number;
 }
 
-const initialiseCanvas = (_canvas: HTMLCanvasElement): CanvasData => {
+const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
     return {
         mouseWheel: {
             deltaX: 0, 
             deltaY: 0
-        }
+        },
+
+        deltaZoom: 0,
     };
 }
 
@@ -56,12 +60,18 @@ const hsInitialise = async (
 ): Promise<HSData> => {
     const audioData = initialiseAudioData();
     const sceneData = initialiseScene(gl);
-    const canvasData = initialiseCanvas(canvas);
+    const inputData = initialiseCanvas(canvas);
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
-        canvasData.mouseWheel.deltaX = event.deltaX;
-        canvasData.mouseWheel.deltaY = -event.deltaY;
+        if (event.ctrlKey) {
+            // Zoom event
+            inputData.deltaZoom = event.deltaY;
+            return;
+        }
+
+        inputData.mouseWheel.deltaX = event.deltaX;
+        inputData.mouseWheel.deltaY = -event.deltaY;
     });
 
     // Callback from main.ts whenever new 
@@ -84,7 +94,7 @@ const hsInitialise = async (
     return {
         audioData,
         sceneData,
-        canvasData,
+        inputData,
 
         gl,
 
@@ -102,8 +112,17 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
     hsData.time += deltaTime;
     hsData.deltaTime = deltaTime;
 
-    hsData.canvasData.mouseWheel.deltaX = CNum.lerp(hsData.canvasData.mouseWheel.deltaX, 0, 0.05);
-    hsData.canvasData.mouseWheel.deltaY = CNum.lerp(hsData.canvasData.mouseWheel.deltaY, 0, 0.05);
+    hsData.inputData.mouseWheel.deltaX = CNum.lerp(
+        hsData.inputData.mouseWheel.deltaX, 0, 0.05
+    );
+
+    hsData.inputData.mouseWheel.deltaY = CNum.lerp(
+        hsData.inputData.mouseWheel.deltaY, 0, 0.05
+    );
+
+    hsData.inputData.deltaZoom = CNum.lerp(
+        hsData.inputData.deltaZoom, 0, 0.05
+    );
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {

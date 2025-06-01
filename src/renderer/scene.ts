@@ -1,13 +1,23 @@
-import { mat3, mat4, vec3 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
+import { CNum } from "./math/number";
+
+interface CameraData {
+    xRot: number;
+    yRot: number;
+
+    // Represents sphere on which camera is fixed.
+    radius: number;
+
+    focus: vec3;
+};
 
 interface SceneData {
     projMat: mat4;
     viewMat: mat4;
 
-    viewMatXRot: number;
-    viewMatYRot: number;
+    cameraData: CameraData;
 };
 
 const initialiseScene = (
@@ -18,31 +28,62 @@ const initialiseScene = (
     const zNear = 0.1;
     const zFar = 100.0;
 
-    const projMat = mat4.create();
-    mat4.perspective(projMat, fov, aspect, zNear, zFar);
+    return { 
+        projMat: mat4.perspective(
+            mat4.create(),
+            fov,
+            aspect,
+            zNear,
+            zFar
+        ), 
+        viewMat: mat4.create(),
 
-    const viewMat = mat4.create();
+        cameraData: {
+            xRot: 0,
+            yRot: 0,
 
-    mat4.translate(
-        viewMat,
-        viewMat,
-        [-0.0, 0.0, -10],
+            radius: 6,
+
+            focus: vec3.fromValues(0, 0, 1.5),
+        }
+    }
+}
+
+const createViewMat = (
+    cameraData: CameraData
+): mat4 => {
+    let viewMatOut: mat4 = new Float32Array(16);
+    
+    mat4.fromTranslation(
+        viewMatOut,
+        vec3.fromValues(0, 0, -cameraData.radius)
     );
 
     mat4.rotate(
-        viewMat,
-        viewMat,
-        45/180 * Math.PI,
+        viewMatOut,
+        viewMatOut,
+        cameraData.xRot,
         [1, 0, 0]
     );
 
-    return { 
-        projMat, 
-        viewMat,
+    mat4.rotate(
+        viewMatOut,
+        viewMatOut,
+        cameraData.yRot,
+        [0, 1, 0]
+    );
 
-        viewMatXRot: 0,
-        viewMatYRot: 0,
-    }
+    mat4.translate(
+        viewMatOut,
+        viewMatOut,
+        vec3.scale(
+            vec3.create(),
+            cameraData.focus,
+            -1
+        )
+    );
+
+    return viewMatOut;
 }
 
 const drawScene = (
@@ -52,24 +93,20 @@ const drawScene = (
     let sceneData = hsData.sceneData;
 
     // TODO: Find a better way to do this.
-    sceneData.viewMatXRot += hsData.canvasData.mouseWheel.deltaY
+    sceneData.cameraData.xRot += hsData.inputData.mouseWheel.deltaY
         *hsData.deltaTime;
 
-    sceneData.viewMatYRot += -hsData.canvasData.mouseWheel.deltaX * hsData.deltaTime;
+    sceneData.cameraData.yRot += -hsData.inputData.mouseWheel.deltaX * hsData.deltaTime;
 
-    mat4.rotate(
-        sceneData.viewMat,
-        mat4.fromTranslation(sceneData.viewMat, [0, 0, -6.0]),
-        sceneData.viewMatXRot,
-        [1, 0, 0]
+    sceneData.cameraData.xRot = CNum.clamp(
+        sceneData.cameraData.xRot,
+        -1/3 * Math.PI,
+        1/3 * Math.PI
     );
 
-    mat4.rotate(
-        sceneData.viewMat,
-        sceneData.viewMat,
-        sceneData.viewMatYRot,
-        [0, 1, 0]
-    );
+    sceneData.viewMat = createViewMat(sceneData.cameraData);
+
+    sceneData.cameraData.radius += 5*hsData.inputData.deltaZoom * hsData.deltaTime;
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
