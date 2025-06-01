@@ -55,6 +55,19 @@ const drawScene = (
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    gl.depthMask(false);
+
+    // Render transparent objects intended for the 
+    // background
+    renderGridlines(gl, 
+        sceneData, hsData.gridlinesShaderData,
+        [0.2, 1.0, 1.0, 1.0],
+        0.01, 
+        2.0,
+    );
+
+    gl.depthMask(true);
+
     renderWaveform(
         gl, 
         sceneData, 
@@ -72,10 +85,9 @@ const drawScene = (
     );
 
     gl.depthMask(false);
-
-    renderGridlines(gl, 
-        sceneData, hsData.gridlinesShaderData,
-    );
+    
+    // TODO: Render transparent objects intended for the 
+    // foreground.
 };
 
 export { 

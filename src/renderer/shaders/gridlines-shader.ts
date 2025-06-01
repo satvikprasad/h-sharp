@@ -12,6 +12,9 @@ namespace GridlinesShader {
         uniformLocations: {
             projMat: WebGLUniformLocation;
             viewMat: WebGLUniformLocation;
+            color: WebGLUniformLocation;
+            scale: WebGLUniformLocation;
+            width: WebGLUniformLocation;
         };
     };
 
@@ -21,22 +24,52 @@ namespace GridlinesShader {
     ) => {
         const projMatLoc = gl.getUniformLocation(
             program,
-            "uProjectionMatrix"
-        );
-
-        const viewMatLoc = gl.getUniformLocation(
-            program,
-            "uViewMatrix"
+            "uProjMat"
         );
 
         if (!projMatLoc) {
             throw Error(`Could not find uniform location\
-            for uProjectionMatrix`);
+            for uProjMat`);
         }
+
+        const viewMatLoc = gl.getUniformLocation(
+            program,
+            "uViewMat"
+        );
 
         if (!viewMatLoc) {
             throw Error(`Could not find uniform location\
-            for uViewMatrix`);
+            for uViewMat`);
+        }
+
+        const colorLoc = gl.getUniformLocation(
+            program,
+            "uColor"
+        );
+
+        if (!colorLoc) {
+            throw Error(`Could not find uniform location\
+            for uColor`);
+        }
+
+        const scaleLoc = gl.getUniformLocation(
+            program,
+            "uScale"
+        );
+
+        if (!scaleLoc) {
+            throw Error(`Could not find uniform location\
+            for uScale`);
+        }
+
+        const widthLoc = gl.getUniformLocation(
+            program,
+            "uWidth"
+        );
+
+        if (!widthLoc) {
+            throw Error(`Could not find uniform location\
+            for uWidth`);
         }
 
         return {
@@ -44,6 +77,9 @@ namespace GridlinesShader {
             uniformLocations: {
                 projMat: projMatLoc,
                 viewMat: viewMatLoc,
+                color: colorLoc,
+                scale: scaleLoc,
+                width: widthLoc,
             },
         };
     }
