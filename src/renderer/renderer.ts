@@ -1,3 +1,4 @@
+import { abort } from "process";
 import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
 
 let deltaTime = 0;
@@ -34,6 +35,25 @@ const main = (): void => {
         canvas.setAttribute("height", String(dim.height))
 
         gl.viewport(0, 0, dim.width, dim.height);
+    });
+
+    window.electronAPI.fs.readFileSync("wasm/math.wasm").then((source) => {
+        if (typeof(source) == "string") {
+            throw Error(
+                "Received string when reading wasm bytecode."
+            );
+        }
+
+        const typedArray = new Uint8Array(source);
+        WebAssembly.instantiate(typedArray, {
+            env: {
+                print: (result) => { console.log(`The result is ${result}`); }
+            }
+        }).then(result => {
+            const add = result.instance.exports.add as CallableFunction;
+
+            add(1, 2);
+        });
     });
 
     hsInitialise(

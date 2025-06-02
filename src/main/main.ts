@@ -1,5 +1,8 @@
 // NOTE: Naming conventions follow js standards,
 // PascalCase are instantiable constructors, whereas
+
+import { cwd } from "process";
+
 // camelCase are non-instantiable.
 const { app, BrowserWindow, ipcMain, session, desktopCapturer } = require('electron');
 const { spawn } = require('child_process')
@@ -73,6 +76,19 @@ app.whenReady().then(() => {
         }
 
         throw Error(`Incorrect encoding while reading ${p}`);
+    });
+
+    ipcMain.handle('fs.readFileSync', (_event, ...args: any) => {
+        console.log(`Using working directory ${cwd()}`);
+
+        let path = args[0];
+        let options = args[1];
+
+        if (options) {
+            return fs.readFileSync(path, options);
+        } 
+
+        return fs.readFileSync(path);
     });
 });
 
