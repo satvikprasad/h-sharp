@@ -98,7 +98,7 @@ const hsInitialise = async (
     );
 
     const gridlinesShaderData = await GridlinesShader.initialise(
-        gl, e.fs, 1000, vec4.fromValues(1.0, 1.0, 1.0, 1.0)
+        gl, e.fs
     );
 
     return {

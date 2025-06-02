@@ -18,7 +18,12 @@ const main = (): void => {
         throw Error("Could not find canvas element");
     }
     // Get gl context
-    const gl: WebGLRenderingContext | null = canvas.getContext("webgl");
+    const gl: WebGLRenderingContext | null = canvas.getContext(
+        "webgl2", {
+            alpha: false,
+            antialias: true,
+        }
+    );
     if (gl == null) {
         throw Error(`Unable to initialise WebGL.\
             Your browser or machine may not support it.`);

@@ -14,7 +14,7 @@ interface SceneData {
 const initialiseScene = (
     gl: WebGLRenderingContext
 ): SceneData => {
-    const fov = (45 * Math.PI) / 180;
+    const fov = (100 * Math.PI) / 180;
     const aspect = gl.canvas.width / gl.canvas.height;
     const zNear = 0.1;
     const zFar = 100.0;
@@ -30,7 +30,7 @@ const initialiseScene = (
         viewMat: mat4.create(),
 
         cameraData: {
-            xRot: 0,
+            xRot: 15/180 * Math.PI,
             yRot: 0,
 
             radius: 6,
@@ -48,19 +48,29 @@ const drawScene = (
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
+    gl.enable(gl.BLEND);
     gl.enable(gl.DEPTH_TEST);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthFunc(gl.LEQUAL);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    gl.depthMask(false);
+
+    // Render transparent objects intended for the 
+    // background
     renderGridlines(gl, 
-        hsData.sceneData, hsData.gridlinesShaderData,
-        1000,
+        sceneData, hsData.gridlinesShaderData,
+        [0.5, 0.5, 0.5, 1.0],
+        0.01, 
+        1.0,
     );
+
+    gl.depthMask(true);
 
     renderWaveform(
         gl, 
-        hsData.sceneData, 
+        sceneData, 
         hsData.waveformShaderData,
         hsData.audioData.inputs[0].raw,
         [0, 0, 0]
@@ -68,11 +78,16 @@ const drawScene = (
 
     renderWaveform(
         gl,
-        hsData.sceneData,
+        sceneData,
         hsData.waveformShaderData,
         hsData.audioData.inputs[0].frequencySpectrum,
         [0, 0, 3]
     );
+
+    gl.depthMask(false);
+    
+    // TODO: Render transparent objects intended for the 
+    // foreground.
 };
 
 export { 
