@@ -14,7 +14,7 @@ interface SceneData {
 const initialiseScene = (
     gl: WebGLRenderingContext
 ): SceneData => {
-    const fov = (45 * Math.PI) / 180;
+    const fov = (100 * Math.PI) / 180;
     const aspect = gl.canvas.width / gl.canvas.height;
     const zNear = 0.1;
     const zFar = 100.0;
@@ -61,9 +61,9 @@ const drawScene = (
     // background
     renderGridlines(gl, 
         sceneData, hsData.gridlinesShaderData,
-        [0.2, 1.0, 1.0, 1.0],
+        [0.5, 0.5, 0.5, 1.0],
         0.01, 
-        2.0,
+        1.0,
     );
 
     gl.depthMask(true);
