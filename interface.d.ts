@@ -27,6 +27,10 @@ export interface IFileSystemAPI {
     readFileRelPath: (
         path: string[]
     ) => Promise<string>,
+
+    readFileSync: (
+        path: string, options?: Object
+    ) => Promise<string | Buffer>,
 }
 
 declare global {

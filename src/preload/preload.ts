@@ -28,5 +28,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         readFileRelPath: (
             path: string[]
         ) => ipcRenderer.invoke('fs.readFileRelPath', ...path),
+
+        readFileSync: (
+            path: string | Buffer | URL | number,
+            options?: Object,
+        ) => ipcRenderer.invoke(
+            'fs.readFileSync', path, options
+        ),
     }
 });

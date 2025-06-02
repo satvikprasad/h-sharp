@@ -1,4 +1,5 @@
 const path = require('path');
+const { experiments } = require('webpack');
 
 module.exports = {
     entry: "./src/renderer/renderer.ts",
@@ -11,6 +12,9 @@ module.exports = {
                 exclude: /node_modules/,
             },
         ],
+    },
+    experiments: {
+        asyncWebAssembly: true,
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
