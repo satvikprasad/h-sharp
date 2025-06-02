@@ -140,5 +140,5 @@ dist
 .vscode/
 bin/
 
-wasm/*.wasm
-wasm/*.wasm.o
+wasm/zig-out
+wasm/.zig-cache/

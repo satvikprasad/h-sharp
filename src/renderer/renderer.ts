@@ -1,4 +1,3 @@
-import { abort } from "process";
 import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
 
 let deltaTime = 0;
@@ -10,6 +9,70 @@ const resizeCanvas = async (
 
     canvas.setAttribute("width", String(size[0]));
     canvas.setAttribute("height", String(size[1]));
+}
+type TRealFFTSignature = (
+    inputPtr: number, 
+    outputPtr: number, 
+    N: number
+) => void;
+
+interface WASMData {
+    memory: WebAssembly.Memory | null,
+    audio: {
+        realFFT: TRealFFTSignature;
+    } | null;
+}
+
+const executeWebAssembly = (): WASMData => {
+    let data: WASMData = {
+        memory: null,
+        audio: null,
+    };
+
+    window.electronAPI.fs.readFileSync("wasm/zig-out/bin/h-sharp.wasm").then((source) => {
+        if (typeof(source) == "string") {
+            throw Error(
+                "Received string when reading wasm bytecode."
+            );
+        }
+
+        const memory = new WebAssembly.Memory(
+            { initial: 10, maximum: 100 }
+        );
+
+        WebAssembly.instantiate(source, {
+            env: {
+                server_print: (sPtr: number, length: number) => { 
+                    if (data.memory == null || data.memory.buffer == null) {
+                        console.log("Error printing from WASM: WASM Memory has not yet been instantiated.");
+                    }
+
+                    let memoryView = new Uint8Array(
+                        data.memory?.buffer!
+                    );
+                
+                    const buf = new Uint8Array(
+                        data.memory?.buffer!,
+                        sPtr,
+                        length
+                    );
+
+                    console.log(`From WASM: ${new TextDecoder().decode(buf)}`);
+                },
+                memory: memory,
+            }
+        }).then(result => {
+            data.memory = result.instance.exports
+                .memory as WebAssembly.Memory;
+
+            data.audio = {
+                realFFT: result.instance.exports
+                    .audio_real_fft as TRealFFTSignature,
+            };
+        });
+    });
+
+    return data;
 }
 
 const main = (): void => {
@@ -25,10 +88,13 @@ const main = (): void => {
             antialias: true,
         }
     );
+
     if (gl == null) {
         throw Error(`Unable to initialise WebGL.\
             Your browser or machine may not support it.`);
     }
+
+    executeWebAssembly();
 
     window.electronAPI.frame.onResized((dim) => {
         canvas.setAttribute("width", String(dim.width))
@@ -36,26 +102,6 @@ const main = (): void => {
 
         gl.viewport(0, 0, dim.width, dim.height);
     });
-
-    window.electronAPI.fs.readFileSync("wasm/math.wasm").then((source) => {
-        if (typeof(source) == "string") {
-            throw Error(
-                "Received string when reading wasm bytecode."
-            );
-        }
-
-        const typedArray = new Uint8Array(source);
-        WebAssembly.instantiate(typedArray, {
-            env: {
-                print: (result) => { console.log(`The result is ${result}`); }
-            }
-        }).then(result => {
-            const add = result.instance.exports.add as CallableFunction;
-
-            add(1, 2);
-        });
-    });
-
     hsInitialise(
         window.electronAPI, 
         gl,
