@@ -1,5 +1,5 @@
-import { CMath as cx } from "./math/complex";
-import { CNum as cn } from "./math/number";
+// TODO: Don't hardcode length of input buffer.
+
 import { DoubleStack, DoubleStackNode } from "./structures/double-stack";
 import { float32MemoryViewFromWASM, TAudioRealFFT, WASMData } from "./wasm";
 
@@ -23,6 +23,9 @@ interface AInput {
     raw: AWaveformData;
     frequencySpectrum: AWaveformData;
 
+    logScaleBase: number;
+    logScaleAmplitude: number;
+
     sampleRate: number,
     audioType: AType;
 };
@@ -31,7 +34,10 @@ interface AData {
     inputs: AInput[],
 
     inputFFTBuffer: Float32Array,
+    inputPtr: number,
+
     outputFFTBuffer: Float32Array,
+    outputPtr: number,
 
     realFFT: TAudioRealFFT,
 };
@@ -54,28 +60,32 @@ const initWaveformData = (
 const initialiseAudioData = (
     wasmData: WASMData 
 ): AData => {
-    if (!wasmData.audio) {
-        console.log("Error: wasmData.audio has not yet been initialised.");
-    }
-
     // TODO: Check if this is correctly hardcoded.
-    const bufferPtr = wasmData.audio!.initialiseBuffers(2048); 
+    const bufferPtr = wasmData.audio.initialiseBuffers(512); 
 
     const inputFFTBuffer = float32MemoryViewFromWASM(
         wasmData.memory,
         bufferPtr,
-        2048
+        512
     ); // TODO: Check if this length is correct
+    const inputPtr = bufferPtr;
 
     const outputFFTBuffer = float32MemoryViewFromWASM(
         wasmData.memory,
-        bufferPtr + Float32Array.BYTES_PER_ELEMENT*2048,
-        2048
+        bufferPtr + Float32Array.BYTES_PER_ELEMENT*512,
+        512
     );
+    const outputPtr = bufferPtr + Float32Array.
+        BYTES_PER_ELEMENT*512;
 
+    // TODO: Fix this hardcoding
     let systemAudioInput: AInput = {
         sampleRate: 44100,
         raw: initWaveformData(4),
+        logScaleBase: 0.019,
+        logScaleAmplitude: wasmData.audio.computeLogScaleAmplitude(
+            512, 0.019
+        ),
         frequencySpectrum: initWaveformData(512),
         audioType: AType.Audio,
     }
@@ -85,45 +95,17 @@ const initialiseAudioData = (
         inputs: [systemAudioInput],
 
         inputFFTBuffer,
+        inputPtr,
+
         outputFFTBuffer,
+        outputPtr,
 
         realFFT: wasmData.audio!.realFFT,
     };
 }
 
-const fastFourierTransform = (
-    input: Array<cx.CInt>,
-    N: number,
-    stride: number = 1,
-): Array<cx.CInt> => {
-    if (N == 1) {
-        return Array.from([input[0]]);
-    }
-
-    // Compute integer division
-    if (N/2 % 1 != 0) {
-        throw Error("FFT: Input length was not a power of 2.");
-    }
-
-    let halfN = N/2;
-
-    let even = fastFourierTransform(input, halfN, 2*stride);
-    let odd = fastFourierTransform(input.slice(stride, input.length), halfN, 2*stride);
-
-    let out = new Array<cx.CInt>(N).fill(cx.fromReal(0));
-
-    for (let k = 0; k < halfN; ++k) {
-        let p = even[k];
-        let q = cx.multiply(odd[k], cx.fromPolar(1, -2*Math.PI * k/N));
-
-        out[k] = cx.add(p, q);
-        out[k + halfN] = cx.add(p, cx.multiply(cx.fromReal(-1), q))
-    }
-
-    return out;
-}
-
 const updateFrequencySpectrumForInput = (
+    audioData: AData,
     input: AInput
 ) => {
     // Update buffer
@@ -131,42 +113,31 @@ const updateFrequencySpectrumForInput = (
         return 
     }
 
-    let N = cn.floorPow2(input.raw.buffer.length);
-
-    let cxBuffer: Array<cx.CInt> = [];
+    let reBuffer = new Float32Array(256);
 
     switch (input.audioType) {
         case AType.Audio: 
-            let arr = cx.fromRealArray([...input.raw.buffer].slice(0, N));
+            audioData.inputFFTBuffer.set(input.raw.buffer);
 
-            cxBuffer = fastFourierTransform(
-                arr, 
-                N, 
+            audioData.realFFT(
+                audioData.inputPtr, audioData.outputPtr, 
+                512,
+                input.logScaleAmplitude,
+                input.logScaleBase
             );
+
+            reBuffer.set(audioData.outputFFTBuffer.slice(0, 256));
+
             break;
         default: 
             return
     }
 
-    // Symmetry of fft
-    cxBuffer = cxBuffer.slice(0, N/2);
-
-    let phi = N/2 - 1;
-    let k = 0.019;
-    let a = phi/(Math.exp(k*phi) - 1)
-    let b = -a
-
-    cxBuffer = cxBuffer.map((_v, i) => {
-        return cxBuffer[Math.floor(a*Math.exp(k*i) - a)]
-    });
-
-    let reBuffer = cxBuffer.map((v) => cx.mod(v));
-
-    input.frequencySpectrum.buffer = new Float32Array(reBuffer);
+    input.frequencySpectrum.buffer = reBuffer;
 
     // Update maximums
     updateMaximums(input.frequencySpectrum);
-    //updateMaximums(input.raw);
+    updateMaximums(input.raw);
 }
 
 const updateMaximums = (waveformData: AWaveformData) => {
@@ -214,16 +185,17 @@ const updateMaximums = (waveformData: AWaveformData) => {
 }
 
 const updateInput = (
+    audioData: AData,
     input: AInput
 ) => {
-    updateFrequencySpectrumForInput(input);
+    updateFrequencySpectrumForInput(audioData, input);
 }
 
 const updateAudioData = (
     audioData: AData
 ) => {
     for (let k = 0; k < audioData.inputs.length; ++k) {
-        updateInput(audioData.inputs[k]);
+        updateInput(audioData, audioData.inputs[k]);
     }
 }
 

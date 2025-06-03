@@ -1,31 +1,41 @@
 type TAudioRealFFT = (
     inputPtr: number, 
     outputPtr: number, 
-    N: number
+    N: number,
+    logScaleAmplitude: number,
+    logScaleBase: number,
 ) => void;
 
+type TAudioComputeLogScaleAmplitude = (
+    N: number, k: number) => number;
+
+type TAudioInitialiseBuffers = (N: number) => number;
+
 interface WASMData {
-    memory: WebAssembly.Memory | null,
-        audio: {
-            initialiseBuffers: (N: number) => number;
-            realFFT: TAudioRealFFT;
-        } | null;
+    memory: WebAssembly.Memory,
+    audio: {
+        initialiseBuffers: (N: number) => number;
+        realFFT: TAudioRealFFT;
+        computeLogScaleAmplitude: TAudioComputeLogScaleAmplitude;
+    };
 }
 
 const float32MemoryViewFromWASM = (
-    memory: WebAssembly.Memory | null,
-    byteOffset: number,
+    memory: WebAssembly.Memory,
+    ptr: number,
     length: number,
 ) => {
-    if (!memory || !memory.buffer) {
+    if (!memory.buffer) {
         console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
     }
 
-    return new Float32Array(
-        memory!.buffer,
-        byteOffset,
+    let view = new Float32Array(
+        memory.buffer,
+        ptr,
         length
     );
+
+    return view;
 }
 
 const wasmPrint = (
@@ -35,20 +45,16 @@ const wasmPrint = (
         console.log("Error printing from WASM: WASM Memory has not yet been instantiated.");
     }
 
-    const buf = new Uint8Array(
-        memory.buffer!,
-        sPtr,
-        length
-    );
+    const buf = new Uint8Array(memory.buffer.slice(sPtr, length));
 
-    console.log(`From WASM: ${new TextDecoder().decode(buf)}`);
+    console.log([...buf]);
+    let str = new TextDecoder().decode(buf);
+
+    console.log(`From WASM: ${str}`);
 }
 
 const initialiseWASM = async (): Promise<WASMData> => {
-    let data: WASMData = {
-        memory: null,
-        audio: null,
-    };
+    let memory: WebAssembly.Memory | null = null;
 
     const source = await window.electronAPI.fs.readFileSync("wasm/zig-out/bin/h-sharp.wasm") 
     
@@ -58,32 +64,30 @@ const initialiseWASM = async (): Promise<WASMData> => {
         );
     }
 
-    const memory = new WebAssembly.Memory(
-        { initial: 10, maximum: 100 }
-    );
-
     const result = await WebAssembly.instantiate(source, {
         env: {
-            server_print: (
+            serverPrint: (
                 sPtr: number, length: number
-            ) => wasmPrint(data.memory!, sPtr, length),
-            memory: memory,
+            ) => wasmPrint(memory!, sPtr, length),
+            serverPrintFloat: (n: number) => console.log(n),
         }
-    })
+    });
 
-    data.memory = result.instance.exports
-        .memory as WebAssembly.Memory;
+    memory = result.instance.exports.memory as WebAssembly.Memory;
 
-    data.audio = {
+    let audio = {
         realFFT: result.instance.exports
-        .audio_real_fft as TAudioRealFFT,
+            .audioRealFFT as TAudioRealFFT,
         initialiseBuffers: result.instance.exports
-        .audio_initialise_buffers as (
-            N: number
-        ) => number,
+            .audioInitialiseBuffers as TAudioInitialiseBuffers,
+        computeLogScaleAmplitude: result.instance.exports
+            .audioComputeLogScaleAmplitude as TAudioComputeLogScaleAmplitude,
     };
 
-    return data;
+    return {
+        memory: memory!,
+        audio
+    };
 }
 
 export {

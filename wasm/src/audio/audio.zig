@@ -1,4 +1,5 @@
 const std = @import("std");
+const debug = @import("../debug.zig");
 
 pub const FourierTransformError = error{
     OutOfMemory,
@@ -33,10 +34,10 @@ fn fft(
         const p: std.math.Complex(f32) = even[i];
         const q: std.math.Complex(f32) = 
             odd[i].mul(std.math.complex.exp(
-                std.math.complex.Complex(f32){
-                    .im = theta,
-                    .re = 0
-                }
+                    std.math.complex.Complex(f32){
+                        .im = theta,
+                        .re = 0
+                    }
             ));
 
         output[i] = p.add(q);
@@ -44,20 +45,39 @@ fn fft(
     }
 }
 
-pub fn initialise_buffers(
+pub fn initialiseBuffers(
     N: usize
 ) !usize {
     const buffers = try std.heap.page_allocator
         .alloc(f32, 2*N);
 
+    @memset(buffers, 0);
+
     return @intFromPtr(buffers.ptr);
 }
 
-pub fn real_fft(
+fn computeLogScaleIndex(
+    a: f32,
+    k: f32,
+    index: usize
+) usize {
+    const index_f32: f32 = @floatFromInt(index);
+
+    const new_index: f32 = std.math.floor(a*std.math.exp(
+            k * index_f32
+    ) - a);
+
+    return @intFromFloat(new_index);
+}
+
+fn realFFT(
     input: [*]f32, 
     output: [*]f32,
     N: usize,
+    lsa: f32,
+    lsb: f32,
 ) !void {
+    // Convert inputs to complex valued inputs.
     const cx_input: []std.math.Complex(f32) = try std.heap
         .page_allocator
         .alloc(
@@ -67,6 +87,7 @@ pub fn real_fft(
 
     for (0..N) |i| {
         cx_input[i].re = input[i];
+        cx_input[i].im = 0;
     }
 
     const cx_output: []std.math.Complex(f32) = try std.heap
@@ -78,7 +99,35 @@ pub fn real_fft(
 
     try fft(cx_input.ptr, cx_output.ptr, N, 1);
 
-    for (cx_output, 0..) |elem, i| {
-        output[i] = elem.squaredMagnitude();
+    for (0..N/2) |i| {
+        output[i] = std.math.pow(f32, 
+            cx_output[computeLogScaleIndex(lsa, lsb, i)].magnitude(), 0.4);
     }
 }
+
+pub fn realFFTWrapper(
+    input: [*]f32,
+    output: [*]f32,
+    N: usize,
+    lsa: f32,
+    lsb: f32,
+) callconv(.c) void {
+    realFFT(input, output, N, lsa, lsb) catch |err| {
+        switch (err) {
+            std.mem.Allocator.Error.OutOfMemory => {
+                debug.print("ERROR: Ran out of memory while computing FFT.");
+            },
+            FourierTransformError.InputNotPowerTwo => {
+                debug.print("ERROR: Input array did not have length that was a power of two.");
+            }
+        }
+    };
+}
+
+pub fn computeLogScaleAmplitude(N: usize, k: f32) 
+    callconv(.c) f32 {
+        const N_f32: f32 = @floatFromInt(N);
+        const phi = N_f32/2 - 1;
+
+        return phi/(std.math.exp(k*phi) - 1);
+    }

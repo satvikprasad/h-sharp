@@ -67,7 +67,7 @@ const hsInitialise = async (
     canvas: HTMLCanvasElement,
     wasmData: WASMData,
 ): Promise<HSData> => {
-        const audioData = initialiseAudioData(wasmData);
+    const audioData = initialiseAudioData(wasmData);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
