@@ -65,11 +65,11 @@ const hsInitialise = async (
     e: IElectronAPI,
     gl: WebGLRenderingContext,
     canvas: HTMLCanvasElement,
+    wasmData: WASMData,
 ): Promise<HSData> => {
-    const audioData = initialiseAudioData();
+        const audioData = initialiseAudioData(wasmData);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
-    const wasmData = initialiseWASM();
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {

@@ -1,4 +1,5 @@
 import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
+import { initialiseWASM } from "./wasm";
 
 let deltaTime = 0;
 
@@ -36,31 +37,35 @@ const main = (): void => {
 
         gl.viewport(0, 0, dim.width, dim.height);
     });
-    hsInitialise(
-        window.electronAPI, 
-        gl,
-        canvas
-    ).then((hsData: HSData) => {
-        // Resize canvas to width of view
-        resizeCanvas(canvas).then(() => {
-            // Resize viewport
-            gl.viewport(0, 0, canvas.width, canvas.height);
+    
+    initialiseWASM().then((wasmData) => {
+        hsInitialise(
+            window.electronAPI, 
+            gl,
+            canvas,
+            wasmData
+        ).then((hsData: HSData) => {
+            // Resize canvas to width of view
+            resizeCanvas(canvas).then(() => {
+                // Resize viewport
+                gl.viewport(0, 0, canvas.width, canvas.height);
 
-            let then = 0;
+                let then = 0;
 
-            const tick: FrameRequestCallback = (now: number) => {
-                hsUpdate(hsData, deltaTime);
+                const tick: FrameRequestCallback = (now: number) => {
+                    hsUpdate(hsData, deltaTime);
 
-                hsRender(hsData, deltaTime);
+                    hsRender(hsData, deltaTime);
 
-                now *= 0.001; // Convert to seconds.
-                deltaTime = now - then;
-                then = now;
+                    now *= 0.001; // Convert to seconds.
+                    deltaTime = now - then;
+                    then = now;
+
+                    requestAnimationFrame(tick);
+                }
 
                 requestAnimationFrame(tick);
-            }
-
-            requestAnimationFrame(tick);
+            });
         });
     });
 };

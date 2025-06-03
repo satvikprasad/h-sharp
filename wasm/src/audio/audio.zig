@@ -79,6 +79,6 @@ pub fn real_fft(
     try fft(cx_input.ptr, cx_output.ptr, N, 1);
 
     for (cx_output, 0..) |elem, i| {
-        output[i] = elem;
+        output[i] = elem.squaredMagnitude();
     }
 }

@@ -1,7 +1,7 @@
 import { CMath as cx } from "./math/complex";
 import { CNum as cn } from "./math/number";
 import { DoubleStack, DoubleStackNode } from "./structures/double-stack";
-import { WASMData } from "./wasm";
+import { float32MemoryViewFromWASM, TAudioRealFFT, WASMData } from "./wasm";
 
 export enum AType {
     MIDI = 0,
@@ -28,7 +28,12 @@ interface AInput {
 };
 
 interface AData {
-    inputs: AInput[]
+    inputs: AInput[],
+
+    inputFFTBuffer: Float32Array,
+    outputFFTBuffer: Float32Array,
+
+    realFFT: TAudioRealFFT,
 };
 
 const initWaveformData = (
@@ -46,7 +51,28 @@ const initWaveformData = (
     }
 }
 
-const initialiseAudioData = (): AData => {
+const initialiseAudioData = (
+    wasmData: WASMData 
+): AData => {
+    if (!wasmData.audio) {
+        console.log("Error: wasmData.audio has not yet been initialised.");
+    }
+
+    // TODO: Check if this is correctly hardcoded.
+    const bufferPtr = wasmData.audio!.initialiseBuffers(2048); 
+
+    const inputFFTBuffer = float32MemoryViewFromWASM(
+        wasmData.memory,
+        bufferPtr,
+        2048
+    ); // TODO: Check if this length is correct
+
+    const outputFFTBuffer = float32MemoryViewFromWASM(
+        wasmData.memory,
+        bufferPtr + Float32Array.BYTES_PER_ELEMENT*2048,
+        2048
+    );
+
     let systemAudioInput: AInput = {
         sampleRate: 44100,
         raw: initWaveformData(4),
@@ -56,7 +82,12 @@ const initialiseAudioData = (): AData => {
 
     // Guarantees first element is system audio
     return {
-        inputs: [systemAudioInput]
+        inputs: [systemAudioInput],
+
+        inputFFTBuffer,
+        outputFFTBuffer,
+
+        realFFT: wasmData.audio!.realFFT,
     };
 }
 
