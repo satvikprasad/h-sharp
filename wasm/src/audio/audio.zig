@@ -20,14 +20,11 @@ fn fft(
         return FourierTransformError.InputNotPowerTwo;
     }
 
-    const odd = try std.heap.page_allocator.alloc(std.math.Complex(f32), N/2);
-    defer std.heap.page_allocator.free(odd);
+    const even = output;
+    const odd = output + N/2;
 
-    const even = try std.heap.page_allocator.alloc(std.math.Complex(f32), N/2);
-    defer std.heap.page_allocator.free(even);
-
-    try fft(input + 1, odd.ptr, N/2, 2*stride);
-    try fft(input, even.ptr, N/2, 2*stride);
+    try fft(input, even, N/2, 2*stride);
+    try fft(input + stride, odd, N/2, 2*stride);
 
     for (0..N/2) |i| {
         const theta: f32 = -2 * std.math.pi * 
@@ -45,6 +42,15 @@ fn fft(
         output[i] = p.add(q);
         output[i + N/2] = p.sub(q);
     }
+}
+
+pub fn initialise_buffers(
+    N: usize
+) !usize {
+    const buffers = try std.heap.page_allocator
+        .alloc(f32, 2*N);
+
+    return @intFromPtr(buffers.ptr);
 }
 
 pub fn real_fft(
@@ -73,6 +79,6 @@ pub fn real_fft(
     try fft(cx_input.ptr, cx_output.ptr, N, 1);
 
     for (cx_output, 0..) |elem, i| {
-        output[i] = elem.squaredMagnitude();
+        output[i] = elem;
     }
 }

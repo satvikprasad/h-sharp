@@ -22,6 +22,7 @@ import {
 import { DefaultShader } from "./shaders/default-shader";
 import { GridlinesShader } from "./shaders/gridlines-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
+import { initialiseWASM, WASMData } from "./wasm";
 
 interface InputData {
     mouseWheel: {
@@ -36,6 +37,7 @@ interface HSData {
     audioData: AData;
     sceneData: SceneData;
     inputData: InputData;
+    wasmData: WASMData;
 
     gl: WebGLRenderingContext;
     
@@ -67,6 +69,7 @@ const hsInitialise = async (
     const audioData = initialiseAudioData();
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
+    const wasmData = initialiseWASM();
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
@@ -105,6 +108,7 @@ const hsInitialise = async (
         audioData,
         sceneData,
         inputData,
+        wasmData,
 
         gl,
 

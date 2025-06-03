@@ -20,6 +20,20 @@ fn safePrint(s: []const u8) void {
     };
 }
 
+export fn audio_initialise_buffers(
+    N: usize
+) usize {
+    return audio.initialise_buffers(N) catch |err| { 
+        if (err == std.mem.Allocator.Error.OutOfMemory) {
+            safePrint(
+                "Insufficient memory to intialise audio buffers"
+            );
+        }
+
+        return std.math.maxInt(usize);
+    };
+}
+
 export fn audio_real_fft(
     input: [*]f32,
     output: [*]f32,
@@ -31,15 +45,4 @@ export fn audio_real_fft(
                 safePrint("FFT received input with length that was not a power of 2.");
             }
         };
-}
-
-export fn double_string(s: [*]u8, length: usize, capacity: usize) i32 {
-    if (capacity < length * 2) {
-        return -1;
-    }
-
-    const left = s[0..length];
-    const right = s[length .. length * 2];
-    std.mem.copyForwards(u8, right, left);
-    return @as(i32, @intCast(length)) * 2;
 }

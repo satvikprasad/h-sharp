@@ -1,6 +1,7 @@
 import { CMath as cx } from "./math/complex";
 import { CNum as cn } from "./math/number";
 import { DoubleStack, DoubleStackNode } from "./structures/double-stack";
+import { WASMData } from "./wasm";
 
 export enum AType {
     MIDI = 0,
