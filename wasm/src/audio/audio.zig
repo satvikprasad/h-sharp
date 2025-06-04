@@ -46,7 +46,7 @@ fn fft(
     }
 }
 
-fn initialiseBuffers(
+pub fn initialiseBuffers(
     N: usize
 ) ![]f32 {
     const buffers: []f32 = try std.heap.page_allocator
@@ -72,7 +72,7 @@ fn computeLogScaleIndex(
     return @intFromFloat(new_index);
 }
 
-fn realFFT(
+pub fn realFFT(
     input: [*]f32, 
     output: [*]f32,
     N: usize,
@@ -157,7 +157,7 @@ fn destroyWaveformData(data: WaveformData) void {
     data.rolling_maximums.destroy();
 }
 
-const AudioData = struct {
+pub const AudioData = struct {
     pub const Self = @This();
 
     inputs: []Input,
@@ -248,7 +248,7 @@ const AudioData = struct {
     }
 };
 
-fn create(
+pub fn create(
     input_capacity: usize
 ) ?*AudioData {
     // Initialise default system audio input
@@ -284,45 +284,15 @@ fn create(
     return ptr;
 }
 
-pub fn initialiseWrapper(input_capacity: usize) callconv(.c) usize {
-    const audio_data: ?*AudioData = create(input_capacity);
+pub fn destroy(audio_data: *AudioData) void {
+    audio_data.destroy();
 
-    if (audio_data == null) {
-        return std.math.maxInt(usize);
-    }
-
-    return @intFromPtr(audio_data.?);
+    std.heap.page_allocator.destroy(audio_data);
 }
 
-pub fn initialiseBuffersWrapper(N: usize) !usize {
-    const buf: ?[]f32 = initialiseBuffers(N) catch null;
+pub fn computeLogScaleAmplitude(N: usize, k: f32) f32 {
+    const N_f32: f32 = @floatFromInt(N);
+    const phi = N_f32/2 - 1;
 
-    return @intFromPtr(buf.?.ptr);
+    return phi/(std.math.exp(k*phi) - 1);
 }
-
-pub fn realFFTWrapper(
-    input: [*]f32,
-    output: [*]f32,
-    N: usize,
-    lsa: f32,
-    lsb: f32,
-) callconv(.c) void {
-    realFFT(input, output, N, lsa, lsb) catch |err| {
-        switch (err) {
-            std.mem.Allocator.Error.OutOfMemory => {
-                debug.print("ERROR: Ran out of memory while computing FFT.");
-            },
-            FourierTransformError.InputNotPowerTwo => {
-                debug.print("ERROR: Input array did not have length that was a power of two.");
-            }
-        }
-    };
-}
-
-pub fn computeLogScaleAmplitude(N: usize, k: f32) 
-    callconv(.c) f32 {
-        const N_f32: f32 = @floatFromInt(N);
-        const phi = N_f32/2 - 1;
-
-        return phi/(std.math.exp(k*phi) - 1);
-    }
