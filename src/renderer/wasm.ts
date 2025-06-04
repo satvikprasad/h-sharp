@@ -56,7 +56,7 @@ const wasmPrint = (
 const initialiseWASM = async (): Promise<WASMData> => {
     let memory: WebAssembly.Memory | null = null;
 
-    const source = await window.electronAPI.fs.readFileSync("wasm/zig-out/bin/h-sharp.wasm") 
+    const source = await window.electronAPI.fs.readFileSync("dist/bin/h-sharp.wasm") 
     
     if (typeof(source) == "string") {
         throw Error(
