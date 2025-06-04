@@ -2,10 +2,10 @@ const audio = @import("audio/wrappers.zig");
 
 comptime {
     // These require wrappers to follow c conventions.
-    @export(&audio.realFFTWrapper, .{ .name = "audioRealFFT" });
-    @export(&audio.initialiseWrapper, .{ .name = "audioInitialise" });
-    @export(&audio.initialiseBuffersWrapper, .{ .name = "audioInitialiseBuffers" });
+    @export(&audio.initialise, .{ .name = "audioInitialise" });
+    @export(&audio.update, .{ .name = "audioUpdate" });
+    @export(&audio.getSystemBuffer, .{ .name = "audioGetSystemBuffer" });
 
-    // These don't
-    @export(&audio.computeLogScaleAmplitudeWrapper, .{ .name = "audioComputeLogScaleAmplitude" });
+    @export(&audio.getFrequencyBufferFromInput, .{ .name = "audioGetFrequencyBufferFromInput" });
+    @export(&audio.getRawBufferFromInput, .{ .name = "audioGetRawBufferFromInput" });
 }

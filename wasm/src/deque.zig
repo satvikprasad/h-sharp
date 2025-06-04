@@ -1,16 +1,24 @@
 const std = @import("std");
 const debug = @import("debug.zig");
 
+pub fn DequeIterator(comptime T: type) type {
+    return struct {
+        pub fn iter (_: *Deque(T).Node, _: *const anyopaque) bool {}
+    
+        user_data: ?*const anyopaque = null,
+    };
+}
+
 pub fn Deque(comptime T: type) type {
     return struct {
         pub const Node = std.DoublyLinkedList(T).Node;
         const Self = @This();
 
         list: std.DoublyLinkedList(T) = std.DoublyLinkedList(T){},
-        length: f32 = 0,
+        length: usize = 0,
 
         pub fn pushBack(dq: *Self, data: T) void {
-            const new_node: *Node = (
+            const new_node: ?*Node = (
                 std.heap.page_allocator.create(Node) catch null
             );
 
@@ -20,18 +28,18 @@ pub fn Deque(comptime T: type) type {
                 return;
             }
 
-            new_node.next = null;
-            new_node.prev = null;
-            new_node.data = data;
+            new_node.?.next = null;
+            new_node.?.prev = null;
+            new_node.?.data = data;
 
-            dq.list.append(dq.list, new_node);
+            dq.list.append(new_node.?);
             dq.length += 1;
         }
 
         pub fn popBack(dq: *Self) ?T {
-            const popped_node: ?*Node = dq.list.pop(dq.list);
+            const popped_node: ?*Node = dq.list.pop();
 
-            if (popped_node) {
+            if (popped_node != null) {
                 defer std.heap.page_allocator.destroy(popped_node);
 
                 const data: T = popped_node.?.data;
@@ -44,10 +52,10 @@ pub fn Deque(comptime T: type) type {
         }
 
         pub fn popFront(dq: *Self) ?T {
-            const popped_node: ?*Node = dq.list.popFirst(dq.list);
+            const popped_node: ?*Node = dq.list.popFirst();
 
-            if (popped_node) {
-                defer std.heap.page_allocator.destroy(popped_node);
+            if (popped_node != null) {
+                defer std.heap.page_allocator.destroy(popped_node.?);
                 const data: T = popped_node.?.data;
                 dq.length -= 1; 
 
@@ -66,7 +74,9 @@ pub fn Deque(comptime T: type) type {
         }
 
         pub fn iterateBackwards(
-            dq: *Self, iterator: fn (*Node) bool
+            dq: *Self, 
+            iterator: fn (*Deque(T).Node, *const anyopaque) bool, 
+            user_data: *const anyopaque
         ) void {
             if (dq.list.last == null) {
                 // Do nothing.
@@ -76,14 +86,14 @@ pub fn Deque(comptime T: type) type {
             var curr_node: *Node = dq.list.last.?;
 
             while (curr_node.prev != null) {
-                if (!iterator(curr_node)) {
+                if (!iterator(curr_node, user_data)) {
                     return;
                 }
 
                 curr_node = curr_node.prev.?;
             }
 
-            iterator(curr_node);
+            _ = iterator(curr_node, user_data);
         }
 
         pub fn destroy(dq: *Self) void {

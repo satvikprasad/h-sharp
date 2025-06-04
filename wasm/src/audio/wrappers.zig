@@ -14,47 +14,72 @@ pub fn initialise(input_capacity: usize) callconv(.c) usize {
 }
 
 pub fn update(audio_data: *audio.AudioData) callconv(.c) void {
-    audio_data.update();
+    audio_data.update() catch |err| {
+        switch (err) {
+            std.mem.Allocator.Error.OutOfMemory => {
+            },
+            audio.Math.FourierTransformError.InputNotPowerTwo => {
+            },
+        }
+    };
 }
 
 pub fn destroy(audio_data: *audio.AudioData) callconv(.c) void {
     audio.destroy(audio_data);
 }
 
-pub fn initialiseBuffersWrapper(N: usize) callconv(.c) usize {
-    if (audio.initialiseBuffers(N)) |buf| {
-        return @intFromPtr(buf.ptr);
-    } else |err| switch (err) {
-        std.mem.Allocator.Error.OutOfMemory => {
-            debug.print("ERROR: Out of memory when initialising buffers.");
-        }
-    }
-
-    return std.math.maxInt(usize);
+pub fn getSystemBuffer(
+    audio_data: *audio.AudioData
+) callconv(.c) usize {
+    return @intFromPtr(audio_data.inputs[0].raw.buffer.ptr);
 }
 
-pub fn realFFTWrapper(
-    input: [*]f32,
-    output: [*]f32,
-    N: usize,
-    lsa: f32,
-    lsb: f32,
-) callconv(.c) void {
-    audio.realFFT(input, output, N, lsa, lsb) catch |err| {
-        switch (err) {
-            std.mem.Allocator.Error.OutOfMemory => {
-                debug.print("ERROR: Ran out of memory while computing FFT.");
-            },
-            audio.FourierTransformError.InputNotPowerTwo => {
-                debug.print("ERROR: Input array did not have length that was a power of two.");
-            }
-        }
-    };
-}
-
-pub fn computeLogScaleAmplitudeWrapper(N: usize, k: f32) 
-    callconv(.c) f32 {
-        return audio.computeLogScaleAmplitude(N, k);
+fn getInput(
+    audio_data: *audio.AudioData,
+    index: usize,
+) ?*audio.Input {
+    if (index < audio_data.inputs.len) {
+        return &audio_data.inputs[index];
     }
 
+    debug.print("ERROR: Input requested is out of range.");
+    return null;
+}
 
+pub fn getRawBufferFromInput(
+    audio_data: *audio.AudioData,
+    input_index: usize,
+) callconv(.c) usize {
+    const input = getInput(audio_data, input_index);
+
+    return @intFromPtr(input.?.raw.buffer.ptr);
+}
+
+
+pub fn getRawMaximumFromInput(
+    audio_data: *audio.AudioData,
+    input_index: usize,
+) callconv(.c) f32 {
+    const input = getInput(audio_data, input_index);
+
+    return @intFromPtr(input.?.raw.time_weighted_max);
+}
+
+pub fn getFrequencyBufferFromInput(
+    audio_data: *audio.AudioData,
+    input_index: usize,
+) callconv(.c) usize {
+    const input = getInput(audio_data, input_index);
+
+    return @intFromPtr(input.?.frequency_spectrum.buffer.ptr);
+}
+
+
+pub fn getFrequencyMaximumFromInput(
+    audio_data: *audio.AudioData,
+    input_index: usize,
+) callconv(.c) f32 {
+    const input = getInput(audio_data, input_index);
+
+    return @intFromPtr(input.?.frequency_spectrum.time_weighted_max);
+}

@@ -1,30 +1,33 @@
+type TAudioGetRawBufferFromInput = (
+    dataPtr: number,
+    inputIndex: number,
+) => number;
+
 type TAudioInitialise = (
     inputCapacity: number
 ) => number;
 
-type TAudioRealFFT = (
-    inputPtr: number, 
-    outputPtr: number, 
-    N: number,
-    logScaleAmplitude: number,
-    logScaleBase: number,
+type TAudioUpdate = (
+    dataPtr: number
 ) => void;
 
-type TAudioComputeLogScaleAmplitude = (
-    N: number, k: number) => number;
+type TAudioGetSystemBuffer = (
+    dataPtr: number
+) => number;
 
-type TAudioInitialiseBuffers = (N: number) => number;
+interface IAudio {
+    initialise: TAudioInitialise;
+    update: TAudioUpdate;
+    getSystemBuffer: TAudioGetSystemBuffer;
+    getRawBufferFromInput: TAudioGetRawBufferFromInput;
+};
 
 interface WASMData {
     memory: WebAssembly.Memory,
-    audio: {
-        initialiseBuffers: (N: number) => number;
-        realFFT: TAudioRealFFT;
-        computeLogScaleAmplitude: TAudioComputeLogScaleAmplitude;
-    };
+    audio: IAudio;
 }
 
-const float32MemoryViewFromWASM = (
+const float32MemoryView = (
     memory: WebAssembly.Memory,
     ptr: number,
     length: number,
@@ -49,9 +52,12 @@ const wasmPrint = (
         console.log("Error printing from WASM: WASM Memory has not yet been instantiated.");
     }
 
-    const buf = new Uint8Array(memory.buffer.slice(sPtr, length));
+    const buf = new Uint8Array(
+        memory.buffer,
+        sPtr,
+        length
+    );
 
-    console.log([...buf]);
     let str = new TextDecoder().decode(buf);
 
     console.log(`From WASM: ${str}`);
@@ -79,14 +85,18 @@ const initialiseWASM = async (): Promise<WASMData> => {
 
     memory = result.instance.exports.memory as WebAssembly.Memory;
 
-    let audio = {
-        realFFT: result.instance.exports
-            .audioRealFFT as TAudioRealFFT,
-        initialiseBuffers: result.instance.exports
-            .audioInitialiseBuffers as TAudioInitialiseBuffers,
-        computeLogScaleAmplitude: result.instance.exports
-            .audioComputeLogScaleAmplitude as TAudioComputeLogScaleAmplitude,
-        initialise: result.instance.exports.audioInitialise as TAudioInitialise,
+    let audio: IAudio = {
+        initialise: result.instance.exports
+        .audioInitialise as TAudioInitialise,
+
+        update: result.instance.exports
+        .audioUpdate as TAudioUpdate,
+
+        getSystemBuffer: result.instance.exports
+        .audioGetSystemBuffer as TAudioGetSystemBuffer,
+
+        getRawBufferFromInput: result.instance.exports
+        .audioGetRawBufferFromInput as TAudioGetRawBufferFromInput,
     };
 
     return {
@@ -97,8 +107,8 @@ const initialiseWASM = async (): Promise<WASMData> => {
 
 export {
     type WASMData,
-    type TAudioRealFFT,
+    type IAudio,
 
     initialiseWASM,
-    float32MemoryViewFromWASM
+    float32MemoryView
 };

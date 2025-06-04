@@ -1,5 +1,4 @@
 import { mat4, vec3 } from "gl-matrix";
-import { AWaveformData } from "../audio";
 import { SceneData } from "../scene";
 import { WaveformShader } from "../shaders/waveform-shader";
 
@@ -7,28 +6,27 @@ const renderWaveform = (
     gl: WebGLRenderingContext,
     sceneData: SceneData,
     shader: WaveformShader.Data,
-    waveform: AWaveformData,
+    waveform: Float32Array,
     center: vec3 = [0, 0, 0],
+    max: number,
 ) => {
     gl.useProgram(shader.program);
 
-    if (waveform.buffer) {
-        // We have frequency information
-        gl.bindBuffer(
-            gl.ARRAY_BUFFER,
-            shader.buffers.value,
-        );
+    // We have frequency information
+    gl.bindBuffer(
+        gl.ARRAY_BUFFER,
+        shader.buffers.value,
+    );
 
-        gl.bufferSubData(
-            gl.ARRAY_BUFFER,
-            0,
-            WaveformShader.generateValues(
-                100, // TODO: Make not hardcoded
-                waveform.buffer,
-                waveform.timeWeightedMax,
-            )
-        );
-    }
+    gl.bufferSubData(
+        gl.ARRAY_BUFFER,
+        0,
+        WaveformShader.generateValues(
+            100, // TODO: Make not hardcoded
+            waveform,
+            max,
+        )
+    );
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
