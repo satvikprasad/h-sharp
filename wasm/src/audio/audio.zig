@@ -113,13 +113,13 @@ const InputType = enum {
 };
 
 const WaveformData = struct {
-    buffer: []f32,
+    buffer: ?[]f32,
 
     maximums: dq.Deque(f32),
     rolling_maximums: dq.Deque(f32),
 
-    time_weighted_max: dq.Deque(f32),
-    num_maximums: f32,
+    time_weighted_max: f32,
+    num_maximums: usize,
 };
 
 const Input = struct {
@@ -134,22 +134,123 @@ const Input = struct {
     audio_type: InputType,
 };
 
-fn initWaveformData(N: usize, num_maximums: usize) !WaveformData {
-    // TODO: Ensure this is freed
-    const buffer: []f32 = try std.heap.page_allocator.alloc(f32, N);
+fn initWaveformData(N: usize, num_maximums: usize) WaveformData {
+    const buffer: ?[]f32 = std.heap.page_allocator.alloc(f32, N) catch null;
 
     return .{
         .buffer = buffer,
-        .maximums = dq.Deque(f32),
-        .rolling_maximums = dq.Deque(f32),
+
+        .maximums = dq.Deque(f32){},
+        .rolling_maximums = dq.Deque(f32){},
+
         .time_weighted_max = 0,
         .num_maximums = num_maximums,
     };
 }
 
-fn AudioData(
+fn destroyWaveformData(data: WaveformData) void {
+    if (data.buffer) {
+        std.heap.page_allocator.free(data.buffer.?);
+    }
+
+    data.maximums.destroy();
+    data.rolling_maximums.destroy();
+}
+
+const AudioData = struct {
+    pub const Self = @This();
+
+    inputs: []Input,
+
+    fn updateMaximums(waveform: WaveformData) !void {
+        const curr_max = std.sort
+            .max(f32, waveform.buffer, {}, std.sort.asc(f32)).?;
+
+        waveform.maximums.pushBack(curr_max);
+        waveform.rolling_maximums.pushBack(curr_max);
+
+        if (waveform.maximums.length > waveform.num_maximums) {
+            waveform.maximums.popFront();
+
+            const popped = waveform.rolling_maximums.popFront();
+
+            if (popped == null) {
+                debug.print("ERROR: Contradiction while updating maximums.");
+            }
+
+            waveform.time_weighted_max = popped.?;
+        } else {
+            const max_since_front = waveform.rolling_maximums
+                .readFront();
+
+            if (max_since_front != null) {
+                waveform.time_weighted_max = max_since_front.?;
+            }
+        }
+
+        const _fn = struct {
+            fn updateMaximumsIterator(
+                node: *dq.Deque(f32).Node
+            ) bool {
+                if (curr_max >= node.data) {
+                    node.data = curr_max;
+
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
+        waveform.rolling_maximums.iterateBackwards(
+            _fn.updateMaximumsIterator
+        );
+    }
+
+    fn updateInput(input: Input) !void {
+        switch (input.audio_type)  {
+            .audio => {
+                // Perform FFT on buffer
+                realFFT(
+                    input.raw.buffer.ptr, 
+                    input.frequency_spectrum.buffer.ptr, 
+                    512, 
+                    input.log_scale_amplitude, 
+                    input.log_scale_base
+                );
+
+                // Update maximums for frequency spectrum
+                try updateMaximums(input.frequency_spectrum);
+            },
+        }
+
+        // Update maximums for raw data
+        updateMaximums(input.raw);
+    }
+
+    fn destroyInput(input: Input) void {
+        destroyWaveformData(input.raw);
+        destroyWaveformData(input.frequency_spectrum);
+    }
+
+    pub fn update(audio_data: *Self) !void {
+        for (audio_data.inputs) |input| {
+            try updateInput(input);
+        }
+    }
+
+    pub fn destroy(audio_data: *Self) !void {
+        for (audio_data.inputs) |input| {
+            destroyInput(input);
+        }
+
+        std.heap.page_allocator.free(audio_data.inputs);
+    }
+};
+
+fn create(
     input_capacity: usize
-) !type {
+) ?*AudioData {
     // Initialise default system audio input
     const system_audio_input: Input = .{
         .sample_rate = 48000,
@@ -161,86 +262,36 @@ fn AudioData(
     };
 
     // Construct inputs with capacity
-    // TODO: Ensure this is freed
-    const default_inputs: []Input = try std.heap.page_allocator
-        .alloc(Input, input_capacity);
-    default_inputs[0] = system_audio_input;
+    const default_inputs: ?[]Input = std.heap.page_allocator
+        .alloc(Input, input_capacity) catch null;
 
-    return struct {
-        const inputs: []Input = default_inputs;
+    if (default_inputs == null) {
+        debug.print("ERROR: Failed to allocate audio inputs with capacity.");
 
-        fn updateMaximums(waveform: WaveformData) !void {
-            const curr_max = std.sort
-                .max(f32, waveform.buffer, {}, std.sort.asc(f32)).?;
+        return null;    
+    }
 
-            waveform.maximums.pushBack(curr_max);
-            waveform.rolling_maximums.pushBack(curr_max);
+    default_inputs.?[0] = system_audio_input;
 
-            if (waveform.maximums.length > waveform.num_maximums) {
-                waveform.maximums.popFront();
-                
-                const popped = waveform.rolling_maximums.popFront();
+    const ptr: ?*AudioData = std.heap.page_allocator
+        .create(AudioData) catch null;
 
-                if (popped == null) {
-                    debug.print("ERROR: Contradiction while updating maximums.");
-                }
+    if (ptr == null) {
+        debug.print("ERROR: Failed to allocate AudioData");
+    }
 
-                waveform.time_weighted_max = popped.?;
-            } else {
-                const max_since_front = waveform.rolling_maximums
-                    .readFront();
+    ptr.?.inputs = default_inputs.?;
+    return ptr;
+}
 
-                if (max_since_front != null) {
-                    waveform.time_weighted_max = max_since_front.?;
-                }
-            }
+pub fn initialiseWrapper(input_capacity: usize) callconv(.c) usize {
+    const audio_data: ?*AudioData = create(input_capacity);
 
-            const _fn = struct {
-                fn updateMaximumsIterator(
-                    node: *dq.Deque(f32).Node
-                ) bool {
-                    if (curr_max >= node.data) {
-                        node.data = curr_max;
+    if (audio_data == null) {
+        return std.math.maxInt(usize);
+    }
 
-                        return true;
-                    }
-
-                    return false;
-                }
-            };
-
-            waveform.rolling_maximums.iterateBackwards(
-                _fn.updateMaximumsIterator
-            );
-        }
-
-        fn updateInput(input: Input) !void {
-            switch (input.audio_type)  {
-                .audio => {
-                    // Perform FFT on buffer
-                    realFFT(
-                        input.raw.buffer.ptr, 
-                        input.frequency_spectrum.buffer.ptr, 
-                        512, 
-                        input.log_scale_amplitude, 
-                        input.log_scale_base
-                    );
-                
-                    // Update maximums for frequency spectrum
-                    try updateMaximums(input.frequency_spectrum);
-                },
-            }
-
-            // Update maximums for raw data
-            updateMaximums(input.raw);
-        }
-
-        pub fn update() !void {
-            for (inputs) |input| {
-                try updateInput(input);
-            }
-        }
-    };
+    return @intFromPtr(audio_data.?);
 }
 
 pub fn initialiseBuffersWrapper(N: usize) !usize {

@@ -21,5 +21,6 @@ export fn audioInitialiseBuffers(
 comptime {
     @export(&audio.realFFTWrapper, .{ .name = "audioRealFFT" });
     @export(&audio.computeLogScaleAmplitude, .{ .name = "audioComputeLogScaleAmplitude" });
+    @export(&audio.initialiseWrapper, .{ .name = "audioInitialise" });
 }
 

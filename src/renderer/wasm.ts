@@ -1,3 +1,7 @@
+type TAudioInitialise = (
+    inputCapacity: number
+) => number;
+
 type TAudioRealFFT = (
     inputPtr: number, 
     outputPtr: number, 
@@ -82,6 +86,7 @@ const initialiseWASM = async (): Promise<WASMData> => {
             .audioInitialiseBuffers as TAudioInitialiseBuffers,
         computeLogScaleAmplitude: result.instance.exports
             .audioComputeLogScaleAmplitude as TAudioComputeLogScaleAmplitude,
+        initialise: result.instance.exports.audioInitialise as TAudioInitialise,
     };
 
     return {
