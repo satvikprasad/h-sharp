@@ -5,7 +5,7 @@ const std = @import("std");
 export fn audioInitialiseBuffers(
     N: usize
 ) usize {
-    const ptr: usize = audio.initialiseBuffers(N) catch |err| { 
+    const ptr: usize = audio.initialiseBuffersWrapper(N) catch |err| { 
         if (err == std.mem.Allocator.Error.OutOfMemory) {
             debug.print(
                 "Insufficient memory to intialise audio buffers"
