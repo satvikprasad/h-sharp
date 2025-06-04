@@ -22,6 +22,7 @@ import {
 import { DefaultShader } from "./shaders/default-shader";
 import { GridlinesShader } from "./shaders/gridlines-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
+import { initialiseWASM, WASMData } from "./wasm";
 
 interface InputData {
     mouseWheel: {
@@ -36,6 +37,7 @@ interface HSData {
     audioData: AData;
     sceneData: SceneData;
     inputData: InputData;
+    wasmData: WASMData;
 
     gl: WebGLRenderingContext;
     
@@ -63,8 +65,9 @@ const hsInitialise = async (
     e: IElectronAPI,
     gl: WebGLRenderingContext,
     canvas: HTMLCanvasElement,
+    wasmData: WASMData,
 ): Promise<HSData> => {
-    const audioData = initialiseAudioData();
+    const audioData = initialiseAudioData(wasmData);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
@@ -105,6 +108,7 @@ const hsInitialise = async (
         audioData,
         sceneData,
         inputData,
+        wasmData,
 
         gl,
 

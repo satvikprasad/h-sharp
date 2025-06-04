@@ -2,6 +2,13 @@
 echo -e "\033[0;32mCleaning dist..."
 rm -r dist
 
+echo -e "\033[0;32mCompiling WASM"
+mkdir -p dist/bin
+pushd wasm
+zig build
+popd
+cp ./wasm/zig-out/bin/h-sharp.wasm ./dist/bin/
+
 echo -e "\033[0;32mCompiling typescript..."
 ./node_modules/.bin/tsc # Compile typescript
 
@@ -15,12 +22,11 @@ cp src/styles.css dist/
 
 # Copy shaders
 echo -e "\033[0;32mCopying shaders..."
-mkdir "dist/renderer/shaders" "dist/renderer/shaders/source"
+mkdir -p "dist/renderer/shaders" "dist/renderer/shaders/source"
 find "src/renderer/shaders/source" -name \*.glsl -exec cp {} "dist/renderer/shaders/source" \;
 
 # Copy auxiliary apps
 echo -e "\033[0;32mCopying auxiliary plugins"
-mkdir dist/bin
 cp bin/* ./dist/bin
 
 # Source environment variables
