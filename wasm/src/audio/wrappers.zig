@@ -31,7 +31,8 @@ pub fn destroy(audio_data: *audio.AudioData) callconv(.c) void {
 pub fn getSystemBuffer(
     audio_data: *audio.AudioData
 ) callconv(.c) usize {
-    return @intFromPtr(audio_data.inputs[0].raw.buffer.ptr);
+    return @intFromPtr(audio_data.inputs[0]
+        .waveforms[0].buffer.ptr);
 }
 
 fn getInput(
@@ -46,40 +47,65 @@ fn getInput(
     return null;
 }
 
-pub fn getRawBufferFromInput(
+pub fn getBufferFromInput(
     audio_data: *audio.AudioData,
     input_index: usize,
+    waveform_index: usize
 ) callconv(.c) usize {
-    const input = getInput(audio_data, input_index);
+    if (input_index >= audio_data.inputs.len) {
+        debug.print("input_index is out of range.");
+        return std.math.maxInt(usize);
+    }
 
-    return @intFromPtr(input.?.raw.buffer.ptr);
+    if (waveform_index >= audio_data.inputs[input_index]
+        .waveforms.len) {
+        debug.print("waveform_index is out of range.");
+        return std.math.maxInt(usize);
+    }
+
+    return @intFromPtr(audio_data.inputs[input_index]
+        .waveforms[waveform_index]
+        .buffer.ptr);
 }
 
-
-pub fn getRawMaximumFromInput(
+pub fn getBufferLengthFromInput(
     audio_data: *audio.AudioData,
     input_index: usize,
-) callconv(.c) f32 {
-    const input = getInput(audio_data, input_index);
-
-    return @intFromPtr(input.?.raw.time_weighted_max);
-}
-
-pub fn getFrequencyBufferFromInput(
-    audio_data: *audio.AudioData,
-    input_index: usize,
+    waveform_index: usize
 ) callconv(.c) usize {
-    const input = getInput(audio_data, input_index);
+    if (input_index >= audio_data.inputs.len) {
+        debug.print("input_index is out of range.");
+        return std.math.maxInt(usize);
+    }
 
-    return @intFromPtr(input.?.frequency_spectrum.buffer.ptr);
+    if (waveform_index >= audio_data.inputs[input_index]
+        .waveforms.len) {
+        debug.print("waveform_index is out of range.");
+        return std.math.maxInt(usize);
+    }
+
+    return audio_data.inputs[input_index]
+        .waveforms[waveform_index]
+        .buffer.len;
 }
 
-
-pub fn getFrequencyMaximumFromInput(
+pub fn getMaximumFromInput(
     audio_data: *audio.AudioData,
     input_index: usize,
+    waveform_index: usize
 ) callconv(.c) f32 {
-    const input = getInput(audio_data, input_index);
+    if (input_index >= audio_data.inputs.len) {
+        debug.print("input_index is out of range.");
+        return std.math.maxInt(usize);
+    }
 
-    return @intFromPtr(input.?.frequency_spectrum.time_weighted_max);
+    if (waveform_index >= audio_data.inputs[input_index]
+        .waveforms.len) {
+        debug.print("waveform_index is out of range.");
+        return std.math.maxInt(usize);
+    }
+
+    return audio_data.inputs[input_index]
+        .waveforms[waveform_index]
+        .time_weighted_max;
 }

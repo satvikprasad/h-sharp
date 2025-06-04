@@ -1,8 +1,3 @@
-type TAudioGetRawBufferFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-) => number;
-
 type TAudioInitialise = (
     inputCapacity: number
 ) => number;
@@ -15,11 +10,32 @@ type TAudioGetSystemBuffer = (
     dataPtr: number
 ) => number;
 
+type TAudioGetMaximumFromInput = (
+    dataPtr: number,
+    inputIndex: number,
+    waveformIndex: number
+) => number;
+
+type TAudioGetBufferFromInput = (
+    dataPtr: number,
+    inputIndex: number,
+    waveformIndex: number
+) => number;
+
+type TAudioGetBufferLengthFromInput = (
+    dataPtr: number,
+    inputIndex: number,
+    waveformIndex: number
+) => number;
+
 interface IAudio {
     initialise: TAudioInitialise;
     update: TAudioUpdate;
     getSystemBuffer: TAudioGetSystemBuffer;
-    getRawBufferFromInput: TAudioGetRawBufferFromInput;
+
+    getMaximumFromInput: TAudioGetMaximumFromInput;
+    getBufferFromInput: TAudioGetBufferFromInput;
+    getBufferLengthFromInput: TAudioGetBufferLengthFromInput;
 };
 
 interface WASMData {
@@ -95,8 +111,14 @@ const initialiseWASM = async (): Promise<WASMData> => {
         getSystemBuffer: result.instance.exports
         .audioGetSystemBuffer as TAudioGetSystemBuffer,
 
-        getRawBufferFromInput: result.instance.exports
-        .audioGetRawBufferFromInput as TAudioGetRawBufferFromInput,
+        getMaximumFromInput: result.instance.exports
+        .audioGetMaximumFromInput as TAudioGetMaximumFromInput,
+
+        getBufferFromInput: result.instance.exports
+        .audioGetBufferFromInput as TAudioGetBufferFromInput,
+
+        getBufferLengthFromInput: result.instance.exports
+        .audioGetBufferLengthFromInput as TAudioGetBufferLengthFromInput,
     };
 
     return {
