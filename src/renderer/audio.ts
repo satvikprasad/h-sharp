@@ -7,16 +7,22 @@ interface AData {
 
     methods: wasm.IAudio;
     memory: WebAssembly.Memory;
+
+    hasSystemAudio: boolean;
 };
 
 const initialiseAudioData = (
-    wasmData: wasm.WASMData 
+    wasmData: wasm.WASMData,
+    hasSystemAudio: boolean,
 ): AData => {
     return {
-        ptr: wasmData.audio.initialise(10),
+        // TODO: Don't hardcode capacity.
+        ptr: wasmData.audio.initialise(10, hasSystemAudio),
 
         methods: wasmData.audio,
         memory: wasmData.memory,
+
+        hasSystemAudio,
     }
 }
 

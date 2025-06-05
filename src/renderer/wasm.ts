@@ -1,7 +1,8 @@
 import { IFileSystemAPI } from "../../interface";
 
 type TAudioInitialise = (
-    inputCapacity: number
+    inputCapacity: number,
+    hasSystemAudio: boolean,
 ) => number;
 
 type TAudioUpdate = (

@@ -1,4 +1,3 @@
-import { vec4 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import { 
@@ -22,7 +21,7 @@ import {
 import { DefaultShader } from "./shaders/default-shader";
 import { GridlinesShader } from "./shaders/gridlines-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
-import { initialiseWASM, WASMData } from "./wasm";
+import { WASMData } from "./wasm";
 
 interface InputData {
     mouseWheel: {
@@ -66,8 +65,9 @@ const hsInitialise = async (
     gl: WebGLRenderingContext,
     canvas: HTMLCanvasElement,
     wasmData: WASMData,
+    isNative: boolean,
 ): Promise<HSData> => {
-    const audioData = initialiseAudioData(wasmData);
+    const audioData = initialiseAudioData(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 

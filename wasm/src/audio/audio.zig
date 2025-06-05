@@ -5,6 +5,8 @@ const debug = @import("../debug.zig");
 pub const Math = @import("math.zig");
 
 const InputType = enum {
+    uninitialised,
+    system_audio,
     audio,
     midi,
 };
@@ -78,11 +80,23 @@ pub const AudioData = struct {
 
     fn updateInput(input: *Input) !void {
         switch (input.audio_type)  {
+            .uninitialised => {
+                debug.print("Warning: iterated over uninitialised input.");
+            },
+            .system_audio => {
+                try realFFT(
+                    input.waveforms.?[0].buffer.ptr, 
+                    input.waveforms.?[1].buffer.ptr, 
+                    Self.raw_buffer_fidelity, 
+                    input.log_scale_amplitude, 
+                    input.log_scale_base
+                );
+            },
             .audio => {
                 // Perform FFT on buffer
                 try realFFT(
-                    input.waveforms[0].buffer.ptr, 
-                    input.waveforms[1].buffer.ptr, 
+                    input.waveforms.?[0].buffer.ptr, 
+                    input.waveforms.?[1].buffer.ptr, 
                     Self.raw_buffer_fidelity, 
                     input.log_scale_amplitude, 
                     input.log_scale_base
@@ -90,11 +104,11 @@ pub const AudioData = struct {
             },
             .midi => {
                 debug.print("MIDI Inputs are not yet supported");
-            }
+            },
         }
 
-        for (0..input.waveforms.len) |i| {
-            try updateMaximums(&input.waveforms[i]);
+        for (0..input.waveforms.?.len) |i| {
+            try updateMaximums(&input.waveforms.?[i]);
         }
     }
 
@@ -126,7 +140,7 @@ pub const Input = struct {
     log_scale_base: f32,
     log_scale_amplitude: f32,
 
-    waveforms: []WaveformData,
+    waveforms: ?[]WaveformData,
 
     audio_type: InputType,
 };
@@ -181,18 +195,11 @@ pub fn realFFT(
     }
 }
 
-fn initWaveformData(N: usize, num_maximums: usize) ?WaveformData {
-    const buffer: ?[]f32 = std.heap.page_allocator.alloc(f32, N) catch null;
-
-    if (buffer == null) {
-        debug.print(
-            "ERROR: Failed to allocate WaveformData.buffer."
-        );
-        return null;
-    }
+fn initWaveformData(N: usize, num_maximums: usize) !WaveformData {
+    const buffer: []f32 = try std.heap.page_allocator.alloc(f32, N);
 
     return .{
-        .buffer = buffer.?,
+        .buffer = buffer,
 
         .maximums = dq.Deque(f32){},
         .rolling_maximums = dq.Deque(f32){},
@@ -211,62 +218,56 @@ fn destroyWaveformData(data: WaveformData) void {
     data.rolling_maximums.destroy();
 }
 
+pub fn createInput(
+    sample_rate: f32,
+    raw_buffer_fidelity: usize,
+    lsb: f32,
+    input_type: InputType
+) !Input {
+    const raw_data = try initWaveformData(raw_buffer_fidelity, 4);
+    const frequency_data = try initWaveformData(@intCast(raw_buffer_fidelity/2), 512);
+
+    const waveforms: []WaveformData = try std.heap.page_allocator.alloc(WaveformData, 2);
+
+    waveforms[0] = raw_data;
+    waveforms[1] = frequency_data;
+
+    return .{
+        .sample_rate = sample_rate,
+        .log_scale_base = lsb,
+        .log_scale_amplitude = computeLogScaleAmplitude(
+            raw_buffer_fidelity, lsb),
+        .audio_type = input_type,
+        .waveforms = waveforms
+    };
+}
+
 pub fn create(
     input_capacity: usize,
-) ?*AudioData {
-    const rawData = initWaveformData(
-        AudioData.raw_buffer_fidelity, 4
-    );
-
-    const frequencyData = initWaveformData(
-        @intCast(AudioData.raw_buffer_fidelity/2), 512
-    );
-
-    // TODO: Don't hardcode this length
-    const waveforms: ?[]WaveformData = std.heap.page_allocator
-        .alloc(WaveformData, 2) catch null;
-
-    if (rawData == null or 
-        frequencyData == null or 
-        waveforms == null) {
-        debug.print("Failed to setup waveform data for input.");
-        return null;
-    }
-
-    waveforms.?[0] = rawData.?;
-    waveforms.?[1] = frequencyData.?;
-
-    // Initialise default system audio input
-    const system_audio_input: Input = .{
-        .sample_rate = 48000,
-        .log_scale_base = 0.019,
-        .log_scale_amplitude = computeLogScaleAmplitude(
-            AudioData.raw_buffer_fidelity, 0.019),
-        .audio_type = .audio,
-        .waveforms = waveforms.?
-    };
-
+    has_system_audio: bool,
+) !*AudioData {
     // Construct inputs with capacity
-    const default_inputs: ?[]Input = std.heap.page_allocator
-        .alloc(Input, input_capacity) catch null;
+    const default_inputs: []Input = try std.heap.page_allocator
+        .alloc(Input, input_capacity);
+    @memset(default_inputs, Input{
+        .audio_type = .uninitialised,
+        .waveforms = null,
+        .log_scale_base = 0.019,
+        .log_scale_amplitude = computeLogScaleAmplitude(AudioData.raw_buffer_fidelity, 0.019),
+        .sample_rate = 48000,
+    });
 
-    if (default_inputs == null) {
-        debug.print("ERROR: Failed to allocate audio inputs with capacity.");
+    if (has_system_audio) {
+        const system_input = try createInput(48000, AudioData.raw_buffer_fidelity, 0.019, .system_audio);
 
-        return null;    
+        default_inputs[0] = system_input;
     }
 
-    default_inputs.?[0] = system_audio_input;
+    const ptr: *AudioData = try std.heap.page_allocator
+        .create(AudioData);
 
-    const ptr: ?*AudioData = std.heap.page_allocator
-        .create(AudioData) catch null;
-
-    if (ptr == null) {
-        debug.print("ERROR: Failed to allocate AudioData");
-    }
-
-    ptr.?.inputs = default_inputs.?;
-    ptr.?.input_length = 1;
+    ptr.inputs = default_inputs;
+    ptr.input_length = @intFromBool(has_system_audio);
 
     return ptr;
 }

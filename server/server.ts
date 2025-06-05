@@ -5,4 +5,6 @@ const path = require("path");
 
 app.use("/", express.static('./dist'));
 
-app.listen(3000, () => {});
+app.listen(3000, (error) => {
+    console.log(error);
+});

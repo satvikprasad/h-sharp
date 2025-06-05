@@ -36,8 +36,10 @@ const main = (): void => {
 
     let local: ILocalAPI;
     if (window.local) {
+        // We are running inside an electron instance
         local = window.local;
     } else {
+        // We are running on the client side
         local = initialiseLocalSystem();
     }
 
@@ -53,7 +55,8 @@ const main = (): void => {
             local, 
             gl,
             canvas,
-            wasmData
+            wasmData,
+            window.local != undefined
         ).then((hsData: HSData) => {
             // Resize canvas to width of view
             resizeCanvas(local, canvas).then(() => {
