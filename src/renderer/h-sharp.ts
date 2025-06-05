@@ -1,5 +1,5 @@
 import { vec4 } from "gl-matrix";
-import type { IElectronAPI } from "../../interface";
+import type { ILocalAPI } from "../../interface";
 
 import { 
     type AData, 
@@ -62,7 +62,7 @@ const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
 }
 
 const hsInitialise = async (
-    e: IElectronAPI,
+    local: ILocalAPI,
     gl: WebGLRenderingContext,
     canvas: HTMLCanvasElement,
     wasmData: WASMData,
@@ -74,6 +74,8 @@ const hsInitialise = async (
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
         if (event.ctrlKey) {
+            event.preventDefault();
+
             // Zoom event
             inputData.deltaZoom = event.deltaY;
             return;
@@ -85,7 +87,7 @@ const hsInitialise = async (
 
     // Callback from main.ts whenever new 
     // system audio is received
-    e.audio.onListener(
+    local.audio.onListener(
         (buffer: Float32Array) => {
             // Update buffer
             updateSystemAudioData(audioData, buffer);
@@ -93,15 +95,15 @@ const hsInitialise = async (
 
     // Initialise shaders
     const defaultShaderData = await DefaultShader.initialise(
-        gl, e.fs
+        gl, local.fs
     );
 
     const waveformShaderData = await WaveformShader.initialise(
-        gl, e.fs, 100
+        gl, local.fs, 100
     );
 
     const gridlinesShaderData = await GridlinesShader.initialise(
-        gl, e.fs
+        gl, local.fs
     );
 
     return {

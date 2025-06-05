@@ -11,6 +11,7 @@ cp ./wasm/zig-out/bin/h-sharp.wasm ./dist/bin/
 
 echo -e "\033[0;32mCompiling typescript..."
 ./node_modules/.bin/tsc # Compile typescript
+./node_modules/.bin/tsc --p server/tsconfig.json
 
 echo -e "\033[0;32mBundling..."
 ./node_modules/.bin/webpack # Bundle renderer.ts
@@ -22,8 +23,8 @@ cp src/styles.css dist/
 
 # Copy shaders
 echo -e "\033[0;32mCopying shaders..."
-mkdir -p "dist/renderer/shaders" "dist/renderer/shaders/source"
-find "src/renderer/shaders/source" -name \*.glsl -exec cp {} "dist/renderer/shaders/source" \;
+mkdir -p "dist/shaders" "dist/shaders/source"
+find "src/renderer/shaders/source" -name \*.glsl -exec cp {} "dist/shaders/source" \;
 
 # Copy auxiliary apps
 echo -e "\033[0;32mCopying auxiliary plugins"

@@ -1,12 +1,15 @@
+import { ILocalAPI } from "../../interface";
 import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
+import { initialiseLocalSystem } from "./local";
 import { initialiseWASM } from "./wasm";
 
 let deltaTime = 0;
 
 const resizeCanvas = async (
+    local: ILocalAPI,
     canvas: HTMLCanvasElement
 ): Promise<void> => {
-    let size: [Number, Number] = await window.electronAPI.frame.getSize();
+    let size: [Number, Number] = await local.frame.getSize();
 
     canvas.setAttribute("width", String(size[0]));
     canvas.setAttribute("height", String(size[1]));
@@ -31,22 +34,29 @@ const main = (): void => {
             Your browser or machine may not support it.`);
     }
 
-    window.electronAPI.frame.onResized((dim) => {
+    let local: ILocalAPI;
+    if (window.local) {
+        local = window.local;
+    } else {
+        local = initialiseLocalSystem();
+    }
+
+    local.frame.onResized((dim) => {
         canvas.setAttribute("width", String(dim.width))
         canvas.setAttribute("height", String(dim.height))
 
         gl.viewport(0, 0, dim.width, dim.height);
     });
     
-    initialiseWASM().then((wasmData) => {
+    initialiseWASM(local.fs).then((wasmData) => {
         hsInitialise(
-            window.electronAPI, 
+            local, 
             gl,
             canvas,
             wasmData
         ).then((hsData: HSData) => {
             // Resize canvas to width of view
-            resizeCanvas(canvas).then(() => {
+            resizeCanvas(local, canvas).then(() => {
                 // Resize viewport
                 gl.viewport(0, 0, canvas.width, canvas.height);
 

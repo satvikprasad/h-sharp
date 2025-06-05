@@ -1,21 +1,16 @@
 // NOTE: Naming conventions follow js standards,
 // PascalCase are instantiable constructors, whereas
-
 import { cwd } from "process";
-
 // camelCase are non-instantiable.
 const { app, BrowserWindow, ipcMain, session, desktopCapturer } = require('electron');
-const { spawn } = require('child_process')
+const { spawn } = require('child_process');
 const path = require('node:path');
 const fs = require('fs');
-
 // TODO: make this better
 let hasWindow = false;
-
-function getSize(win: any): [Number, Number] {
+function getSize(win) {
     return win.getSize();
 }
-
 const createWindow = () => {
     const win = new BrowserWindow({
         width: 800,
@@ -24,77 +19,60 @@ const createWindow = () => {
             preload: path.join(__dirname, '../preload/preload.js'),
         },
     });
-
     hasWindow = true;
-
     win.loadFile(path.join(__dirname, '../index.html'));
-
-    return win
-}
-
+    return win;
+};
 app.whenReady().then(() => {
     let win = createWindow();
-
     // Begin system audio capture
     const systemAudioCapturer = spawn(path.join(__dirname, '../bin/listener'));
-
-    systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
+    systemAudioCapturer.stdout.on('data', (chunk) => {
         if (hasWindow) {
-            let buf = new ArrayBuffer(chunk.length)
-            let f = new Float32Array(buf)
-            new Uint8Array(buf).set([...chunk])
-
+            let buf = new ArrayBuffer(chunk.length);
+            let f = new Float32Array(buf);
+            new Uint8Array(buf).set([...chunk]);
             win.webContents.send('audio.on-listener', f);
         }
     });
-
-    win.on('will-resize', (_event, newBounds: any, _details) => {
-        win.webContents.send('frame.resized', { 
-            width: newBounds.width, 
-            height: newBounds.height 
+    win.on('will-resize', (_event, newBounds, _details) => {
+        win.webContents.send('frame.resized', {
+            width: newBounds.width,
+            height: newBounds.height
         });
-    })
-
+    });
     // Create new window on macOS platforms if no windows are present.
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        if (BrowserWindow.getAllWindows().length === 0)
+            createWindow();
     });
-
     // Get window size
     ipcMain.handle('get-win-size', (event) => {
         const webContents = event.sender;
         const win = BrowserWindow.fromWebContents(webContents);
         return getSize(win);
     });
-
-    ipcMain.handle('fs.readFileRelPath', (_event, ...args: any) => {
-        let p = path.join(__dirname, "../", ...args);
-        let buf = fs.readFileSync(p, { encoding: "utf8" });        
-
-        if (typeof(buf) == "string") {
+    ipcMain.handle('fs.readFileRelPath', (_event, ...args) => {
+        let p = path.join(__dirname, "../renderer/", ...args);
+        let buf = fs.readFileSync(p, { encoding: "utf8" });
+        if (typeof (buf) == "string") {
             return buf;
         }
-
         throw Error(`Incorrect encoding while reading ${p}`);
     });
-
-    ipcMain.handle('fs.readFileSync', (_event, ...args: any) => {
+    ipcMain.handle('fs.readFileSync', (_event, ...args) => {
         console.log(`Using working directory ${cwd()}`);
-
-        let p = path.join(__dirname, "../", args[0]);
+        let path = args[0];
         let options = args[1];
-
         if (options) {
-            return fs.readFileSync(p, options);
-        } 
-
-        return new Uint8Array(fs.readFileSync(p));
+            return fs.readFileSync(path, options);
+        }
+        return fs.readFileSync(path);
     });
 });
-
 app.on('window-all-closed', () => {
     // Close application if all windows are closed and the
     // user is on Windows or Linux
-    app.quit(); 
+    app.quit();
     hasWindow = false;
 });

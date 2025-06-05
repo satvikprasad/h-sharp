@@ -5,7 +5,7 @@ type FrameOnResizedCallback = (dim: {
     height: number
 }) => void;
 
-export interface IElectronAPI {
+export interface ILocalAPI {
     audio: {
         onListener: (
             callback: AudioOnListenerCallback
@@ -30,11 +30,11 @@ export interface IFileSystemAPI {
 
     readFileSync: (
         path: string, options?: Object
-    ) => Promise<string | Buffer>,
+    ) => Promise<string | Uint8Array>,
 }
 
 declare global {
     interface Window {
-        electronAPI: IElectronAPI,
+        local: ILocalAPI,
     }
 }

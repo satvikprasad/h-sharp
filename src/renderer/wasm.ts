@@ -1,3 +1,5 @@
+import { IFileSystemAPI } from "../../interface";
+
 type TAudioInitialise = (
     inputCapacity: number
 ) => number;
@@ -79,10 +81,12 @@ const wasmPrint = (
     console.log(`From WASM: ${str}`);
 }
 
-const initialiseWASM = async (): Promise<WASMData> => {
+const initialiseWASM = async (
+    fs: IFileSystemAPI
+): Promise<WASMData> => {
     let memory: WebAssembly.Memory | null = null;
 
-    const source = await window.electronAPI.fs.readFileSync("dist/bin/h-sharp.wasm") 
+    const source = await fs.readFileSync("bin/h-sharp.wasm") 
     
     if (typeof(source) == "string") {
         throw Error(
