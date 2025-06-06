@@ -9,21 +9,68 @@ interface AData {
     memory: WebAssembly.Memory;
 
     hasSystemAudio: boolean;
+
+    inputStringsPtr: number;
 };
+
+function getInputStrings(
+    audioData: AData,
+): string[] {
+    const wasmMemory = audioData.memory;
+    const outSize = audioData.methods.getInputStringsAlignSize(
+        audioData.ptr
+    );
+
+    let retPtr = audioData.methods.getInputStrings(
+        audioData.ptr,
+        audioData.inputStringsPtr, // Destination for input strings bufffer
+    );
+    audioData.inputStringsPtr = retPtr;
+
+    const buf = wasm.u32MemoryView(
+        wasmMemory, retPtr, 2*outSize
+    ); // [(ptr, len), ...]
+
+    const decoder = new TextDecoder();
+
+    let strings: string[] = [];
+    for (let i = 0; i < outSize; ++i) { 
+        const strPtr = buf[2*i];
+        const strLen = buf[2*i + 1];
+
+        const strBuf = wasm.u8MemoryView(
+            wasmMemory,
+            strPtr,
+            strLen
+        );
+
+        strings.push(decoder.decode(strBuf));
+    }
+
+    return strings;
+}
 
 const initialiseAudioData = (
     wasmData: wasm.WASMData,
     hasSystemAudio: boolean,
 ): AData => {
-    return {
+    let ptr = wasmData.audio.initialise(10, hasSystemAudio);
+
+    let data: AData = {
         // TODO: Don't hardcode capacity.
-        ptr: wasmData.audio.initialise(10, hasSystemAudio),
+        ptr,
 
         methods: wasmData.audio,
         memory: wasmData.memory,
 
         hasSystemAudio,
+
+        inputStringsPtr: -1,
     }
+
+    console.log(getInputStrings(data));
+
+    return data;
 }
 
 const updateAudioData = (

@@ -31,6 +31,13 @@ type TAudioGetBufferLengthFromInput = (
     waveformIndex: number
 ) => number;
 
+type TAudioGetInputStrings = (
+    dataPtr: number,
+    inputStringBufPtr: number
+) => number;
+
+type TAudioGetInputStringsAlignSize = (dataPtr: number) => number;
+
 interface IAudio {
     initialise: TAudioInitialise;
     update: TAudioUpdate;
@@ -39,11 +46,43 @@ interface IAudio {
     getMaximumFromInput: TAudioGetMaximumFromInput;
     getBufferFromInput: TAudioGetBufferFromInput;
     getBufferLengthFromInput: TAudioGetBufferLengthFromInput;
+    getInputStrings: TAudioGetInputStrings;
+    getInputStringsAlignSize: TAudioGetInputStringsAlignSize;
 };
 
 interface WASMData {
     memory: WebAssembly.Memory,
     audio: IAudio;
+}
+
+const arrayBufferMemoryView = (
+    memory: WebAssembly.Memory,
+    ptr: number,
+    length: number
+) => {
+    if (!memory.buffer) {
+        console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
+    }
+
+    return memory.buffer.slice(ptr, ptr + length);
+}
+
+const u32MemoryView = (
+    memory: WebAssembly.Memory,
+    ptr: number,
+    length: number,
+) => {
+    if (!memory.buffer) {
+        console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
+    }
+
+    let view = new Uint32Array(
+        memory.buffer,
+        ptr,
+        length
+    );
+
+    return view;
 }
 
 const float32MemoryView = (
@@ -63,6 +102,25 @@ const float32MemoryView = (
 
     return view;
 }
+
+const u8MemoryView = (
+    memory: WebAssembly.Memory,
+    ptr: number,
+    length: number,
+) => {
+    if (!memory.buffer) {
+        console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
+    }
+
+    let view = new Uint8Array(
+        memory.buffer,
+        ptr,
+        length
+    );
+
+    return view;
+}
+
 
 const wasmPrint = (
     memory: WebAssembly.Memory, sPtr: number, length: number
@@ -124,6 +182,12 @@ const initialiseWASM = async (
 
         getBufferLengthFromInput: result.instance.exports
         .audioGetBufferLengthFromInput as TAudioGetBufferLengthFromInput,
+
+        getInputStrings: result.instance.exports
+        .audioGetInputStrings as TAudioGetInputStrings,
+
+        getInputStringsAlignSize: result.instance.exports
+        .audioGetInputStringsAlignSize as TAudioGetInputStringsAlignSize,
     };
 
     return {
@@ -137,5 +201,10 @@ export {
     type IAudio,
 
     initialiseWASM,
-    float32MemoryView
+
+    float32MemoryView,
+    u8MemoryView,
+    u32MemoryView,
+
+    arrayBufferMemoryView
 };

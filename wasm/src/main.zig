@@ -25,4 +25,12 @@ comptime {
     @export(&audio.getBufferLengthFromInput, .{
         .name = "audioGetBufferLengthFromInput"
     });
+
+    @export(&audio.getInputStrings, .{
+        .name = "audioGetInputStrings"
+    });
+
+    @export(&audio.getInputStringsAlignSize, .{
+        .name = "audioGetInputStringsAlignSize"
+    });
 }

@@ -135,3 +135,40 @@ pub fn getMaximumFromInput(
         .waveforms.?[waveform_index]
         .time_weighted_max;
 }
+
+pub fn getInputStringsAlignSize(
+    audio_data: *audio.AudioData
+) callconv(.c) usize {
+    return audio_data.input_length;
+}
+
+pub fn getInputStrings(
+    audio_data: *audio.AudioData,
+    input_string_buf: [*][]u8
+) callconv(.c) usize {
+    var input_strings_out: [*][]u8 = input_string_buf;
+
+    if (@intFromPtr(input_strings_out) == std.math.maxInt(usize)) {
+        debug.print("1");
+
+        // TODO: Free this
+        if (std.heap.page_allocator.alloc(
+                []u8, 
+                audio_data.input_length
+        )) |ret| {
+            input_strings_out = ret.ptr;
+        } else |err| switch (err) {
+            std.mem.Allocator.Error.OutOfMemory => {
+                debug.print("ERROR: Could not get input strings as WASM is out of memory");
+            }
+        }
+    }
+
+    for (0..audio_data.input_length) |i| {
+        const input: *audio.Input = &audio_data.inputs[i];
+
+        input_strings_out[i] = @constCast(input.name);
+    }
+
+    return @intFromPtr(input_strings_out);
+}
