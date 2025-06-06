@@ -21,12 +21,75 @@ const WaveformData = struct {
     num_maximums: usize,
 };
 
+pub const Input = struct {
+    name: []const u8 = "Unnamed Input",
+
+    sample_rate: f32 = 48000,
+    lsb: f32,
+    lsa: f32,
+
+    waveforms: ?[]WaveformData,
+
+    audio_type: InputType,
+
+    pub fn create(
+        sample_rate: f32,
+        raw_buffer_fidelity: usize,
+        lsb: f32,
+        input_type: InputType
+    ) !Input {
+        const raw_data = try initWaveformData(raw_buffer_fidelity, 4);
+        const frequency_data = try initWaveformData(@intCast(raw_buffer_fidelity/2), 512);
+
+        const waveforms: []WaveformData = try std.heap.page_allocator.alloc(WaveformData, 2);
+
+        waveforms[0] = raw_data;
+        waveforms[1] = frequency_data;
+
+        return .{
+            .sample_rate = sample_rate,
+            .lsb = lsb,
+            .lsa = computeLogScaleAmplitude(
+                raw_buffer_fidelity, lsb),
+            .audio_type = input_type,
+            .waveforms = waveforms
+        };
+    }
+};
+
 pub const AudioData = struct {
     pub const Self = @This();
     const raw_buffer_fidelity: usize = 512;
 
     inputs: []Input,
     input_length: usize = 0,
+
+    pub fn create(input_capacity: usize, has_system_audio: bool) !*AudioData {
+        const default_inputs: []Input = try std.heap.page_allocator
+            .alloc(Input, input_capacity);
+        @memset(default_inputs, Input{
+            .name = "System Audio",
+            .audio_type = .uninitialised,
+            .waveforms = null,
+            .lsb = 0.019,
+            .lsa = computeLogScaleAmplitude(AudioData.raw_buffer_fidelity, 0.019),
+            .sample_rate = 48000,
+        });
+
+        if (has_system_audio) {
+            const system_input = try Input.create(48000, AudioData.raw_buffer_fidelity, 0.019, .system_audio);
+
+            default_inputs[0] = system_input;
+        }
+
+        const ptr: *AudioData = try std.heap.page_allocator
+            .create(AudioData);
+
+        ptr.inputs = default_inputs;
+        ptr.input_length = @intFromBool(has_system_audio);
+
+        return ptr;
+    }
 
     fn updateMaximums(waveform: *WaveformData) !void {
         const curr_max = std.sort
@@ -74,7 +137,7 @@ pub const AudioData = struct {
         const max_ptr: *const anyopaque = &curr_max;
 
         waveform.rolling_maximums.iterateBackwards(
-           _it.iterator, max_ptr
+            _it.iterator, max_ptr
         );
     }
 
@@ -88,8 +151,8 @@ pub const AudioData = struct {
                     input.waveforms.?[0].buffer.ptr, 
                     input.waveforms.?[1].buffer.ptr, 
                     Self.raw_buffer_fidelity, 
-                    input.log_scale_amplitude, 
-                    input.log_scale_base
+                    input.lsa, 
+                    input.lsb
                 );
             },
             .audio => {
@@ -98,8 +161,8 @@ pub const AudioData = struct {
                     input.waveforms.?[0].buffer.ptr, 
                     input.waveforms.?[1].buffer.ptr, 
                     Self.raw_buffer_fidelity, 
-                    input.log_scale_amplitude, 
-                    input.log_scale_base
+                    input.lsa, 
+                    input.lsb
                 );
             },
             .midi => {
@@ -133,17 +196,6 @@ pub const AudioData = struct {
     }
 };
 
-
-pub const Input = struct {
-    sample_rate: f32 = 48000,
-
-    log_scale_base: f32,
-    log_scale_amplitude: f32,
-
-    waveforms: ?[]WaveformData,
-
-    audio_type: InputType,
-};
 
 fn computeLogScaleIndex(
     a: f32,
@@ -197,6 +249,7 @@ pub fn realFFT(
 
 fn initWaveformData(N: usize, num_maximums: usize) !WaveformData {
     const buffer: []f32 = try std.heap.page_allocator.alloc(f32, N);
+    @memset(buffer, 0);
 
     return .{
         .buffer = buffer,
@@ -218,59 +271,6 @@ fn destroyWaveformData(data: WaveformData) void {
     data.rolling_maximums.destroy();
 }
 
-pub fn createInput(
-    sample_rate: f32,
-    raw_buffer_fidelity: usize,
-    lsb: f32,
-    input_type: InputType
-) !Input {
-    const raw_data = try initWaveformData(raw_buffer_fidelity, 4);
-    const frequency_data = try initWaveformData(@intCast(raw_buffer_fidelity/2), 512);
-
-    const waveforms: []WaveformData = try std.heap.page_allocator.alloc(WaveformData, 2);
-
-    waveforms[0] = raw_data;
-    waveforms[1] = frequency_data;
-
-    return .{
-        .sample_rate = sample_rate,
-        .log_scale_base = lsb,
-        .log_scale_amplitude = computeLogScaleAmplitude(
-            raw_buffer_fidelity, lsb),
-        .audio_type = input_type,
-        .waveforms = waveforms
-    };
-}
-
-pub fn create(
-    input_capacity: usize,
-    has_system_audio: bool,
-) !*AudioData {
-    // Construct inputs with capacity
-    const default_inputs: []Input = try std.heap.page_allocator
-        .alloc(Input, input_capacity);
-    @memset(default_inputs, Input{
-        .audio_type = .uninitialised,
-        .waveforms = null,
-        .log_scale_base = 0.019,
-        .log_scale_amplitude = computeLogScaleAmplitude(AudioData.raw_buffer_fidelity, 0.019),
-        .sample_rate = 48000,
-    });
-
-    if (has_system_audio) {
-        const system_input = try createInput(48000, AudioData.raw_buffer_fidelity, 0.019, .system_audio);
-
-        default_inputs[0] = system_input;
-    }
-
-    const ptr: *AudioData = try std.heap.page_allocator
-        .create(AudioData);
-
-    ptr.inputs = default_inputs;
-    ptr.input_length = @intFromBool(has_system_audio);
-
-    return ptr;
-}
 
 pub fn destroy(audio_data: *AudioData) void {
     audio_data.destroy();

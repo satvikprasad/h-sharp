@@ -7,7 +7,8 @@ pub fn initialise(
     input_capacity: usize,
     has_system_audio: bool
 ) callconv(.c) usize {
-    if (audio.create(input_capacity, has_system_audio)) |audio_data| {
+    if (audio.AudioData
+        .create(input_capacity, has_system_audio)) |audio_data| {
         return @intFromPtr(audio_data);
     } else |err| switch (err) {
         std.mem.Allocator.Error.OutOfMemory => {
