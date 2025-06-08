@@ -136,6 +136,7 @@ pub fn getMaximumFromInput(
         .time_weighted_max;
 }
 
+// TODO: Rename this
 pub fn getInputStringsAlignSize(
     audio_data: *audio.AudioData
 ) callconv(.c) usize {
@@ -149,7 +150,7 @@ pub fn getInputStrings(
     var input_strings_out: [*][]u8 = input_string_buf;
 
     if (@intFromPtr(input_strings_out) == std.math.maxInt(usize)) {
-        debug.print("1");
+        debug.print("Allocating new string for getInputStrings");
 
         // TODO: Free this
         if (std.heap.page_allocator.alloc(

@@ -3,19 +3,12 @@ import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
 import { initialiseLocalSystem } from "./local";
 import { initialiseWASM } from "./wasm";
 
-let deltaTime = 0;
-
-const resizeCanvas = async (
-    local: ILocalAPI,
-    canvas: HTMLCanvasElement
-): Promise<void> => {
-    let size: [Number, Number] = await local.frame.getSize();
-
-    canvas.setAttribute("width", String(size[0]));
-    canvas.setAttribute("height", String(size[1]));
-}
-
 const main = (): void => {
+    const container: HTMLDivElement | null = document.querySelector(".container");
+    if (container == null) {
+        throw Error("Could not find main container.");
+    }
+        
     // Get canvas
     const canvas: HTMLCanvasElement | null = document.querySelector("#gl-canvas");
     if (canvas == null) {
@@ -44,43 +37,51 @@ const main = (): void => {
     }
 
     local.frame.onResized((dim) => {
-        canvas.setAttribute("width", String(dim.width))
-        canvas.setAttribute("height", String(dim.height))
+        container.setAttribute("width", String(dim.width))
+        container.setAttribute("height", String(dim.height))
 
         gl.viewport(0, 0, dim.width, dim.height);
     });
-    
-    initialiseWASM(local.fs).then((wasmData) => {
-        hsInitialise(
+
+    const initialise = async () => {
+        // Resize the canvas.
+        const canvasSize = await local.frame.getSize();
+        container.setAttribute("width", String(canvasSize[0]));
+        container.setAttribute("height", String(canvasSize[0]));
+
+        let wasmData = await initialiseWASM(local.fs);
+
+        let hsData = await hsInitialise(
             local, 
             gl,
             canvas,
             wasmData,
             window.local != undefined
-        ).then((hsData: HSData) => {
-            // Resize canvas to width of view
-            resizeCanvas(local, canvas).then(() => {
-                // Resize viewport
-                gl.viewport(0, 0, canvas.width, canvas.height);
+        )
 
-                let then = 0;
+        // Resize canvas to width of view
+        // Resize viewport
+        gl.viewport(0, 0, canvas.width, canvas.height);
 
-                const tick: FrameRequestCallback = (now: number) => {
-                    hsUpdate(hsData, deltaTime);
+        let deltaTime = 0;
+        let then = 0;
 
-                    hsRender(hsData, deltaTime);
+        const tick: FrameRequestCallback = (now: number) => {
+            hsUpdate(hsData, deltaTime);
 
-                    now *= 0.001; // Convert to seconds.
-                    deltaTime = now - then;
-                    then = now;
+            hsRender(hsData, deltaTime);
 
-                    requestAnimationFrame(tick);
-                }
+            now *= 0.001; // Convert to seconds.
+            deltaTime = now - then;
+            then = now;
 
-                requestAnimationFrame(tick);
-            });
-        });
-    });
+            requestAnimationFrame(tick);
+        }
+
+        requestAnimationFrame(tick);
+    };
+
+    initialise().then(() => {});
 };
 
 main();

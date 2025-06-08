@@ -33,6 +33,7 @@ pub const Input = struct {
     audio_type: InputType,
 
     pub fn create(
+        name: []const u8,
         sample_rate: f32,
         raw_buffer_fidelity: usize,
         lsb: f32,
@@ -47,6 +48,7 @@ pub const Input = struct {
         waveforms[1] = frequency_data;
 
         return .{
+            .name = name,
             .sample_rate = sample_rate,
             .lsb = lsb,
             .lsa = computeLogScaleAmplitude(
@@ -68,7 +70,7 @@ pub const AudioData = struct {
         const default_inputs: []Input = try std.heap.page_allocator
             .alloc(Input, input_capacity);
         @memset(default_inputs, Input{
-            .name = "System Audio",
+            .name = "",
             .audio_type = .uninitialised,
             .waveforms = null,
             .lsb = 0.019,
@@ -77,7 +79,7 @@ pub const AudioData = struct {
         });
 
         if (has_system_audio) {
-            const system_input = try Input.create(48000, AudioData.raw_buffer_fidelity, 0.019, .system_audio);
+            const system_input = try Input.create("System Audio", 48000, AudioData.raw_buffer_fidelity, 0.019, .system_audio);
 
             default_inputs[0] = system_input;
         }

@@ -20,15 +20,19 @@ function getInputStrings(
     const outSize = audioData.methods.getInputStringsAlignSize(
         audioData.ptr
     );
+    
+    if (outSize <= 0) {
+        // Have no input strings.
+        return [];
+    }
 
-    let retPtr = audioData.methods.getInputStrings(
+    audioData.inputStringsPtr = audioData.methods.getInputStrings(
         audioData.ptr,
         audioData.inputStringsPtr, // Destination for input strings bufffer
     );
-    audioData.inputStringsPtr = retPtr;
 
     const buf = wasm.u32MemoryView(
-        wasmMemory, retPtr, 2*outSize
+        wasmMemory, audioData.inputStringsPtr, 2*outSize
     ); // [(ptr, len), ...]
 
     const decoder = new TextDecoder();
@@ -68,8 +72,6 @@ const initialiseAudioData = (
         inputStringsPtr: -1,
     }
 
-    console.log(getInputStrings(data));
-
     return data;
 }
 
@@ -106,11 +108,11 @@ const getBufferFromInput = (
         ));
 }
 
-const getMaximumFromInput = (
+function getMaximumFromInput(
     audioData: AData,
     inputIndex: number,
     waveformIndex: number
-): number => {
+): number {
     return audioData.methods.getMaximumFromInput(
         audioData.ptr, inputIndex, waveformIndex
     );
@@ -125,5 +127,7 @@ export {
     updateSystemAudioData,
 
     getBufferFromInput,
-    getMaximumFromInput
+    getMaximumFromInput,
+
+    getInputStrings,
 };

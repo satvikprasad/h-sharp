@@ -2,8 +2,58 @@ body, html {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background-color: #121212;
+    color: #ffffff;
 }
 
 ::-webkit-scrollbar {
+    display: none;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+#gl-canvas {
+    flex-grow: 1;
+    height: 100%;
+    max-width: 100%;
+}
+
+#input-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#input-list ul {
+    list-style-type: none;
+    padding-left: 20px;
+    margin: 0;
+}
+
+#input-list li {
+    padding: 0;
+    background-color: #2d1b4d;
+    color: #e0e0e0;
+    font-family: 'Arial', sans-serif;
+    font-size: x-small;
+    cursor: pointer;
+    width: 100px;
+}
+
+#input-list li:hover {
+    background-color: #3d2b5d;
+}
+
+#toggle-list:hover {
+    background-color: #3d2b5d;
+}
+
+#input-list.hidden {
     display: none;
 }

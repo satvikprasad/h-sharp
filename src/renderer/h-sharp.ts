@@ -3,10 +3,13 @@ import type { ILocalAPI } from "../../interface";
 import { 
     type AData, 
 
+    getInputStrings, 
+
     initialiseAudioData, 
     updateAudioData, 
     updateSystemAudioData 
 } from "./audio";
+import { initialiseInputList } from "./input-list";
 
 import { CNum } from "./math/number";
 
@@ -70,6 +73,8 @@ const hsInitialise = async (
     const audioData = initialiseAudioData(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
+
+    initialiseInputList(getInputStrings(audioData));
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {

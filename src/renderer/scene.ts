@@ -47,6 +47,10 @@ const drawScene = (
     let gl = hsData.gl;
     let sceneData = hsData.sceneData;
 
+    let canvas: HTMLCanvasElement = document.querySelector("#gl-canvas")!;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.BLEND);
