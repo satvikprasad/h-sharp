@@ -3,7 +3,8 @@ import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
 import { CameraData } from "./objects/camera";
 import { renderGridlines } from "./objects/gridlines";
-import { getBufferFromInput, getMaximumFromInput } from "./audio";
+
+import * as audio from "./audio";
 
 interface SceneData {
     projMat: mat4;
@@ -47,6 +48,10 @@ const drawScene = (
     let gl = hsData.gl;
     let sceneData = hsData.sceneData;
 
+    let canvas: HTMLCanvasElement = document.querySelector("#gl-canvas")!;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.BLEND);
@@ -69,23 +74,25 @@ const drawScene = (
 
     gl.depthMask(true);
 
-    renderWaveform(
-        gl, 
-        sceneData, 
-        hsData.waveformShaderData,
-        getBufferFromInput(hsData.audioData, 0, 0),
-        [0, 0, 0],
-        getMaximumFromInput(hsData.audioData, 0, 0),
-    );
+    if (hsData.audioData.withSystemAudio) {
+        renderWaveform(
+            gl, 
+            sceneData, 
+            hsData.waveformShaderData,
+            audio.getWaveformBufferFromInputIndex(hsData.audioData, 0, 0),
+            [0, 0, 0],
+            audio.getMaximumFromInputIndex(hsData.audioData, 0, 0),
+        );
 
-    renderWaveform(
-        gl,
-        sceneData,
-        hsData.waveformShaderData,
-        getBufferFromInput(hsData.audioData, 0, 1),
-        [0, 0, 3],
-        getMaximumFromInput(hsData.audioData, 0, 1),
-    );
+        renderWaveform(
+            gl,
+            sceneData,
+            hsData.waveformShaderData,
+            audio.getWaveformBufferFromInputIndex(hsData.audioData, 0, 1),
+            [0, 0, 3],
+            audio.getMaximumFromInputIndex(hsData.audioData, 0, 1),
+        );
+    }
 
     gl.depthMask(false);
     

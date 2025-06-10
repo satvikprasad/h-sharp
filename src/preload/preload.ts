@@ -2,7 +2,7 @@ import type { FrameOnResizedCallback, AudioOnListenerCallback } from "../../inte
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld('local', {
     audio: {
         onListener: (
             callback: AudioOnListenerCallback

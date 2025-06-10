@@ -3,109 +3,61 @@ const debug = @import("../debug.zig");
 
 const std = @import("std");
 
-pub fn initialise(input_capacity: usize) callconv(.c) usize {
-    const audio_data: ?*audio.AudioData = audio.create(input_capacity);
-
-    if (audio_data == null) {
-        return std.math.maxInt(usize);
-    }
-
-    return @intFromPtr(audio_data.?);
+pub fn getWaveformBuffer(
+    waveform_data: *audio.WaveformData
+) callconv(.c) usize {
+    return @intFromPtr(waveform_data.buffer.ptr);
 }
 
-pub fn update(audio_data: *audio.AudioData) callconv(.c) void {
-    audio_data.update() catch |err| {
-        switch (err) {
-            std.mem.Allocator.Error.OutOfMemory => {
-            },
-            audio.Math.FourierTransformError.InputNotPowerTwo => {
-            },
+pub fn createWaveform(
+    buffer_length: usize,
+    num_maximums: usize
+) callconv(.c) usize {
+    if(audio.WaveformData.create(buffer_length, num_maximums)) 
+        |waveform_data| {
+            return @intFromPtr(waveform_data);
+        }
+    else |err| switch (err) {
+        std.mem.Allocator.Error.OutOfMemory => {
+            debug.print("Could not create waveform, out of memory.");
+        },
+    }
+
+    return std.math.maxInt(usize);
+}
+
+pub fn updateFrequencyWaveform(
+    raw_waveform_data: *audio.WaveformData,
+    frequency_waveform_data: *audio.WaveformData,
+    lsa: f32,
+    lsb: f32
+) callconv(.c) void {
+    raw_waveform_data.updateFrequencyWaveform(frequency_waveform_data, lsa, lsb) catch |err| switch(err) {
+        audio.GenerateFrequencyWaveformError.LengthNotFactorOf2 => {
+            debug.print("Error when updating frequencies: Length of frequency waveform buffer must be half the length of the raw waveform buffer.");
+        },
+        audio.Math.FourierTransformError.InputNotPowerTwo => {
+            debug.print("Error when updating frequencies: Raw buffer length was not power of two.");
+        },
+        std.mem.Allocator.Error.OutOfMemory => {
+            debug.print("Error when updating frequencies: Out of memory.");
         }
     };
 }
 
-pub fn destroy(audio_data: *audio.AudioData) callconv(.c) void {
-    audio.destroy(audio_data);
+pub fn updateWaveform(
+    waveform_data: *audio.WaveformData
+) callconv(.c) void {
+    waveform_data.update() 
+        catch |err| switch(err) {
+            std.mem.Allocator.Error.OutOfMemory => {
+                debug.print("Could not update waveform, out of memory.");
+            }
+        };
 }
 
-pub fn getSystemBuffer(
-    audio_data: *audio.AudioData
-) callconv(.c) usize {
-    return @intFromPtr(audio_data.inputs[0]
-        .waveforms[0].buffer.ptr);
-}
-
-fn getInput(
-    audio_data: *audio.AudioData,
-    index: usize,
-) ?*audio.Input {
-    if (index < audio_data.inputs.len) {
-        return &audio_data.inputs[index];
-    }
-
-    debug.print("ERROR: Input requested is out of range.");
-    return null;
-}
-
-pub fn getBufferFromInput(
-    audio_data: *audio.AudioData,
-    input_index: usize,
-    waveform_index: usize
-) callconv(.c) usize {
-    if (input_index >= audio_data.inputs.len) {
-        debug.print("input_index is out of range.");
-        return std.math.maxInt(usize);
-    }
-
-    if (waveform_index >= audio_data.inputs[input_index]
-        .waveforms.len) {
-        debug.print("waveform_index is out of range.");
-        return std.math.maxInt(usize);
-    }
-
-    return @intFromPtr(audio_data.inputs[input_index]
-        .waveforms[waveform_index]
-        .buffer.ptr);
-}
-
-pub fn getBufferLengthFromInput(
-    audio_data: *audio.AudioData,
-    input_index: usize,
-    waveform_index: usize
-) callconv(.c) usize {
-    if (input_index >= audio_data.inputs.len) {
-        debug.print("input_index is out of range.");
-        return std.math.maxInt(usize);
-    }
-
-    if (waveform_index >= audio_data.inputs[input_index]
-        .waveforms.len) {
-        debug.print("waveform_index is out of range.");
-        return std.math.maxInt(usize);
-    }
-
-    return audio_data.inputs[input_index]
-        .waveforms[waveform_index]
-        .buffer.len;
-}
-
-pub fn getMaximumFromInput(
-    audio_data: *audio.AudioData,
-    input_index: usize,
-    waveform_index: usize
+pub fn getWaveformMaximum(
+    waveform_data: *audio.WaveformData,
 ) callconv(.c) f32 {
-    if (input_index >= audio_data.inputs.len) {
-        debug.print("input_index is out of range.");
-        return std.math.maxInt(usize);
-    }
-
-    if (waveform_index >= audio_data.inputs[input_index]
-        .waveforms.len) {
-        debug.print("waveform_index is out of range.");
-        return std.math.maxInt(usize);
-    }
-
-    return audio_data.inputs[input_index]
-        .waveforms[waveform_index]
-        .time_weighted_max;
+    return waveform_data.time_weighted_max;
 }

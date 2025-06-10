@@ -3,6 +3,7 @@
     "version": "0.1.0",
     "main": "main.js",
     "scripts": {
+        "server": "./build && node server/server.js",
         "build": "./build",
         "debug": "npm run build && electron --enable-logging --inspect=9229 dist/main/main.js",
         "start": "npm run build && electron --enable-logging dist/main/main.js",
@@ -12,15 +13,19 @@
     "license": "ISC",
     "description": "",
     "devDependencies": {
+        "@types/express": "^5.0.2",
         "@types/node": "^22.15.21",
         "electron": "^36.2.1",
+        "electron-reloader": "^1.2.3",
         "ts-loader": "^9.5.2",
         "typescript": "^5.8.3",
         "webpack": "^5.99.9",
         "webpack-cli": "^6.0.1"
     },
     "dependencies": {
+        "express": "^5.1.0",
         "gl-matrix": "^3.4.3",
-        "h-sharp": "file:wasm/pkg"
+        "h-sharp": "file:wasm/pkg",
+        "path-browserify": "^1.0.1"
     }
 }

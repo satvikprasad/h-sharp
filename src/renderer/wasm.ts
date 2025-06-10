@@ -1,46 +1,81 @@
-type TAudioInitialise = (
-    inputCapacity: number
+import { IFileSystemAPI } from "../../interface";
+
+type TAudioComputeLogScaleAmplitude = (
+    N: number,
+    k: number,
 ) => number;
 
-type TAudioUpdate = (
-    dataPtr: number
+type TAudioCreateWaveform = (
+    N: number, 
+    num_maximums: number
+) => number;
+
+type TAudioUpdateFrequencyWaveform = (
+    rawWaveformPtr: number,
+    frequencyWaveformPtr: number,
+    lsa: number,
+    lsb: number
 ) => void;
 
-type TAudioGetSystemBuffer = (
-    dataPtr: number
+type TAudioUpdateWaveform = (
+    waveformPtr: number
+) => void;
+
+type TAudioDestroyWaveform = (
+    waveformPtr: number
+) => void;
+
+type TAudioGetWaveformBuffer = (
+    waveformPtr: number
 ) => number;
 
-type TAudioGetMaximumFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-    waveformIndex: number
-) => number;
-
-type TAudioGetBufferFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-    waveformIndex: number
-) => number;
-
-type TAudioGetBufferLengthFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-    waveformIndex: number
+type TAudioGetWaveformMaximum = (
+    waveformPtr: number
 ) => number;
 
 interface IAudio {
-    initialise: TAudioInitialise;
-    update: TAudioUpdate;
-    getSystemBuffer: TAudioGetSystemBuffer;
-
-    getMaximumFromInput: TAudioGetMaximumFromInput;
-    getBufferFromInput: TAudioGetBufferFromInput;
-    getBufferLengthFromInput: TAudioGetBufferLengthFromInput;
+    computeLogScaleAmplitude: TAudioComputeLogScaleAmplitude;
+    createWaveform: TAudioCreateWaveform;
+    updateFrequencyWaveform: TAudioUpdateFrequencyWaveform;
+    updateWaveform: TAudioUpdateWaveform;
+    destroyWaveform: TAudioDestroyWaveform;
+    getWaveformBuffer: TAudioGetWaveformBuffer;
+    getWaveformMaximum: TAudioGetWaveformMaximum;
 };
 
 interface WASMData {
     memory: WebAssembly.Memory,
     audio: IAudio;
+}
+
+const arrayBufferMemoryView = (
+    memory: WebAssembly.Memory,
+    ptr: number,
+    length: number
+) => {
+    if (!memory.buffer) {
+        console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
+    }
+
+    return memory.buffer.slice(ptr, ptr + length);
+}
+
+const u32MemoryView = (
+    memory: WebAssembly.Memory,
+    ptr: number,
+    length: number,
+) => {
+    if (!memory.buffer) {
+        console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
+    }
+
+    let view = new Uint32Array(
+        memory.buffer,
+        ptr,
+        length
+    );
+
+    return view;
 }
 
 const float32MemoryView = (
@@ -61,6 +96,25 @@ const float32MemoryView = (
     return view;
 }
 
+const u8MemoryView = (
+    memory: WebAssembly.Memory,
+    ptr: number,
+    length: number,
+) => {
+    if (!memory.buffer) {
+        console.log("Error generating float32MemoryView from WASM: memory has not yet been instantiated.");
+    }
+
+    let view = new Uint8Array(
+        memory.buffer,
+        ptr,
+        length
+    );
+
+    return view;
+}
+
+
 const wasmPrint = (
     memory: WebAssembly.Memory, sPtr: number, length: number
 ) => {
@@ -79,10 +133,12 @@ const wasmPrint = (
     console.log(`From WASM: ${str}`);
 }
 
-const initialiseWASM = async (): Promise<WASMData> => {
+const initialiseWASM = async (
+    fs: IFileSystemAPI
+): Promise<WASMData> => {
     let memory: WebAssembly.Memory | null = null;
 
-    const source = await window.electronAPI.fs.readFileSync("dist/bin/h-sharp.wasm") 
+    const source = await fs.readFileSync("bin/h-sharp.wasm") 
     
     if (typeof(source) == "string") {
         throw Error(
@@ -102,23 +158,26 @@ const initialiseWASM = async (): Promise<WASMData> => {
     memory = result.instance.exports.memory as WebAssembly.Memory;
 
     let audio: IAudio = {
-        initialise: result.instance.exports
-        .audioInitialise as TAudioInitialise,
+        computeLogScaleAmplitude: result.instance.exports
+        .audioComputeLogScaleAmplitude as TAudioComputeLogScaleAmplitude,
 
-        update: result.instance.exports
-        .audioUpdate as TAudioUpdate,
+        createWaveform: result.instance.exports
+        .audioCreateWaveform as TAudioCreateWaveform,
 
-        getSystemBuffer: result.instance.exports
-        .audioGetSystemBuffer as TAudioGetSystemBuffer,
+        updateFrequencyWaveform: result.instance.exports
+        .audioUpdateFrequencyWaveform as TAudioUpdateFrequencyWaveform,
 
-        getMaximumFromInput: result.instance.exports
-        .audioGetMaximumFromInput as TAudioGetMaximumFromInput,
+        updateWaveform: result.instance.exports
+        .audioUpdateWaveform as TAudioUpdateWaveform,
 
-        getBufferFromInput: result.instance.exports
-        .audioGetBufferFromInput as TAudioGetBufferFromInput,
+        destroyWaveform: result.instance.exports
+        .audioDestroyWaveform as TAudioDestroyWaveform,
 
-        getBufferLengthFromInput: result.instance.exports
-        .audioGetBufferLengthFromInput as TAudioGetBufferLengthFromInput,
+        getWaveformBuffer: result.instance.exports
+        .audioGetWaveformBuffer as TAudioGetWaveformBuffer,
+
+        getWaveformMaximum: result.instance.exports
+        .audioGetWaveformMaximum as TAudioGetWaveformMaximum
     };
 
     return {
@@ -132,5 +191,10 @@ export {
     type IAudio,
 
     initialiseWASM,
-    float32MemoryView
+
+    float32MemoryView,
+    u8MemoryView,
+    u32MemoryView,
+
+    arrayBufferMemoryView
 };

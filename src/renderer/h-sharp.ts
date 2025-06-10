@@ -1,13 +1,8 @@
-import { vec4 } from "gl-matrix";
-import type { IElectronAPI } from "../../interface";
+import type { ILocalAPI } from "../../interface";
 
-import { 
-    type AData, 
+import * as audio from "./audio";
 
-    initialiseAudioData, 
-    updateAudioData, 
-    updateSystemAudioData 
-} from "./audio";
+import { initialiseInputList } from "./input-list";
 
 import { CNum } from "./math/number";
 
@@ -22,7 +17,7 @@ import {
 import { DefaultShader } from "./shaders/default-shader";
 import { GridlinesShader } from "./shaders/gridlines-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
-import { initialiseWASM, WASMData } from "./wasm";
+import { WASMData } from "./wasm";
 
 interface InputData {
     mouseWheel: {
@@ -34,7 +29,7 @@ interface InputData {
 };
 
 interface HSData {
-    audioData: AData;
+    audioData: audio.AudioData;
     sceneData: SceneData;
     inputData: InputData;
     wasmData: WASMData;
@@ -62,17 +57,22 @@ const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
 }
 
 const hsInitialise = async (
-    e: IElectronAPI,
+    local: ILocalAPI,
     gl: WebGLRenderingContext,
     canvas: HTMLCanvasElement,
     wasmData: WASMData,
+    isNative: boolean,
 ): Promise<HSData> => {
-    const audioData = initialiseAudioData(wasmData);
+    const audioData = audio.create(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
+    initialiseInputList(audioData.inputs);
+
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+
         if (event.ctrlKey) {
             // Zoom event
             inputData.deltaZoom = event.deltaY;
@@ -85,23 +85,27 @@ const hsInitialise = async (
 
     // Callback from main.ts whenever new 
     // system audio is received
-    e.audio.onListener(
+    local.audio.onListener(
         (buffer: Float32Array) => {
+            if (buffer.length != 512) {
+                throw Error("System audio buffer length was not 512.");
+            }
+
             // Update buffer
-            updateSystemAudioData(audioData, buffer);
+            audio.updateSystemAudioData(audioData, buffer);
         });
 
     // Initialise shaders
     const defaultShaderData = await DefaultShader.initialise(
-        gl, e.fs
+        gl, local.fs
     );
 
     const waveformShaderData = await WaveformShader.initialise(
-        gl, e.fs, 100
+        gl, local.fs, 100
     );
 
     const gridlinesShaderData = await GridlinesShader.initialise(
-        gl, e.fs
+        gl, local.fs
     );
 
     return {
@@ -160,7 +164,8 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
     hsData.deltaTime = deltaTime;
     hsData.time += hsData.deltaTime;
 
-    updateAudioData(hsData.audioData);
+    audio.update(hsData.audioData);
+
     updateInputs(hsData);
     updateScene(hsData);
 }
