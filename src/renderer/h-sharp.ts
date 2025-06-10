@@ -87,6 +87,10 @@ const hsInitialise = async (
     // system audio is received
     local.audio.onListener(
         (buffer: Float32Array) => {
+            if (buffer.length != 512) {
+                throw Error("System audio buffer length was not 512.");
+            }
+
             // Update buffer
             audio.updateSystemAudioData(audioData, buffer);
         });

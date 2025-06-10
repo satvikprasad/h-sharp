@@ -48,9 +48,14 @@ app.whenReady().then(() => {
 
     systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
         if (hasWindow) {
-            let buf = new ArrayBuffer(chunk.length)
-            let f = new Float32Array(buf)
-            new Uint8Array(buf).set([...chunk])
+            if (chunk.length < 2048) {
+                throw Error("systemAudioCapturer: chunk length was incorrect size");
+            }
+
+            // TODO: Don't hardcode this.
+            let buf = new ArrayBuffer(Math.min(chunk.length, 2048));
+            let f = new Float32Array(buf);
+            new Uint8Array(buf).set([...chunk].slice(0, 2048));
 
             win.webContents.send('audio.on-listener', f);
         }
