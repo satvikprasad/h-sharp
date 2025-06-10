@@ -1,36 +1,32 @@
-const audio = @import("audio/wrappers.zig");
+const audio_wrappers = @import("audio/wrappers.zig");
+const audio = @import("audio/audio.zig");
 
 comptime {
-    // These require wrappers to follow c conventions.
-    @export(&audio.initialise, .{ 
-        .name = "audioInitialise" 
+    @export(&audio_wrappers.createWaveform, .{
+        .name = "audioCreateWaveform"
     });
 
-    @export(&audio.update, .{ 
-        .name = "audioUpdate" 
+    @export(&audio_wrappers.updateFrequencyWaveform, .{
+        .name = "audioUpdateFrequencyWaveform"
     });
 
-    @export(&audio.getSystemBuffer, .{ 
-        .name = "audioGetSystemBuffer" 
+    @export(&audio_wrappers.updateWaveform, .{
+        .name = "audioUpdateWaveform"
+    });
+    
+    @export(&audio.computeLogScaleAmplitude, .{
+        .name = "audioComputeLogScaleAmplitude"
     });
 
-    @export(&audio.getMaximumFromInput, .{ 
-        .name = "audioGetMaximumFromInput" 
+    @export(&audio_wrappers.getWaveformMaximum, .{
+        .name = "audioGetWaveformMaximum"
     });
 
-    @export(&audio.getBufferFromInput, .{ 
-        .name = "audioGetBufferFromInput" 
+    @export(&audio_wrappers.getWaveformBuffer, .{
+        .name = "audioGetWaveformBuffer"
     });
 
-    @export(&audio.getBufferLengthFromInput, .{
-        .name = "audioGetBufferLengthFromInput"
-    });
-
-    @export(&audio.getInputStrings, .{
-        .name = "audioGetInputStrings"
-    });
-
-    @export(&audio.getInputStringsAlignSize, .{
-        .name = "audioGetInputStringsAlignSize"
+    @export(&audio.WaveformData.destroy, .{
+        .name = "audioDestroyWaveform"
     });
 }

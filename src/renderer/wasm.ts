@@ -1,53 +1,46 @@
 import { IFileSystemAPI } from "../../interface";
 
-type TAudioInitialise = (
-    inputCapacity: number,
-    hasSystemAudio: boolean,
+type TAudioComputeLogScaleAmplitude = (
+    N: number,
+    k: number,
 ) => number;
 
-type TAudioUpdate = (
-    dataPtr: number
+type TAudioCreateWaveform = (
+    N: number, 
+    num_maximums: number
+) => number;
+
+type TAudioUpdateFrequencyWaveform = (
+    rawWaveformPtr: number,
+    frequencyWaveformPtr: number,
+    lsa: number,
+    lsb: number
 ) => void;
 
-type TAudioGetSystemBuffer = (
-    dataPtr: number
+type TAudioUpdateWaveform = (
+    waveformPtr: number
+) => void;
+
+type TAudioDestroyWaveform = (
+    waveformPtr: number
+) => void;
+
+type TAudioGetWaveformBuffer = (
+    waveformPtr: number
 ) => number;
 
-type TAudioGetMaximumFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-    waveformIndex: number
+type TAudioGetWaveformMaximum = (
+    waveformPtr: number
 ) => number;
-
-type TAudioGetBufferFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-    waveformIndex: number
-) => number;
-
-type TAudioGetBufferLengthFromInput = (
-    dataPtr: number,
-    inputIndex: number,
-    waveformIndex: number
-) => number;
-
-type TAudioGetInputStrings = (
-    dataPtr: number,
-    inputStringBufPtr: number
-) => number;
-
-type TAudioGetInputStringsAlignSize = (dataPtr: number) => number;
 
 interface IAudio {
-    initialise: TAudioInitialise;
-    update: TAudioUpdate;
-    getSystemBuffer: TAudioGetSystemBuffer;
-
-    getMaximumFromInput: TAudioGetMaximumFromInput;
-    getBufferFromInput: TAudioGetBufferFromInput;
-    getBufferLengthFromInput: TAudioGetBufferLengthFromInput;
-    getInputStrings: TAudioGetInputStrings;
-    getInputStringsAlignSize: TAudioGetInputStringsAlignSize;
+    computeLogScaleAmplitude: TAudioComputeLogScaleAmplitude;
+    createWaveform: TAudioCreateWaveform;
+    updateFrequencyWaveform: TAudioUpdateFrequencyWaveform;
+    updateWaveform: TAudioUpdateWaveform;
+    destroyWaveform: TAudioDestroyWaveform;
+    getWaveformBuffer: TAudioGetWaveformBuffer;
+    getWaveformMaximum: TAudioGetWaveformMaximum;
 };
 
 interface WASMData {
@@ -165,29 +158,26 @@ const initialiseWASM = async (
     memory = result.instance.exports.memory as WebAssembly.Memory;
 
     let audio: IAudio = {
-        initialise: result.instance.exports
-        .audioInitialise as TAudioInitialise,
+        computeLogScaleAmplitude: result.instance.exports
+        .audioComputeLogScaleAmplitude as TAudioComputeLogScaleAmplitude,
 
-        update: result.instance.exports
-        .audioUpdate as TAudioUpdate,
+        createWaveform: result.instance.exports
+        .audioCreateWaveform as TAudioCreateWaveform,
 
-        getSystemBuffer: result.instance.exports
-        .audioGetSystemBuffer as TAudioGetSystemBuffer,
+        updateFrequencyWaveform: result.instance.exports
+        .audioUpdateFrequencyWaveform as TAudioUpdateFrequencyWaveform,
 
-        getMaximumFromInput: result.instance.exports
-        .audioGetMaximumFromInput as TAudioGetMaximumFromInput,
+        updateWaveform: result.instance.exports
+        .audioUpdateWaveform as TAudioUpdateWaveform,
 
-        getBufferFromInput: result.instance.exports
-        .audioGetBufferFromInput as TAudioGetBufferFromInput,
+        destroyWaveform: result.instance.exports
+        .audioDestroyWaveform as TAudioDestroyWaveform,
 
-        getBufferLengthFromInput: result.instance.exports
-        .audioGetBufferLengthFromInput as TAudioGetBufferLengthFromInput,
+        getWaveformBuffer: result.instance.exports
+        .audioGetWaveformBuffer as TAudioGetWaveformBuffer,
 
-        getInputStrings: result.instance.exports
-        .audioGetInputStrings as TAudioGetInputStrings,
-
-        getInputStringsAlignSize: result.instance.exports
-        .audioGetInputStringsAlignSize as TAudioGetInputStringsAlignSize,
+        getWaveformMaximum: result.instance.exports
+        .audioGetWaveformMaximum as TAudioGetWaveformMaximum
     };
 
     return {

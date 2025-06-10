@@ -1,14 +1,7 @@
 import type { ILocalAPI } from "../../interface";
 
-import { 
-    type AData, 
+import * as audio from "./audio";
 
-    getInputStrings, 
-
-    initialiseAudioData, 
-    updateAudioData, 
-    updateSystemAudioData 
-} from "./audio";
 import { initialiseInputList } from "./input-list";
 
 import { CNum } from "./math/number";
@@ -36,7 +29,7 @@ interface InputData {
 };
 
 interface HSData {
-    audioData: AData;
+    audioData: audio.AudioData;
     sceneData: SceneData;
     inputData: InputData;
     wasmData: WASMData;
@@ -70,17 +63,17 @@ const hsInitialise = async (
     wasmData: WASMData,
     isNative: boolean,
 ): Promise<HSData> => {
-    const audioData = initialiseAudioData(wasmData, isNative);
+    const audioData = audio.create(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
-    initialiseInputList(getInputStrings(audioData));
+    initialiseInputList(audioData.inputs);
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
-        if (event.ctrlKey) {
-            event.preventDefault();
+        event.preventDefault();
 
+        if (event.ctrlKey) {
             // Zoom event
             inputData.deltaZoom = event.deltaY;
             return;
@@ -95,7 +88,7 @@ const hsInitialise = async (
     local.audio.onListener(
         (buffer: Float32Array) => {
             // Update buffer
-            updateSystemAudioData(audioData, buffer);
+            audio.updateSystemAudioData(audioData, buffer);
         });
 
     // Initialise shaders
@@ -167,7 +160,8 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
     hsData.deltaTime = deltaTime;
     hsData.time += hsData.deltaTime;
 
-    updateAudioData(hsData.audioData);
+    audio.update(hsData.audioData);
+
     updateInputs(hsData);
     updateScene(hsData);
 }

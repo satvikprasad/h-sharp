@@ -3,7 +3,8 @@ import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
 import { CameraData } from "./objects/camera";
 import { renderGridlines } from "./objects/gridlines";
-import { getBufferFromInput, getMaximumFromInput } from "./audio";
+
+import * as audio from "./audio";
 
 interface SceneData {
     projMat: mat4;
@@ -73,23 +74,23 @@ const drawScene = (
 
     gl.depthMask(true);
 
-    if (hsData.audioData.hasSystemAudio) {
+    if (hsData.audioData.withSystemAudio) {
         renderWaveform(
             gl, 
             sceneData, 
             hsData.waveformShaderData,
-            getBufferFromInput(hsData.audioData, 0, 0),
+            audio.getWaveformBufferFromInputIndex(hsData.audioData, 0, 0),
             [0, 0, 0],
-            getMaximumFromInput(hsData.audioData, 0, 0),
+            audio.getMaximumFromInputIndex(hsData.audioData, 0, 0),
         );
 
         renderWaveform(
             gl,
             sceneData,
             hsData.waveformShaderData,
-            getBufferFromInput(hsData.audioData, 0, 1),
+            audio.getWaveformBufferFromInputIndex(hsData.audioData, 0, 1),
             [0, 0, 3],
-            getMaximumFromInput(hsData.audioData, 0, 1),
+            audio.getMaximumFromInputIndex(hsData.audioData, 0, 1),
         );
     }
 

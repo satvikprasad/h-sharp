@@ -4,6 +4,7 @@ body, html {
     overflow: hidden;
     background-color: #121212;
     color: #ffffff;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
 }
 
 ::-webkit-scrollbar {
@@ -16,44 +17,112 @@ body, html {
     align-items: flex-start;
     height: 100vh;
     overflow-x: hidden;
+    min-width: 300px;
 }
 
 #gl-canvas {
     flex-grow: 1;
     height: 100%;
     max-width: 100%;
+    min-width: 200px;
 }
 
 #input-list {
     list-style-type: none;
     padding: 0;
     margin: 0;
+    width: 20px;
+    overflow: hidden;
+    transition: width 0.3s ease;
+    height: 100vh;
+    background-color: #000000;
+    text-align: center;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-#input-list ul {
-    list-style-type: none;
-    padding-left: 20px;
-    margin: 0;
+#input-list:hover {
+    width: 200px;
+}
+
+#input-list li, #input-list h2 {
+    color: transparent;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 10pt;
+    padding: 10px;
+    background-color: #000000;
+    white-space: nowrap;
+    user-select: none;
+    text-align: left;
+    -webkit-user-select: none;
 }
 
 #input-list li {
-    padding: 0;
-    background-color: #2d1b4d;
-    color: #e0e0e0;
-    font-family: 'Arial', sans-serif;
-    font-size: x-small;
     cursor: pointer;
-    width: 100px;
+    width: 100%;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+#input-list h2 {
+    margin: 0;
+}
+
+#input-list:hover li, #input-list:hover h2 {
+    color: #e0e0e0;
 }
 
 #input-list li:hover {
-    background-color: #3d2b5d;
-}
-
-#toggle-list:hover {
-    background-color: #3d2b5d;
+    background-color: #1a1a1a;
 }
 
 #input-list.hidden {
     display: none;
 }
+#add-input {
+    background: #2ecc71;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin: 10px auto;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 10pt;
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+#input-list:hover #add-input {
+    opacity: 1;
+    visibility: visible;
+}
+
+#add-input:hover {
+    background: #27ae60;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateX(-50%);
+}
+
+#add-input:active {
+    background: #219a52;
+    transform: translateY(0);
+    box-shadow: none;
+    transform: translateX(-50%);
+}
+
+.text-accented {
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
