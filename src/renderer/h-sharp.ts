@@ -67,7 +67,7 @@ const hsInitialise = async (
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
-    initialiseInputList(audioData.inputs);
+    initialiseInputList(audioData);
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {

@@ -9,14 +9,6 @@ const { spawn } = require('child_process')
 const path = require('node:path');
 const fs = require('fs');
 
-// Enable hot reloading in development
-try {
-    require('electron-reloader')(module, {
-        debug: true,
-        watchRenderer: true
-    });
-} catch (_) { console.log('Error'); }
-
 // TODO: make this better
 let hasWindow = false;
 

@@ -53,6 +53,7 @@ function updateInput(audioData: AudioData, input: Input): void {
     // TODO: Do we need a switch here?
     switch (input.inputType) {
         case InputType.SystemAudio:
+        case InputType.Audio:
             audioData.methods.updateFrequencyWaveform(
                 input.rawWaveformPtr, 
                 input.frequencyWaveformPtr,
@@ -63,7 +64,6 @@ function updateInput(audioData: AudioData, input: Input): void {
             audioData.methods.updateWaveform(input.rawWaveformPtr);
             audioData.methods.updateWaveform(input.frequencyWaveformPtr);
             break;
-        case InputType.Audio:
         case InputType.Uninitialised:
         case InputType.MIDI:
             break;
@@ -86,6 +86,82 @@ interface AudioData {
     memory: WebAssembly.Memory;
     methods: wasm.IAudio;
 };
+
+interface HTMLMediaElementWithCaptureStream extends HTMLMediaElement{
+  captureStream(): MediaStream;
+}
+
+async function addInput(
+    audioData: AudioData,
+    name: string,
+    inputType: InputType,
+    src?: string,
+): Promise<Input> {
+    let newInput: Input;
+
+    switch (inputType) {
+        case InputType.Audio: {
+            if (src == undefined) {
+                throw Error("addInput: src is required when adding inputType: audio");
+            }
+
+            const audioContext = new AudioContext();
+
+            const audioElement= document.createElement("audio");
+            audioElement.src = src;
+
+            const audioTrack = audioContext.createMediaElementSource(
+                audioElement
+            );
+            audioTrack.connect(audioContext.destination);
+
+            audioElement.play();
+
+            await audioContext.audioWorklet.addModule(
+                "./renderer/worklets/audio-processor.js"
+            );
+            const processorNode = new AudioWorkletNode(
+                audioContext,
+                "audio-processor",
+            );
+            audioTrack.connect(processorNode).connect(audioContext.destination);
+
+            const sampleRate = audioContext.sampleRate;
+
+            const lsb = 0.019;
+            const lsa = audioData.methods.computeLogScaleAmplitude(512, 0.019);
+
+            newInput = {
+                name,
+                sampleRate,
+
+                lsb,
+                lsa,
+
+                rawWaveformPtr: audioData.methods.createWaveform(512, 512),
+                frequencyWaveformPtr: audioData.methods.createWaveform(256, 512),
+
+                inputType: InputType.Audio,
+            };
+
+            processorNode.port.onmessage = (e) => {
+                const buffer = e.data as Float32Array;
+
+                const bufPtr = audioData.methods
+                    .getWaveformBuffer(newInput.rawWaveformPtr);
+
+                const memView = wasm.float32MemoryView(audioData.memory, bufPtr, 512);
+                memView.set(buffer);
+            };
+
+        } break;
+
+        default:
+            throw Error(`addInput: InputType ${inputType.toString()} not implemented yet`); 
+    }
+    audioData.inputs.push(newInput);
+    return newInput;
+}
 
 function create(
     wasmData: wasm.WASMData,
@@ -206,6 +282,9 @@ export {
     type AudioData,
     type Input,
 
+    InputType,
+    WaveformType,
+
     create, 
     update, 
     destroy,
@@ -214,4 +293,6 @@ export {
     getWaveformBufferFromInputIndex,
 
     getMaximumFromInputIndex,
+
+    addInput,
 };
