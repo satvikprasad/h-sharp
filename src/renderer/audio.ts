@@ -20,6 +20,12 @@ interface Input {
     frequencyWaveformPtr: number;
 
     inputType: InputType;
+
+    /**
+     * togglePlayPause, returns true if audio began playing, false if it is paused.
+     * @returns boolean 
+     */
+    togglePlayPause?: () => boolean;
 };
 
 function createInput(
@@ -114,7 +120,7 @@ async function addInput(
                 audioElement
             );
             audioTrack.connect(audioContext.destination);
-
+            audioElement.loop = true;
             audioElement.play();
 
             await audioContext.audioWorklet.addModule(
@@ -126,22 +132,26 @@ async function addInput(
             );
             audioTrack.connect(processorNode).connect(audioContext.destination);
 
-            const sampleRate = audioContext.sampleRate;
-
-            const lsb = 0.019;
-            const lsa = audioData.methods.computeLogScaleAmplitude(512, 0.019);
-
             newInput = {
                 name,
-                sampleRate,
+                sampleRate: audioContext.sampleRate,
 
-                lsb,
-                lsa,
+                lsb: 0.019,
+                lsa: audioData.methods.computeLogScaleAmplitude(512, 0.019),
 
                 rawWaveformPtr: audioData.methods.createWaveform(512, 512),
                 frequencyWaveformPtr: audioData.methods.createWaveform(256, 512),
 
                 inputType: InputType.Audio,
+                togglePlayPause: () => {
+                    if (audioElement.paused) {
+                        audioElement.play();
+                        return true;
+                    } 
+
+                    audioElement.pause();
+                    return false;
+                },
             };
 
             processorNode.port.onmessage = (e) => {

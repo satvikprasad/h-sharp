@@ -4,15 +4,53 @@ interface InputListData {
     inputListElement: HTMLUListElement;
 };
 
+function createInputItem(input: audio.Input): HTMLLIElement {
+    let inputItem = document.createElement("li");
+    inputItem.className = "input-item";
+
+    let inputItemText = document.createElement("span");
+    inputItemText.className = "input-name";
+    inputItemText.innerText = input.name;
+
+    let inputItemPlayButton = document.createElement("button");
+    inputItemPlayButton.className = "play-pause-btn";
+
+    let inputItemPlayButtonIcon = document.createElement("span");
+    inputItemPlayButtonIcon.className = "icon";
+    inputItemPlayButtonIcon.innerText = "⏸";
+
+    inputItemPlayButton.onclick = (e) => {
+        if (input.togglePlayPause) {
+            if (input.togglePlayPause()) {
+                inputItemPlayButtonIcon.innerText = "⏸";
+                return;
+            };
+
+            inputItemPlayButtonIcon.innerText = "▶";
+        }
+    };
+
+    switch (input.inputType) {
+        case audio.InputType.Audio:
+            inputItemPlayButton.append(inputItemPlayButtonIcon);
+            break;
+
+        case audio.InputType.SystemAudio: 
+        default:
+            break;
+    }
+
+    inputItem.append(inputItemText, inputItemPlayButton);
+
+    return inputItem;
+}
+
 function pushInput(
     inputList: HTMLUListElement,
     input: audio.Input
 ) {
     let footer: HTMLElement = inputList.children[inputList.children.length - 1] as HTMLElement;
-    let inputItem = document.createElement("li");
-    inputItem.innerText = input.name;
-
-    footer.before(inputItem);
+    footer.before(createInputItem(input));
 }
 
 function createItems(
@@ -26,10 +64,9 @@ function createItems(
     if (inputs) {
         inputs.forEach((input: audio.Input) => {
             // Fill list.
-            let inputItem = document.createElement("li");
-            inputItem.innerText = input.name;
+            
 
-            nodes.push(inputItem);
+            nodes.push(createInputItem(input));
         });
     }
 
