@@ -1,6 +1,6 @@
 #!/bin/bash
 echo -e "\033[0;32mCleaning dist..."
-rm -r dist
+rm -rf dist
 
 echo -e "\033[0;32mCompiling WASM"
 mkdir -p dist/bin
@@ -31,5 +31,7 @@ echo -e "\033[0;32mCopying auxiliary plugins"
 cp bin/* ./dist/bin
 
 # Source environment variables
-echo -e "\033[32mLoading environment...\033[0m"
-source .env
+if [ -f .env ]; then
+    echo -e "\033[32mSourcing environment...\033[0m"
+    source .env
+fi
