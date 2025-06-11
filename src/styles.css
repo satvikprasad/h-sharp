@@ -126,3 +126,42 @@ body, html {
     letter-spacing: 1.5px;
 }
 
+.input-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-name {
+    flex: 1;
+    margin-right: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 40px); /* Account for the play/pause button width */
+}
+
+.play-pause-btn {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.play-pause-btn:hover {
+    background-color: #1a1a1a;
+}
+
+.play-pause-btn.playing .icon {
+    display: inline;
+}
+

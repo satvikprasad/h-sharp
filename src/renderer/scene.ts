@@ -74,25 +74,28 @@ const drawScene = (
 
     gl.depthMask(true);
 
-    if (hsData.audioData.withSystemAudio) {
+    hsData.audioData.inputs.forEach((_, i) => {
         renderWaveform(
-            gl, 
-            sceneData, 
+            gl,
+            sceneData,
             hsData.waveformShaderData,
-            audio.getWaveformBufferFromInputIndex(hsData.audioData, 0, 0),
-            [0, 0, 0],
-            audio.getMaximumFromInputIndex(hsData.audioData, 0, 0),
+            audio.getWaveformBufferFromInputIndex(hsData.audioData,
+                i,
+                audio.WaveformType.Raw
+            ),
+            [0, 3*i, 0],
+            audio.getMaximumFromInputIndex(hsData.audioData, i, audio.WaveformType.Raw)
         );
 
         renderWaveform(
             gl,
             sceneData,
             hsData.waveformShaderData,
-            audio.getWaveformBufferFromInputIndex(hsData.audioData, 0, 1),
-            [0, 0, 3],
-            audio.getMaximumFromInputIndex(hsData.audioData, 0, 1),
+            audio.getWaveformBufferFromInputIndex(hsData.audioData, i, 1),
+            [0, 3*i, 3],
+            audio.getMaximumFromInputIndex(hsData.audioData, i, 1),
         );
-    }
+    });
 
     gl.depthMask(false);
     
