@@ -1,3 +1,4 @@
+import { vec2 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
@@ -16,6 +17,7 @@ import {
 } from "./scene";
 import { DefaultShader } from "./shaders/default-shader";
 import { GridlinesShader } from "./shaders/gridlines-shader";
+import { SquareShader } from "./shaders/square-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { WASMData } from "./wasm";
 
@@ -26,6 +28,8 @@ interface InputData {
     };
 
     deltaZoom: number;
+
+    normalisedMousePos: vec2,
 };
 
 interface HSData {
@@ -39,6 +43,7 @@ interface HSData {
     defaultShaderData: DefaultShader.Data;
     waveformShaderData: WaveformShader.Data;
     gridlinesShaderData: GridlinesShader.Data;
+    squareShaderData: SquareShader.Data;
 
     // Temporaries
     time: number;
@@ -51,6 +56,8 @@ const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
             deltaX: 0, 
             deltaY: 0
         },
+
+        normalisedMousePos: [0, 0],
 
         deltaZoom: 0,
     };
@@ -83,6 +90,12 @@ const hsInitialise = async (
         inputData.mouseWheel.deltaY = -event.deltaY;
     });
 
+    canvas.addEventListener('mousemove',  (event) => {
+        const boundingRect = canvas.getBoundingClientRect();
+        inputData.normalisedMousePos[0] = 2*(event.clientX - boundingRect.x)/boundingRect.width - 1.0;
+        inputData.normalisedMousePos[1] = 1.0 - 2*(event.clientY - boundingRect.y)/boundingRect.height;
+    });
+
     // Callback from main.ts whenever new 
     // system audio is received
     local.audio.onListener(
@@ -108,6 +121,10 @@ const hsInitialise = async (
         gl, local.fs
     );
 
+    const squareShaderData = await SquareShader.initialise(
+        gl, local.fs
+    );
+
     return {
         audioData,
         sceneData,
@@ -119,6 +136,7 @@ const hsInitialise = async (
         defaultShaderData,
         waveformShaderData,
         gridlinesShaderData,
+        squareShaderData,
 
         time: 0,
         deltaTime: 0,

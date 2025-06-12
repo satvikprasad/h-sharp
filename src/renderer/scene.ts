@@ -5,6 +5,7 @@ import { CameraData } from "./objects/camera";
 import { renderGridlines } from "./objects/gridlines";
 
 import * as audio from "./audio";
+import { renderPixel } from "./objects/square";
 
 interface SceneData {
     projMat: mat4;
@@ -98,6 +99,8 @@ const drawScene = (
     });
 
     gl.depthMask(false);
+
+    renderPixel(gl, hsData.squareShaderData, hsData.inputData.normalisedMousePos);
     
     // TODO: Render transparent objects intended for the 
     // foreground.
