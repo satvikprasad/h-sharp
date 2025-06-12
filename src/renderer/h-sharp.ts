@@ -1,4 +1,4 @@
-import { vec2 } from "gl-matrix";
+import { glMatrix, mat4, vec2, vec3 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
@@ -20,6 +20,7 @@ import { GridlinesShader } from "./shaders/gridlines-shader";
 import { SquareShader } from "./shaders/square-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { WASMData } from "./wasm";
+import { argv0 } from "process";
 
 interface InputData {
     mouseWheel: {
@@ -30,6 +31,11 @@ interface InputData {
     deltaZoom: number;
 
     normalisedMousePos: vec2,
+};
+
+interface InputPositionData {
+    raw: vec3;
+    frequency: vec3;
 };
 
 interface HSData {
@@ -45,9 +51,15 @@ interface HSData {
     gridlinesShaderData: GridlinesShader.Data;
     squareShaderData: SquareShader.Data;
 
+    positionData: {
+        inputs: InputPositionData[];
+    };
+
     // Temporaries
     time: number;
     deltaTime: number;
+
+    canvas: HTMLCanvasElement;
 }
 
 const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
@@ -130,6 +142,9 @@ const hsInitialise = async (
         sceneData,
         inputData,
         wasmData,
+        positionData: {
+            inputs: [],
+        },
 
         gl,
 
@@ -140,6 +155,62 @@ const hsInitialise = async (
 
         time: 0,
         deltaTime: 0,
+
+        canvas,
+    };
+}
+
+function calculateShortestDistanceSquared(pos: vec3, near: vec3, far: vec3): number {
+    let diff = vec3.create();
+    vec3.subtract(diff, pos, near);
+
+    let line = vec3.create();
+    vec3.subtract(line, far, near);
+
+    let scale: number = vec3.dot(diff, line)/vec3.dot(line, line);
+
+    let p = vec3.create();
+    vec3.scale(p, line, scale);
+
+    let perp = vec3.create();
+    vec3.subtract(perp, diff, p);
+
+    return vec3.squaredLength(perp);
+}
+
+function calculateNearFarMouseCoords(sceneData: SceneData, inputData: InputData): {
+    near: vec3, far: vec3
+} {
+    let viewInv: mat4 = mat4.create();
+    mat4.invert(viewInv, sceneData.viewMat);
+
+    let projInv: mat4 = mat4.create();
+    mat4.invert(projInv, sceneData.projMat);
+
+    let inv = mat4.create();
+    mat4.multiply(inv, viewInv, projInv);
+
+    let nearMousePos: vec3 = vec3.fromValues(
+        inputData.normalisedMousePos[0], 
+        inputData.normalisedMousePos[1], 
+        -1.0
+    );
+
+    let farMousePos: vec3 = vec3.fromValues(
+        inputData.normalisedMousePos[0], 
+        inputData.normalisedMousePos[1], 
+        1.0
+    );
+
+    let near: vec3 = vec3.create();
+    vec3.transformMat4(near, nearMousePos, inv);
+
+    let far: vec3 = vec3.create();
+    vec3.transformMat4(far, farMousePos, inv);
+
+    return {
+        near,
+        far,
     };
 }
 
@@ -162,6 +233,44 @@ const updateScene = (hsData: HSData) => {
     );
 
     sceneData.cameraData.radius += 5*hsData.inputData.deltaZoom * hsData.deltaTime;
+
+    const nearFarMouseCoords = calculateNearFarMouseCoords(
+        hsData.sceneData, hsData.inputData);
+
+    const near = nearFarMouseCoords.near;
+    const far = nearFarMouseCoords.far;
+
+    // Even indices are raw waveforms, odd indices are freq
+    let selectedIndex: number = -1;
+    let closestDistSq: number = 0.1;
+    hsData.audioData.inputs.forEach((_, i) => {
+        const rawPos: vec3 = [0, 3*i, 0];
+        const freqPos: vec3 = [0, 3*i, 3];
+
+        hsData.positionData.inputs[i] = {
+            raw: rawPos,
+            frequency: freqPos
+        };
+
+        let rawDistSq = calculateShortestDistanceSquared(rawPos, near, far);
+        let freqDistSq = calculateShortestDistanceSquared(freqPos, near, far);
+
+        if (rawDistSq < 0.1) {
+            if (rawDistSq < closestDistSq) {
+                closestDistSq = rawDistSq;
+                selectedIndex = 2*i;
+            }
+        }
+
+        if (freqDistSq < 0.1) {
+            if (freqDistSq < closestDistSq) {
+                closestDistSq = freqDistSq;
+                selectedIndex = 2*i + 1;
+            }
+        }
+    });
+
+    console.log(selectedIndex);
 }
 
 const updateInputs = (hsData: HSData) => {

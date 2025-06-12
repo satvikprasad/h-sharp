@@ -76,6 +76,9 @@ const drawScene = (
     gl.depthMask(true);
 
     hsData.audioData.inputs.forEach((_, i) => {
+        const rawPos = hsData.positionData.inputs[i].raw;
+        const freqPos = hsData.positionData.inputs[i].frequency;
+
         renderWaveform(
             gl,
             sceneData,
@@ -84,7 +87,7 @@ const drawScene = (
                 i,
                 audio.WaveformType.Raw
             ),
-            [0, 3*i, 0],
+            rawPos,
             audio.getMaximumFromInputIndex(hsData.audioData, i, audio.WaveformType.Raw)
         );
 
@@ -93,15 +96,23 @@ const drawScene = (
             sceneData,
             hsData.waveformShaderData,
             audio.getWaveformBufferFromInputIndex(hsData.audioData, i, 1),
-            [0, 3*i, 3],
+            freqPos,
             audio.getMaximumFromInputIndex(hsData.audioData, i, 1),
         );
     });
 
     gl.depthMask(false);
 
-    renderPixel(gl, hsData.squareShaderData, hsData.inputData.normalisedMousePos);
-    
+    renderPixel(
+        gl, 
+        hsData.squareShaderData, 
+        hsData.inputData.normalisedMousePos,
+        [
+            0.05, 
+            0.05*hsData.canvas.getBoundingClientRect().width/hsData.canvas.getBoundingClientRect().height
+        ]
+    );
+
     // TODO: Render transparent objects intended for the 
     // foreground.
 };

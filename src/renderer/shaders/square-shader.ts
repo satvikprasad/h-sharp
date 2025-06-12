@@ -13,7 +13,8 @@ namespace SquareShader {
         };
 
         uniformLocations: {
-            position: WebGLUniformLocation;
+            position: WebGLUniformLocation
+            scale: WebGLUniformLocation;
         };
 
         positionBuffer: WebGLBuffer;
@@ -52,6 +53,16 @@ namespace SquareShader {
             for uPosition`);
         }
 
+        const scaleLoc = gl.getUniformLocation(
+            program,
+            "uScale"
+        );
+
+        if (!scaleLoc) {
+            throw Error(`Could not find uniform location\
+            for uScale`);
+        }
+
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
@@ -75,6 +86,7 @@ namespace SquareShader {
             },
             uniformLocations: {
                 position: positionLoc,
+                scale: scaleLoc
             },
             positionBuffer: positionBuffer,
         };
