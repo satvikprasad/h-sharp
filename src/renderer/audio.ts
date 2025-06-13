@@ -16,6 +16,7 @@ enum InputType {
 
 interface WaveformData {
     ptr: number;
+    length: number;
 
     isSelected: boolean;
 };
@@ -68,12 +69,14 @@ function createInput(
 
     audioData.waveforms.push({
         ptr: audioData.methods.createWaveform(512, 512),
-        isSelected: false
+        isSelected: false,
+        length: 512,
     });
 
     audioData.waveforms.push({
         ptr: audioData.methods.createWaveform(256, 512),
-        isSelected: false
+        isSelected: false,
+        length: 256,
     });
 
     return { 
@@ -162,11 +165,13 @@ async function addInput(
             audioData.waveforms.push({
                 ptr: audioData.methods.createWaveform(512, 512),
                 isSelected: false,
+                length: 512,
             });
 
             audioData.waveforms.push({
                 ptr: audioData.methods.createWaveform(256, 512),
                 isSelected: false,
+                length: 256,
             });
 
             newInput = {
@@ -192,15 +197,14 @@ async function addInput(
             };
 
             processorNode.port.onmessage = (e) => {
-                const buffer = e.data as Float32Array;
-
                 const bufPtr = audioData.methods
                     .getWaveformBuffer(
                         getWaveformFromInput(audioData, newInput, WaveformType.Raw).ptr
                     );
 
-                const memView = wasm.float32MemoryView(audioData.memory, bufPtr, 512);
-                memView.set(buffer);
+                wasm.float32MemoryView(audioData.memory, bufPtr, 512)
+                    .set(e.data as Float32Array);
+
             };
 
         } break;
@@ -299,39 +303,34 @@ function getWaveformBufferFromInputIndex(
     inputIndex: number,
     waveformType: WaveformType,
 ): Float32Array {
-    let bufPtr = audioData.methods.getWaveformBuffer(
-        getWaveformFromInput(
-            audioData, 
-            audioData.inputs[inputIndex], 
-            waveformType).ptr, 
+    const waveform = getWaveformFromInput(
+        audioData,
+        audioData.inputs[inputIndex],
+        waveformType
     );
 
-    switch(waveformType) {
-        case WaveformType.Raw: {
-            // TODO: Don't hardcode, encode length in WaveformData.
-            return wasm.float32MemoryView(audioData.memory, bufPtr, 512);
-        };
-
-        case WaveformType.Frequency: {
-            return wasm.float32MemoryView(audioData.memory, bufPtr, 256);
-        };
-
-        default:
-            throw Error("Unknown waveform type.");
-    };
+    let bufPtr = audioData.methods.getWaveformBuffer(waveform.ptr);
+    return wasm.float32MemoryView(audioData.memory, bufPtr, waveform.length);
 }
 
-function getMaximumFromInputIndex(
+function getWaveformBuffer(
     audioData: AudioData,
-    inputIndex: number,
-    waveformType: WaveformType
-): number {
-    const waveformPtr = getWaveformFromInput(audioData, audioData.inputs[inputIndex], 
-        waveformType).ptr;
+    waveform: WaveformData
+): Float32Array {
+    const bufPtr = audioData.methods.getWaveformBuffer(waveform.ptr);
 
-    return audioData.methods.getWaveformMaximum(
-        waveformPtr
+    return wasm.float32MemoryView(
+        audioData.memory,
+        bufPtr,
+        waveform.length
     );
+}
+
+function getWaveformMaximum(
+    audioData: AudioData,
+    waveform: WaveformData
+): number {
+    return audioData.methods.getWaveformMaximum(waveform.ptr);
 }
 
 export { 
@@ -346,9 +345,9 @@ export {
     destroy,
     
     updateSystemAudioData,
-    getWaveformBufferFromInputIndex,
-
-    getMaximumFromInputIndex,
 
     addInput,
+ 
+    getWaveformBuffer,
+    getWaveformMaximum
 };

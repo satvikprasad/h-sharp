@@ -32,11 +32,6 @@ interface InputData {
     normalisedMousePos: vec2,
 };
 
-interface InputPositionData {
-    raw: vec3;
-    frequency: vec3;
-};
-
 interface HSData {
     audioData: audio.AudioData;
     sceneData: SceneData;
@@ -50,9 +45,9 @@ interface HSData {
     gridlinesShaderData: GridlinesShader.Data;
     squareShaderData: SquareShader.Data;
 
-    positionData: {
-        inputs: InputPositionData[];
-    };
+    // TODO: Think about moving this to SceneData
+    waveformPositions: vec3[];
+    waveformPositionsScreenSpace: vec3[];
 
     // Temporaries
     time: number;
@@ -141,9 +136,9 @@ const hsInitialise = async (
         sceneData,
         inputData,
         wasmData,
-        positionData: {
-            inputs: [],
-        },
+
+        waveformPositions: [],
+        waveformPositionsScreenSpace: [],
 
         gl,
 
@@ -156,60 +151,6 @@ const hsInitialise = async (
         deltaTime: 0,
 
         canvas,
-    };
-}
-
-function calculateShortestDistanceSquared(pos: vec3, near: vec3, far: vec3): number {
-    let diff = vec3.create();
-    vec3.subtract(diff, pos, near);
-
-    let line = vec3.create();
-    vec3.subtract(line, far, near);
-
-    let scale: number = vec3.dot(diff, line)/vec3.dot(line, line);
-
-    let p = vec3.create();
-    vec3.scale(p, line, scale);
-
-    let perp = vec3.create();
-    vec3.subtract(perp, diff, p);
-
-    return vec3.squaredLength(perp);
-}
-
-function calculateNearFarMouseCoords(sceneData: SceneData, inputData: InputData): {
-    near: vec3, far: vec3
-} {
-    let viewInv: mat4 = mat4.create();
-    mat4.invert(viewInv, sceneData.viewMat);
-
-    let projInv: mat4 = mat4.create();
-    mat4.invert(projInv, sceneData.projMat);
-
-    let inv = mat4.create();
-    mat4.multiply(inv, viewInv, projInv);
-
-    let nearMousePos: vec3 = vec3.fromValues(
-        inputData.normalisedMousePos[0], 
-        inputData.normalisedMousePos[1], 
-        -1.0
-    );
-
-    let farMousePos: vec3 = vec3.fromValues(
-        inputData.normalisedMousePos[0], 
-        inputData.normalisedMousePos[1], 
-        1.0
-    );
-
-    let near: vec3 = vec3.create();
-    vec3.transformMat4(near, nearMousePos, inv);
-
-    let far: vec3 = vec3.create();
-    vec3.transformMat4(far, farMousePos, inv);
-
-    return {
-        near,
-        far,
     };
 }
 
@@ -233,43 +174,74 @@ const updateScene = (hsData: HSData) => {
 
     sceneData.cameraData.radius += 5*hsData.inputData.deltaZoom * hsData.deltaTime;
 
-    const nearFarMouseCoords = calculateNearFarMouseCoords(
-        hsData.sceneData, hsData.inputData);
-
-    const near = nearFarMouseCoords.near;
-    const far = nearFarMouseCoords.far;
-
     // Even indices are raw waveforms, odd indices are freq
-    let selectedIndex: number = -1;
-    let closestDistSq: number = 0.1;
-    hsData.audioData.inputs.forEach((_, i) => {
+    hsData.audioData.inputs.forEach((input, i) => {
         const rawPos: vec3 = [0, 3*i, 0];
         const freqPos: vec3 = [0, 3*i, 3];
 
-        hsData.positionData.inputs[i] = {
-            raw: rawPos,
-            frequency: freqPos
-        };
+        hsData.waveformPositions[input.rawWaveformIndex] = rawPos;
+        hsData.waveformPositions[input.frequencyWaveformIndex] = freqPos;
 
-        let rawDistSq = calculateShortestDistanceSquared(rawPos, near, far);
-        let freqDistSq = calculateShortestDistanceSquared(freqPos, near, far);
+        let rawScreenSpacePos = vec3.create();
+        vec3.transformMat4(
+            rawScreenSpacePos,
+            rawPos,
+            sceneData.viewMat, 
+        );
+        vec3.transformMat4(
+            rawScreenSpacePos,
+            rawScreenSpacePos,
+            sceneData.projMat, 
+        );
 
-        if (rawDistSq < 0.1) {
-            if (rawDistSq < closestDistSq) {
-                closestDistSq = rawDistSq;
-                selectedIndex = 2*i;
-            }
-        }
+        let freqScreenSpacePos = vec3.create();
+        vec3.transformMat4(
+            freqScreenSpacePos,
+            freqPos,
+            sceneData.viewMat, 
+        );
+        vec3.transformMat4(
+            freqScreenSpacePos,
+            freqScreenSpacePos,
+            sceneData.projMat, 
+        );
 
-        if (freqDistSq < 0.1) {
-            if (freqDistSq < closestDistSq) {
-                closestDistSq = freqDistSq;
-                selectedIndex = 2*i + 1;
-            }
-        }
+        hsData.waveformPositionsScreenSpace[input
+            .rawWaveformIndex] = rawScreenSpacePos;
+        hsData.waveformPositionsScreenSpace[input
+            .frequencyWaveformIndex] = freqScreenSpacePos;
     });
 
-    console.log(selectedIndex);
+    const screenWidthHeightRatio = hsData.canvas.getBoundingClientRect().height / hsData.canvas.getBoundingClientRect().width;
+
+    let selectedThisFrame = false;
+    hsData.audioData.waveforms.forEach((_, i) => {
+        const screenSpacePos: vec3 = hsData.waveformPositionsScreenSpace[i];
+        const mousePos: vec2 = hsData.inputData.normalisedMousePos;
+        const halfDim: vec2 = [0.015*screenWidthHeightRatio, 0.015];
+
+        let diff: vec2 = vec2.subtract(
+                new Float32Array(2),
+                mousePos, 
+                vec2.fromValues(screenSpacePos[0], screenSpacePos[1])
+            )
+
+        console.log([...diff]);
+        console.log([...halfDim]);
+
+        hsData.audioData.waveforms[i].isSelected = false;
+
+        // Check if within selected bounds.
+        if (diff[0] < halfDim[0] &&
+            diff[0] > -halfDim[0] && 
+            diff[1] < halfDim[1] &&
+            diff[1] > -halfDim[1] &&
+            !selectedThisFrame) {
+            hsData.audioData.waveforms[i].isSelected = true;
+            selectedThisFrame = true;
+            console.log(`Index ${i} is selected`);
+        }
+    });
 }
 
 const updateInputs = (hsData: HSData) => {

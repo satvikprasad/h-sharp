@@ -1,11 +1,11 @@
-import { mat4, vec3 } from "gl-matrix";
+import { mat4, vec2, vec3, vec4 } from "gl-matrix";
 import { type HSData } from "./h-sharp";
 import { renderWaveform } from "./objects/waveform";
 import { CameraData } from "./objects/camera";
 import { renderGridlines } from "./objects/gridlines";
 
 import * as audio from "./audio";
-import { renderPixel } from "./objects/square";
+import { renderSquare } from "./objects/square";
 
 interface SceneData {
     projMat: mat4;
@@ -46,8 +46,9 @@ const initialiseScene = (
 const drawScene = (
     hsData: HSData,
 ) => {
-    let gl = hsData.gl;
-    let sceneData = hsData.sceneData;
+    const gl = hsData.gl;
+    const sceneData = hsData.sceneData;
+    const audioData = hsData.audioData;
 
     let canvas: HTMLCanvasElement = document.querySelector("#gl-canvas")!;
 
@@ -75,46 +76,38 @@ const drawScene = (
 
     gl.depthMask(true);
 
-    hsData.audioData.inputs.forEach((_, i) => {
-        const rawPos = hsData.positionData.inputs[i].raw;
-        const freqPos = hsData.positionData.inputs[i].frequency;
+    const screenWidthHeightRatio = hsData.canvas.getBoundingClientRect().height / hsData.canvas.getBoundingClientRect().width;
+
+    audioData.waveforms.forEach((waveform, i) => {
+        const center: vec3 = hsData.waveformPositions[i];
 
         renderWaveform(
-            gl,
+            gl, 
             sceneData,
             hsData.waveformShaderData,
-            audio.getWaveformBufferFromInputIndex(hsData.audioData,
-                i,
-                audio.WaveformType.Raw
-            ),
-            rawPos,
-            audio.getMaximumFromInputIndex(hsData.audioData, i, audio.WaveformType.Raw)
+            audio.getWaveformBuffer(audioData, waveform),
+            center,
+            audio.getWaveformMaximum(audioData, waveform)
         );
 
-        renderWaveform(
-            gl,
-            sceneData,
-            hsData.waveformShaderData,
-            audio.getWaveformBufferFromInputIndex(hsData.audioData, i, 1),
-            freqPos,
-            audio.getMaximumFromInputIndex(hsData.audioData, i, 1),
-        );
+        // Draw selection surface
+        const screenSpaceCenter = hsData.waveformPositionsScreenSpace[i];
+        const color: vec4 = waveform.isSelected ? 
+            [1.0, 0.0, 0.0, 1.0] : [1.0, 1.0, 1.0, 1.0];
+
+        // Ensure clipped if off screen.
+        if (Math.abs(screenSpaceCenter[2]) < 1.0) {
+            renderSquare(
+                gl, 
+                hsData.squareShaderData,
+                vec2.fromValues(screenSpaceCenter[0], screenSpaceCenter[1]),
+                [0.015*screenWidthHeightRatio, 0.015],
+                color
+            );
+        }
     });
 
     gl.depthMask(false);
-
-    renderPixel(
-        gl, 
-        hsData.squareShaderData, 
-        hsData.inputData.normalisedMousePos,
-        [
-            0.05, 
-            0.05*hsData.canvas.getBoundingClientRect().width/hsData.canvas.getBoundingClientRect().height
-        ]
-    );
-
-    // TODO: Render transparent objects intended for the 
-    // foreground.
 };
 
 export { 

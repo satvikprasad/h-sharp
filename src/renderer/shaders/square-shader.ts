@@ -15,6 +15,7 @@ namespace SquareShader {
         uniformLocations: {
             position: WebGLUniformLocation
             scale: WebGLUniformLocation;
+            color: WebGLUniformLocation;
         };
 
         positionBuffer: WebGLBuffer;
@@ -63,18 +64,28 @@ namespace SquareShader {
             for uScale`);
         }
 
+        const colorLoc = gl.getUniformLocation(
+            program,
+            "uColor"
+        );
+
+        if (!colorLoc) {
+            throw Error(`Could not find uniform location\
+            for uColor`);
+        }
+
         const positionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
         gl.bufferData(
             gl.ARRAY_BUFFER,
             new Float32Array([
-                -0.1, -0.1, 0,
-                -0.1, 0.1, 0,
-                0.1, 0.1, 0,
-                0.1, 0.1, 0,
-                0.1, -0.1, 0,
-                -0.1, -0.1, 0
+                -1, -1, 0,
+                -1, 1, 0,
+                1, 1, 0,
+                1, 1, 0,
+                1, -1, 0,
+                -1, -1, 0
             ]),
            gl.STATIC_DRAW
         );
@@ -86,7 +97,8 @@ namespace SquareShader {
             },
             uniformLocations: {
                 position: positionLoc,
-                scale: scaleLoc
+                scale: scaleLoc,
+                color: colorLoc,
             },
             positionBuffer: positionBuffer,
         };
