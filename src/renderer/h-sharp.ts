@@ -1,4 +1,4 @@
-import { glMatrix, mat4, vec2, vec3 } from "gl-matrix";
+import { mat4, vec2, vec3 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
@@ -20,7 +20,6 @@ import { GridlinesShader } from "./shaders/gridlines-shader";
 import { SquareShader } from "./shaders/square-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { WASMData } from "./wasm";
-import { argv0 } from "process";
 
 interface InputData {
     mouseWheel: {

@@ -2,11 +2,22 @@
 
 import * as wasm from "./wasm";
 
+enum WaveformType {
+    Raw,
+    Frequency,
+};
+
 enum InputType {
     Uninitialised = 0,
     SystemAudio,
     Audio,
     MIDI,
+};
+
+interface WaveformData {
+    ptr: number;
+
+    isSelected: boolean;
 };
 
 interface Input {
@@ -16,8 +27,8 @@ interface Input {
     lsb: number;
     lsa: number;
 
-    rawWaveformPtr: number; // Memory stored in WASM.
-    frequencyWaveformPtr: number;
+    rawWaveformIndex: number;
+    frequencyWaveformIndex: number;
 
     inputType: InputType;
 
@@ -26,6 +37,19 @@ interface Input {
      * @returns boolean 
      */
     togglePlayPause?: () => boolean;
+};
+
+interface AudioData {
+    readonly rawBufferFidelity: number;
+
+    inputs: Input[];
+    waveforms: WaveformData[];
+
+    withSystemAudio: boolean;
+
+    // WebAssembly properties
+    memory: WebAssembly.Memory;
+    methods: wasm.IAudio;
 };
 
 function createInput(
@@ -39,18 +63,26 @@ function createInput(
         audioData.rawBufferFidelity, lsb
     ); 
 
-    let rawWaveformPtr = audioData.methods
-        .createWaveform(512, 512);
-    let frequencyWaveformPtr = audioData.methods
-        .createWaveform(256, 512);
-    
+    const rawWaveformIndex = audioData.waveforms.length;
+    const frequencyWaveformIndex = audioData.waveforms.length + 1;
+
+    audioData.waveforms.push({
+        ptr: audioData.methods.createWaveform(512, 512),
+        isSelected: false
+    });
+
+    audioData.waveforms.push({
+        ptr: audioData.methods.createWaveform(256, 512),
+        isSelected: false
+    });
+
     return { 
         name,
         sampleRate,
         lsb,
         lsa,
-        rawWaveformPtr,
-        frequencyWaveformPtr,
+        rawWaveformIndex,
+        frequencyWaveformIndex,
         inputType
     };
 }
@@ -61,14 +93,14 @@ function updateInput(audioData: AudioData, input: Input): void {
         case InputType.SystemAudio:
         case InputType.Audio:
             audioData.methods.updateFrequencyWaveform(
-                input.rawWaveformPtr, 
-                input.frequencyWaveformPtr,
+                getWaveformFromInput(audioData, input, WaveformType.Raw)
+                .ptr, 
+                getWaveformFromInput(audioData, input, WaveformType.Frequency)
+                .ptr,
                 input.lsa,
                 input.lsb
             );
 
-            audioData.methods.updateWaveform(input.rawWaveformPtr);
-            audioData.methods.updateWaveform(input.frequencyWaveformPtr);
             break;
         case InputType.Uninitialised:
         case InputType.MIDI:
@@ -76,25 +108,16 @@ function updateInput(audioData: AudioData, input: Input): void {
     }
 }
 
-function destroyInput(audioData: AudioData, input: Input): void {
-    audioData.methods.destroyWaveform(input.rawWaveformPtr);
-    audioData.methods.destroyWaveform(input.frequencyWaveformPtr);
+function updateWaveforms(audioData: AudioData): void {
+    audioData.waveforms.forEach((w) => {
+        audioData.methods.updateWaveform(w.ptr);
+    });
 }
 
-interface AudioData {
-    readonly rawBufferFidelity: number;
-
-    inputs: Array<Input>;
-
-    withSystemAudio: boolean;
-
-    // WebAssembly properties
-    memory: WebAssembly.Memory;
-    methods: wasm.IAudio;
-};
-
-interface HTMLMediaElementWithCaptureStream extends HTMLMediaElement{
-  captureStream(): MediaStream;
+function destroyWaveforms(audioData: AudioData): void {
+    audioData.waveforms.forEach((w) => {
+        audioData.methods.destroyWaveform(w.ptr);
+    });
 }
 
 async function addInput(
@@ -132,6 +155,20 @@ async function addInput(
             );
             audioTrack.connect(processorNode).connect(audioContext.destination);
 
+            // TODO: Migrate this to createInput
+            const rawWaveformIndex = audioData.waveforms.length;
+            const frequencyWaveformIndex = audioData.waveforms.length + 1;
+
+            audioData.waveforms.push({
+                ptr: audioData.methods.createWaveform(512, 512),
+                isSelected: false,
+            });
+
+            audioData.waveforms.push({
+                ptr: audioData.methods.createWaveform(256, 512),
+                isSelected: false,
+            });
+
             newInput = {
                 name,
                 sampleRate: audioContext.sampleRate,
@@ -139,8 +176,8 @@ async function addInput(
                 lsb: 0.019,
                 lsa: audioData.methods.computeLogScaleAmplitude(512, 0.019),
 
-                rawWaveformPtr: audioData.methods.createWaveform(512, 512),
-                frequencyWaveformPtr: audioData.methods.createWaveform(256, 512),
+                rawWaveformIndex, 
+                frequencyWaveformIndex,
 
                 inputType: InputType.Audio,
                 togglePlayPause: () => {
@@ -158,7 +195,9 @@ async function addInput(
                 const buffer = e.data as Float32Array;
 
                 const bufPtr = audioData.methods
-                    .getWaveformBuffer(newInput.rawWaveformPtr);
+                    .getWaveformBuffer(
+                        getWaveformFromInput(audioData, newInput, WaveformType.Raw).ptr
+                    );
 
                 const memView = wasm.float32MemoryView(audioData.memory, bufPtr, 512);
                 memView.set(buffer);
@@ -177,7 +216,7 @@ function create(
     wasmData: wasm.WASMData,
     withSystemAudio: boolean
 ): AudioData {
-    let inputs: Array<Input> = new Array<Input>();
+    let inputs: Input[] = [];
 
     let audioData: AudioData = {
         rawBufferFidelity: 512,
@@ -185,6 +224,7 @@ function create(
         withSystemAudio: withSystemAudio,
         memory: wasmData.memory,
         methods: wasmData.audio,
+        waveforms: [],
     };
 
     if (withSystemAudio) {
@@ -206,12 +246,12 @@ function update(audioData: AudioData): void {
     audioData.inputs.forEach((input) => {
         updateInput(audioData, input);
     });
+
+    updateWaveforms(audioData);
 }
 
 function destroy(audioData: AudioData): void {
-    audioData.inputs.forEach((input) => {
-        destroyInput(audioData, input);
-    });
+    destroyWaveforms(audioData);
 }
 
 function updateSystemAudioData(
@@ -223,38 +263,56 @@ function updateSystemAudioData(
     }
 
     let input = audioData.inputs[0];
-    let bufPtr = audioData.methods.getWaveformBuffer(
-        input.rawWaveformPtr
-    );
 
-    let mem = wasm.float32MemoryView(audioData.memory, bufPtr, 512);
-    mem.set(sysAudioBuffer);
+    if (input.inputType != InputType.SystemAudio) {
+        throw Error("First input was not system audio.");
+    }
+
+    // TODO: Ensure this is a shallow copy
+    getWaveformBufferFromInputIndex(audioData, 0, WaveformType.Raw)
+        .set(sysAudioBuffer);
 }
 
-enum WaveformType {
-    Raw,
-    Frequency,
-};
+function getWaveformFromInput(
+    audioData: AudioData,
+    input: Input,
+    waveformType: WaveformType
+) {
+    let index =  -1;
+
+    switch (waveformType) {
+        case WaveformType.Raw:
+            index = input.rawWaveformIndex;
+            break;
+        case WaveformType.Frequency:
+            index = input.frequencyWaveformIndex;
+            break;
+        default: 
+            throw Error("Unhandled waveformType");
+    }
+
+    return audioData.waveforms[index];
+}
 
 function getWaveformBufferFromInputIndex(
     audioData: AudioData, 
     inputIndex: number,
     waveformType: WaveformType,
 ): Float32Array {
+    let bufPtr = audioData.methods.getWaveformBuffer(
+        getWaveformFromInput(
+            audioData, 
+            audioData.inputs[inputIndex], 
+            waveformType).ptr, 
+    );
+
     switch(waveformType) {
         case WaveformType.Raw: {
-            let bufPtr = audioData.methods.getWaveformBuffer(
-                audioData.inputs[inputIndex].rawWaveformPtr, 
-            );
-
+            // TODO: Don't hardcode, encode length in WaveformData.
             return wasm.float32MemoryView(audioData.memory, bufPtr, 512);
         };
 
         case WaveformType.Frequency: {
-            let bufPtr = audioData.methods.getWaveformBuffer(
-                audioData.inputs[inputIndex].frequencyWaveformPtr, 
-            );
-
             return wasm.float32MemoryView(audioData.memory, bufPtr, 256);
         };
 
@@ -268,20 +326,8 @@ function getMaximumFromInputIndex(
     inputIndex: number,
     waveformType: WaveformType
 ): number {
-    let waveformPtr = -1;
-        
-    switch (waveformType) {
-        case WaveformType.Raw: {
-            waveformPtr = audioData.inputs[inputIndex].rawWaveformPtr;
-        } break;
-
-        case WaveformType.Frequency: {
-            waveformPtr = audioData.inputs[inputIndex].frequencyWaveformPtr;
-        } break;
-
-        default:
-            throw Error("Unknown waveform type.");
-    }
+    const waveformPtr = getWaveformFromInput(audioData, audioData.inputs[inputIndex], 
+        waveformType).ptr;
 
     return audioData.methods.getWaveformMaximum(
         waveformPtr
