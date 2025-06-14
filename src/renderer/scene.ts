@@ -81,6 +81,8 @@ const drawScene = (
     audioData.waveforms.forEach((waveform, i) => {
         const center: vec3 = hsData.waveformPositions[i];
 
+        console.log([...center]);
+
         renderWaveform(
             gl, 
             sceneData,
@@ -92,7 +94,7 @@ const drawScene = (
 
         // Draw selection surface
         const screenSpaceCenter = hsData.waveformPositionsScreenSpace[i];
-        const color: vec4 = waveform.isSelected ? 
+        const color: vec4 = (hsData.selectedWaveformIndex == i) ? 
             [1.0, 0.0, 0.0, 1.0] : [1.0, 1.0, 1.0, 1.0];
 
         // Ensure clipped if off screen.

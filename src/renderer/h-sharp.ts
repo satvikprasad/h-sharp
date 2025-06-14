@@ -20,6 +20,7 @@ import { GridlinesShader } from "./shaders/gridlines-shader";
 import { SquareShader } from "./shaders/square-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { WASMData } from "./wasm";
+import { warn } from "console";
 
 interface InputData {
     mouseWheel: {
@@ -30,6 +31,9 @@ interface InputData {
     deltaZoom: number;
 
     normalisedMousePos: vec2,
+
+    leftMouseDown: boolean;
+    rightMouseDown: boolean;
 };
 
 interface HSData {
@@ -48,6 +52,7 @@ interface HSData {
     // TODO: Think about moving this to SceneData
     waveformPositions: vec3[];
     waveformPositionsScreenSpace: vec3[];
+    selectedWaveformIndex: number;
 
     // Temporaries
     time: number;
@@ -66,6 +71,9 @@ const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
         normalisedMousePos: [0, 0],
 
         deltaZoom: 0,
+        
+        leftMouseDown: false,
+        rightMouseDown: false,
     };
 }
 
@@ -80,7 +88,6 @@ const hsInitialise = async (
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
-    initialiseInputList(audioData);
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
@@ -98,8 +105,28 @@ const hsInitialise = async (
 
     canvas.addEventListener('mousemove',  (event) => {
         const boundingRect = canvas.getBoundingClientRect();
-        inputData.normalisedMousePos[0] = 2*(event.clientX - boundingRect.x)/boundingRect.width - 1.0;
-        inputData.normalisedMousePos[1] = 1.0 - 2*(event.clientY - boundingRect.y)/boundingRect.height;
+
+        inputData.normalisedMousePos[0] = 2*(event.clientX - boundingRect.x)
+            /boundingRect.width - 1.0;
+
+        inputData.normalisedMousePos[1] = 1.0 - 2*(event.clientY - boundingRect.y)/
+            boundingRect.height;
+    });
+
+    canvas.addEventListener('mousedown', (event) => {
+        switch (event.button) {
+            case 0:
+                inputData.leftMouseDown = true;
+                break;
+        }
+    });
+
+    canvas.addEventListener('mouseup', (event) => {
+        switch (event.button) {
+            case 0:
+                inputData.leftMouseDown = false;
+                break;
+        }
     });
 
     // Callback from main.ts whenever new 
@@ -131,7 +158,7 @@ const hsInitialise = async (
         gl, local.fs
     );
 
-    return {
+    const hsData: HSData =  {
         audioData,
         sceneData,
         inputData,
@@ -139,6 +166,7 @@ const hsInitialise = async (
 
         waveformPositions: [],
         waveformPositionsScreenSpace: [],
+        selectedWaveformIndex: -1,
 
         gl,
 
@@ -152,11 +180,16 @@ const hsInitialise = async (
 
         canvas,
     };
+
+    initialiseInputList(hsData, audioData);
+
+    return hsData;
 }
 
 const updateScene = (hsData: HSData) => {
     let sceneData = hsData.sceneData;
 
+    // Update camera rotatoin
     sceneData.cameraData.xRot += hsData.inputData.mouseWheel.deltaY
         *hsData.deltaTime;
 
@@ -174,13 +207,10 @@ const updateScene = (hsData: HSData) => {
 
     sceneData.cameraData.radius += 5*hsData.inputData.deltaZoom * hsData.deltaTime;
 
-    // Even indices are raw waveforms, odd indices are freq
+    // Update position of waveforms.
     hsData.audioData.inputs.forEach((input, i) => {
-        const rawPos: vec3 = [0, 3*i, 0];
-        const freqPos: vec3 = [0, 3*i, 3];
-
-        hsData.waveformPositions[input.rawWaveformIndex] = rawPos;
-        hsData.waveformPositions[input.frequencyWaveformIndex] = freqPos;
+        const rawPos = hsData.waveformPositions[input.rawWaveformIndex];
+        const freqPos = hsData.waveformPositions[input.frequencyWaveformIndex];
 
         let rawScreenSpacePos = vec3.create();
         vec3.transformMat4(
@@ -214,34 +244,56 @@ const updateScene = (hsData: HSData) => {
 
     const screenWidthHeightRatio = hsData.canvas.getBoundingClientRect().height / hsData.canvas.getBoundingClientRect().width;
 
-    let selectedThisFrame = false;
-    hsData.audioData.waveforms.forEach((_, i) => {
-        const screenSpacePos: vec3 = hsData.waveformPositionsScreenSpace[i];
-        const mousePos: vec2 = hsData.inputData.normalisedMousePos;
-        const halfDim: vec2 = [0.015*screenWidthHeightRatio, 0.015];
+    console.log(hsData.inputData.leftMouseDown);
 
-        let diff: vec2 = vec2.subtract(
+    if (hsData.inputData.leftMouseDown) {
+        hsData.audioData.waveforms.forEach((_, i) => {
+            const screenSpacePos: vec3 = hsData.waveformPositionsScreenSpace[i];
+            const mousePos: vec2 = hsData.inputData.normalisedMousePos;
+            const halfDim: vec2 = [0.015*screenWidthHeightRatio, 0.015];
+
+            let diff: vec2 = vec2.subtract(
                 new Float32Array(2),
                 mousePos, 
                 vec2.fromValues(screenSpacePos[0], screenSpacePos[1])
             )
 
-        console.log([...diff]);
-        console.log([...halfDim]);
+            if (diff[0] < halfDim[0] &&
+                diff[0] > -halfDim[0] && 
+                diff[1] < halfDim[1] &&
+                diff[1] > -halfDim[1]) {
+                hsData.selectedWaveformIndex = i;
+            }
+        });
+    } else {
+        hsData.selectedWaveformIndex = -1;
+    }
 
-        hsData.audioData.waveforms[i].isSelected = false;
+    if (hsData.selectedWaveformIndex >= 0) {
+        const worldSpaceMousePos = vec3.transformMat4(
+            new Float32Array(3),
+            vec3.fromValues(
+                hsData.inputData.normalisedMousePos[0],
+                hsData.inputData.normalisedMousePos[1],
+                hsData.waveformPositionsScreenSpace[hsData.selectedWaveformIndex][2],
+            ),
+            mat4.invert(
+                mat4.create(),
+                sceneData.projMat
+            )
+        );
 
-        // Check if within selected bounds.
-        if (diff[0] < halfDim[0] &&
-            diff[0] > -halfDim[0] && 
-            diff[1] < halfDim[1] &&
-            diff[1] > -halfDim[1] &&
-            !selectedThisFrame) {
-            hsData.audioData.waveforms[i].isSelected = true;
-            selectedThisFrame = true;
-            console.log(`Index ${i} is selected`);
-        }
-    });
+        vec3.transformMat4(
+            worldSpaceMousePos,
+            worldSpaceMousePos,
+            mat4.invert(
+                mat4.create(),
+                sceneData.viewMat
+            )
+        );
+
+        hsData.waveformPositions[hsData.selectedWaveformIndex] = worldSpaceMousePos;
+    }
 }
 
 const updateInputs = (hsData: HSData) => {

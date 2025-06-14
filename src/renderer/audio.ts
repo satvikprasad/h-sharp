@@ -1,5 +1,3 @@
-// TODO: Don't hardcode length of input buffer.
-
 import * as wasm from "./wasm";
 
 enum WaveformType {
@@ -17,8 +15,6 @@ enum InputType {
 interface WaveformData {
     ptr: number;
     length: number;
-
-    isSelected: boolean;
 };
 
 interface Input {
@@ -58,8 +54,13 @@ function createInput(
     name: string,
     sampleRate: number,
     lsb: number,
-    inputType: InputType
+    inputType: InputType,
+    togglePlayPause?: () => boolean,
 ): Input {
+    if (inputType == InputType.Audio && !togglePlayPause) {
+        throw Error("togglePlayPause is required for inputType = InputType.Audio");
+    }
+
     let lsa = audioData.methods.computeLogScaleAmplitude(
         audioData.rawBufferFidelity, lsb
     ); 
@@ -69,13 +70,11 @@ function createInput(
 
     audioData.waveforms.push({
         ptr: audioData.methods.createWaveform(512, 512),
-        isSelected: false,
         length: 512,
     });
 
     audioData.waveforms.push({
         ptr: audioData.methods.createWaveform(256, 512),
-        isSelected: false,
         length: 256,
     });
 
@@ -86,12 +85,12 @@ function createInput(
         lsa,
         rawWaveformIndex,
         frequencyWaveformIndex,
-        inputType
+        inputType,
+        togglePlayPause
     };
 }
 
 function updateInput(audioData: AudioData, input: Input): void {
-    // TODO: Do we need a switch here?
     switch (input.inputType) {
         case InputType.SystemAudio:
         case InputType.Audio:
@@ -138,54 +137,35 @@ async function addInput(
             }
 
             const audioContext = new AudioContext();
-
-            const audioElement= document.createElement("audio");
+            const audioElement = document.createElement("audio");
             audioElement.src = src;
-
             const audioTrack = audioContext.createMediaElementSource(
                 audioElement
             );
+
             audioTrack.connect(audioContext.destination);
+
             audioElement.loop = true;
             audioElement.play();
 
             await audioContext.audioWorklet.addModule(
                 "./renderer/worklets/audio-processor.js"
             );
+
             const processorNode = new AudioWorkletNode(
                 audioContext,
                 "audio-processor",
             );
+
             audioTrack.connect(processorNode).connect(audioContext.destination);
 
-            // TODO: Migrate this to createInput
-            const rawWaveformIndex = audioData.waveforms.length;
-            const frequencyWaveformIndex = audioData.waveforms.length + 1;
-
-            audioData.waveforms.push({
-                ptr: audioData.methods.createWaveform(512, 512),
-                isSelected: false,
-                length: 512,
-            });
-
-            audioData.waveforms.push({
-                ptr: audioData.methods.createWaveform(256, 512),
-                isSelected: false,
-                length: 256,
-            });
-
-            newInput = {
+            newInput = createInput(
+                audioData, 
                 name,
-                sampleRate: audioContext.sampleRate,
-
-                lsb: 0.019,
-                lsa: audioData.methods.computeLogScaleAmplitude(512, 0.019),
-
-                rawWaveformIndex, 
-                frequencyWaveformIndex,
-
-                inputType: InputType.Audio,
-                togglePlayPause: () => {
+                audioContext.sampleRate,
+                0.019,
+                InputType.Audio,
+                () => {
                     if (audioElement.paused) {
                         audioElement.play();
                         return true;
@@ -193,8 +173,8 @@ async function addInput(
 
                     audioElement.pause();
                     return false;
-                },
-            };
+                }
+            );
 
             processorNode.port.onmessage = (e) => {
                 const bufPtr = audioData.methods
@@ -204,14 +184,15 @@ async function addInput(
 
                 wasm.float32MemoryView(audioData.memory, bufPtr, 512)
                     .set(e.data as Float32Array);
-
             };
-
         } break;
 
         default:
-            throw Error(`addInput: InputType ${inputType.toString()} not implemented yet`); 
+            throw Error(
+                `addInput: InputType ${inputType.toString()} not implemented yet`
+            ); 
     }
+
     audioData.inputs.push(newInput);
     return newInput;
 }
@@ -272,7 +253,6 @@ function updateSystemAudioData(
         throw Error("First input was not system audio.");
     }
 
-    // TODO: Ensure this is a shallow copy
     getWaveformBufferFromInputIndex(audioData, 0, WaveformType.Raw)
         .set(sysAudioBuffer);
 }

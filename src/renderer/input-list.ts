@@ -1,4 +1,5 @@
 import * as audio from "./audio";
+import { HSData } from "./h-sharp";
 
 interface InputListData {
     inputListElement: HTMLUListElement;
@@ -74,6 +75,7 @@ function createItems(
 }
 
 function addAddInputHandler(
+    hsData: HSData,
     inputList: HTMLUListElement, 
     audioData: audio.AudioData
 ) {
@@ -98,19 +100,36 @@ function addAddInputHandler(
 
             const src = URL.createObjectURL(target.files[0]);
 
-            pushInput(inputList, await audio.addInput(
+            const newInput = await audio.addInput(
                 audioData, 
                 `File: ${target.files[0].name}`,
                 audio.InputType.Audio,
                 src,
-            ));
+            );
+
+            pushInput(inputList, newInput);
+
+            hsData.waveformPositions[newInput.rawWaveformIndex] = [
+                2*(hsData.audioData.waveforms.length - 2),
+                0,
+                0.0
+            ];
+
+            hsData.waveformPositions[newInput.frequencyWaveformIndex] = [
+                2*(hsData.audioData.waveforms.length - 1),
+                0,
+                0.0,
+            ];
         };
 
         input.click();
     };
 }
 
-function initialiseInputList(audioData: audio.AudioData): InputListData {
+function initialiseInputList(
+    hsData: HSData, 
+    audioData: audio.AudioData
+): InputListData {
     let inputList: HTMLUListElement | null = document.querySelector("#input-list");
 
     if (!inputList) {
@@ -118,7 +137,7 @@ function initialiseInputList(audioData: audio.AudioData): InputListData {
     }
 
     createItems(inputList, audioData.inputs);
-    addAddInputHandler(inputList, audioData);
+    addAddInputHandler(hsData, inputList, audioData);
 
     return {
         inputListElement: inputList,
