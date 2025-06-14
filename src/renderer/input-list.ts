@@ -1,3 +1,4 @@
+import { vec3 } from "gl-matrix";
 import * as audio from "./audio";
 import { HSData } from "./h-sharp";
 
@@ -75,9 +76,9 @@ function createItems(
 }
 
 function addAddInputHandler(
-    hsData: HSData,
     inputList: HTMLUListElement, 
-    audioData: audio.AudioData
+    audioData: audio.AudioData,
+    waveformPositions: vec3[]
 ) {
     let addInputButton = inputList.children.namedItem("add-input") as HTMLButtonElement;
 
@@ -109,14 +110,14 @@ function addAddInputHandler(
 
             pushInput(inputList, newInput);
 
-            hsData.waveformPositions[newInput.rawWaveformIndex] = [
-                2*(hsData.audioData.waveforms.length - 2),
+            waveformPositions[newInput.rawWaveformIndex] = [
+                2*(audioData.waveforms.length - 2),
                 0,
                 0.0
             ];
 
-            hsData.waveformPositions[newInput.frequencyWaveformIndex] = [
-                2*(hsData.audioData.waveforms.length - 1),
+            waveformPositions[newInput.frequencyWaveformIndex] = [
+                2*(audioData.waveforms.length - 1),
                 0,
                 0.0,
             ];
@@ -127,8 +128,8 @@ function addAddInputHandler(
 }
 
 function initialiseInputList(
-    hsData: HSData, 
-    audioData: audio.AudioData
+    audioData: audio.AudioData, 
+    waveformPositions: vec3[],
 ): InputListData {
     let inputList: HTMLUListElement | null = document.querySelector("#input-list");
 
@@ -137,11 +138,32 @@ function initialiseInputList(
     }
 
     createItems(inputList, audioData.inputs);
-    addAddInputHandler(hsData, inputList, audioData);
+    addAddInputHandler(inputList, audioData, waveformPositions);
 
     return {
         inputListElement: inputList,
     };
 }
 
-export { initialiseInputList };
+function updateInputList(
+    inputListData: InputListData,
+    selectedInputIndex: number,
+) {
+    for (let i = 1; i < inputListData.inputListElement.children.length; ++i) {
+        const child = inputListData.inputListElement.children[i];
+
+        child.classList.remove("selected");
+    }
+
+    if (selectedInputIndex != -1) {
+        inputListData.inputListElement.children[selectedInputIndex + 1]
+            .classList.add("selected");
+    }
+}
+
+export { 
+    type InputListData,
+
+    initialiseInputList,
+    updateInputList,
+};

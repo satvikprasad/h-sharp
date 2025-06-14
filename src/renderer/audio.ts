@@ -15,6 +15,8 @@ enum InputType {
 interface WaveformData {
     ptr: number;
     length: number;
+
+    inputIndex: number;
 };
 
 interface Input {
@@ -49,7 +51,7 @@ interface AudioData {
     methods: wasm.IAudio;
 };
 
-function createInput(
+function pushNewInput(
     audioData: AudioData,
     name: string,
     sampleRate: number,
@@ -71,14 +73,16 @@ function createInput(
     audioData.waveforms.push({
         ptr: audioData.methods.createWaveform(512, 512),
         length: 512,
+        inputIndex: audioData.inputs.length
     });
 
     audioData.waveforms.push({
         ptr: audioData.methods.createWaveform(256, 512),
         length: 256,
+        inputIndex: audioData.inputs.length
     });
 
-    return { 
+    let newInput: Input = { 
         name,
         sampleRate,
         lsb,
@@ -87,7 +91,11 @@ function createInput(
         frequencyWaveformIndex,
         inputType,
         togglePlayPause
-    };
+    }
+
+    audioData.inputs.push(newInput);
+
+    return newInput;
 }
 
 function updateInput(audioData: AudioData, input: Input): void {
@@ -159,7 +167,7 @@ async function addInput(
 
             audioTrack.connect(processorNode).connect(audioContext.destination);
 
-            newInput = createInput(
+            newInput = pushNewInput(
                 audioData, 
                 name,
                 audioContext.sampleRate,
@@ -193,7 +201,6 @@ async function addInput(
             ); 
     }
 
-    audioData.inputs.push(newInput);
     return newInput;
 }
 
@@ -213,15 +220,13 @@ function create(
     };
 
     if (withSystemAudio) {
-        let systemInput = createInput(
+        pushNewInput(
             audioData,
             "System Audio",
             48000,
             0.019,
             InputType.SystemAudio
         );
-
-        audioData.inputs.push(systemInput);
     }
 
     return audioData;

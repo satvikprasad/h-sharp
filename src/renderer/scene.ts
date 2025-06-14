@@ -81,8 +81,6 @@ const drawScene = (
     audioData.waveforms.forEach((waveform, i) => {
         const center: vec3 = hsData.waveformPositions[i];
 
-        console.log([...center]);
-
         renderWaveform(
             gl, 
             sceneData,
