@@ -31,7 +31,6 @@ body, html {
     list-style-type: none;
     padding: 0;
     margin: 0;
-    width: 20px;
     overflow: hidden;
     transition: width 0.3s ease;
     height: 100vh;
@@ -41,6 +40,12 @@ body, html {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+
+    /* width: 20px; */
+    /********/
+    width: 200px;
+    min-width: 200px;
+    /********/
 }
 
 #input-list:hover {
@@ -48,7 +53,7 @@ body, html {
 }
 
 #input-list li, #input-list h2 {
-    color: transparent;
+    /* color: transparent; */
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     font-size: 10pt;
     padding: 10px;
@@ -80,6 +85,7 @@ body, html {
 #input-list.hidden {
     display: none;
 }
+
 #add-input {
     background: #2ecc71;
     color: white;
@@ -93,8 +99,8 @@ body, html {
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     font-size: 10pt;
     display: block;
-    opacity: 0;
-    visibility: hidden;
+    /* opacity: 0; */
+    /* visibility: hidden; */
     position: absolute;
     bottom: 20px;
     left: 50%;
@@ -127,12 +133,28 @@ body, html {
 }
 
 .input-item {
+    width: 100%;
+    padding: 8px 10px;
+    box-sizing: border-box;
+}
+
+.input-item .pane {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 10px;
-    width: 100%;
-    box-sizing: border-box;
+    margin-bottom: 5px;
+}
+
+.input-item .waveform-list {
+    list-style-type: none;
+    padding-left: 0;
+    padding-right: 20px;
+}
+
+.input-item .waveform-list .selected {
+    border: 1px solid #ffffff;
+    border-radius: 2px;
+    padding: 2px 4px;
 }
 
 .input-name {
