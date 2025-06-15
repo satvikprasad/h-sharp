@@ -5,7 +5,7 @@ import * as audio from "./audio";
 
 import { initialiseInputList, InputListData, updateInputListSelectedItem } from "./input-list";
 
-import { CNum } from "./math/number";
+import * as hsMath from "./math";
 
 import { createViewMatFromCamera } from "./objects/camera";
 
@@ -22,7 +22,6 @@ import { GridlinesShader } from "./shaders/gridlines-shader";
 import { SquareShader } from "./shaders/square-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { WASMData } from "./wasm";
-import { warn } from "console";
 
 interface InputData {
     mouseWheel: {
@@ -205,7 +204,7 @@ function updateCameraData(
 
     cameraData.yRot += -inputData.mouseWheel.deltaX * deltaTime;
 
-    cameraData.xRot = CNum.clamp(
+    cameraData.xRot = hsMath.clamp(
         cameraData.xRot,
         -1/3 * Math.PI,
         1/3 * Math.PI
@@ -301,15 +300,15 @@ const updateScene = (hsData: HSData) => {
 }
 
 const updateInputs = (hsData: HSData) => {
-    hsData.inputData.mouseWheel.deltaX = CNum.lerp(
+    hsData.inputData.mouseWheel.deltaX = hsMath.lerp(
         hsData.inputData.mouseWheel.deltaX, 0, 0.05
     );
 
-    hsData.inputData.mouseWheel.deltaY = CNum.lerp(
+    hsData.inputData.mouseWheel.deltaY = hsMath.lerp(
         hsData.inputData.mouseWheel.deltaY, 0, 0.05
     );
 
-    hsData.inputData.deltaZoom = CNum.lerp(
+    hsData.inputData.deltaZoom = hsMath.lerp(
         hsData.inputData.deltaZoom, 0, 0.05
     );
 }
