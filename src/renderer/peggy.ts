@@ -5,7 +5,7 @@ import * as audio from "./audio";
 
 import { initialiseInputList, InputListData, updateInputListSelectedItem } from "./input-list";
 
-import * as hsMath from "./math";
+import * as pgMath from "./math";
 
 import { createViewMatFromCamera } from "./objects/camera";
 
@@ -37,7 +37,7 @@ interface InputData {
     rightMouseDown: boolean;
 };
 
-interface HSData {
+interface PgData {
     audioData: audio.AudioData;
     sceneData: SceneData;
     inputData: InputData;
@@ -79,13 +79,13 @@ const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
     };
 }
 
-const hsInitialise = async (
+const pgInitialise = async (
     local: ILocalAPI,
     gl: WebGLRenderingContext,
     canvas: HTMLCanvasElement,
     wasmData: WASMData,
     isNative: boolean,
-): Promise<HSData> => {
+): Promise<PgData> => {
     const audioData = audio.create(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
@@ -169,7 +169,7 @@ const hsInitialise = async (
 
     const inputListData = initialiseInputList(audioData, waveformPositions);
 
-    const hsData: HSData =  {
+    const pgData: PgData =  {
         audioData,
         sceneData,
         inputData,
@@ -193,7 +193,7 @@ const hsInitialise = async (
         canvas,
     };
 
-    return hsData;
+    return pgData;
 }
 
 function updateCameraData(
@@ -204,7 +204,7 @@ function updateCameraData(
 
     cameraData.yRot += -inputData.mouseWheel.deltaX * deltaTime;
 
-    cameraData.xRot = hsMath.clamp(
+    cameraData.xRot = pgMath.clamp(
         cameraData.xRot,
         -1/3 * Math.PI,
         1/3 * Math.PI
@@ -219,18 +219,18 @@ function updateCameraData(
     return viewMat;
 }
 
-const updateScene = (hsData: HSData) => {
-    let sceneData = hsData.sceneData;
+const updateScene = (pgData: PgData) => {
+    let sceneData = pgData.sceneData;
     sceneData.viewMat = updateCameraData(
         sceneData.cameraData, 
-        hsData.inputData, 
-        hsData.deltaTime
+        pgData.inputData, 
+        pgData.deltaTime
     );
 
     // Update camera rotation
     // Update position of waveforms.
-    hsData.audioData.waveforms.forEach((_, i) => {
-        const pos = hsData.waveformPositions[i];
+    pgData.audioData.waveforms.forEach((_, i) => {
+        const pos = pgData.waveformPositions[i];
 
         let screenSpacePos = vec3.create();
         vec3.transformMat4(
@@ -244,15 +244,15 @@ const updateScene = (hsData: HSData) => {
             sceneData.projMat, 
         );
 
-        hsData.waveformPositionsScreenSpace[i] = screenSpacePos;
+        pgData.waveformPositionsScreenSpace[i] = screenSpacePos;
     });
 
-    const screenWidthHeightRatio = hsData.canvas.getBoundingClientRect().height / hsData.canvas.getBoundingClientRect().width;
+    const screenWidthHeightRatio = pgData.canvas.getBoundingClientRect().height / pgData.canvas.getBoundingClientRect().width;
 
-    if (hsData.inputData.leftMouseDown) {
-        hsData.audioData.waveforms.forEach((_, i) => {
-            const screenSpacePos: vec3 = hsData.waveformPositionsScreenSpace[i];
-            const mousePos: vec2 = hsData.inputData.normalisedMousePos;
+    if (pgData.inputData.leftMouseDown) {
+        pgData.audioData.waveforms.forEach((_, i) => {
+            const screenSpacePos: vec3 = pgData.waveformPositionsScreenSpace[i];
+            const mousePos: vec2 = pgData.inputData.normalisedMousePos;
             const halfDim: vec2 = [0.015*screenWidthHeightRatio, 0.015];
 
             let diff: vec2 = vec2.subtract(
@@ -265,20 +265,20 @@ const updateScene = (hsData: HSData) => {
                 diff[0] > -halfDim[0] && 
                 diff[1] < halfDim[1] &&
                 diff[1] > -halfDim[1]) {
-                hsData.selectedWaveformIndex = i;
+                pgData.selectedWaveformIndex = i;
             }
         });
     } else {
-        hsData.selectedWaveformIndex = -1;
+        pgData.selectedWaveformIndex = -1;
     }
 
-    if (hsData.selectedWaveformIndex >= 0) {
+    if (pgData.selectedWaveformIndex >= 0) {
         const worldSpaceMousePos = vec3.transformMat4(
             vec3.create(),
             vec3.fromValues(
-                hsData.inputData.normalisedMousePos[0],
-                hsData.inputData.normalisedMousePos[1],
-                hsData.waveformPositionsScreenSpace[hsData.selectedWaveformIndex][2],
+                pgData.inputData.normalisedMousePos[0],
+                pgData.inputData.normalisedMousePos[1],
+                pgData.waveformPositionsScreenSpace[pgData.selectedWaveformIndex][2],
             ),
             mat4.invert(
                 mat4.create(),
@@ -295,40 +295,40 @@ const updateScene = (hsData: HSData) => {
             )
         );
 
-        hsData.waveformPositions[hsData.selectedWaveformIndex] = worldSpaceMousePos;
+        pgData.waveformPositions[pgData.selectedWaveformIndex] = worldSpaceMousePos;
     }
 }
 
-const updateInputs = (hsData: HSData) => {
-    hsData.inputData.mouseWheel.deltaX = hsMath.lerp(
-        hsData.inputData.mouseWheel.deltaX, 0, 0.05
+const updateInputs = (pgData: PgData) => {
+    pgData.inputData.mouseWheel.deltaX = pgMath.lerp(
+        pgData.inputData.mouseWheel.deltaX, 0, 0.05
     );
 
-    hsData.inputData.mouseWheel.deltaY = hsMath.lerp(
-        hsData.inputData.mouseWheel.deltaY, 0, 0.05
+    pgData.inputData.mouseWheel.deltaY = pgMath.lerp(
+        pgData.inputData.mouseWheel.deltaY, 0, 0.05
     );
 
-    hsData.inputData.deltaZoom = hsMath.lerp(
-        hsData.inputData.deltaZoom, 0, 0.05
+    pgData.inputData.deltaZoom = pgMath.lerp(
+        pgData.inputData.deltaZoom, 0, 0.05
     );
 }
 
-const hsUpdate = (hsData: HSData, deltaTime: number) => {
-    hsData.deltaTime = deltaTime;
-    hsData.time += hsData.deltaTime;
+const pgUpdate = (pgData: PgData, deltaTime: number) => {
+    pgData.deltaTime = deltaTime;
+    pgData.time += pgData.deltaTime;
 
-    audio.update(hsData.audioData);
+    audio.update(pgData.audioData);
 
-    updateInputs(hsData);
-    updateScene(hsData);
+    updateInputs(pgData);
+    updateScene(pgData);
 
-    if (hsData.selectedWaveformIndex != -1) {
+    if (pgData.selectedWaveformIndex != -1) {
         const selectedInputIndex =  
-            hsData.audioData.waveforms[hsData.selectedWaveformIndex].inputIndex;
-        const selectedInput = hsData.audioData.inputs[selectedInputIndex];
+            pgData.audioData.waveforms[pgData.selectedWaveformIndex].inputIndex;
+        const selectedInput = pgData.audioData.inputs[selectedInputIndex];
 
-        const isRaw = selectedInput.rawWaveformIndex == hsData.selectedWaveformIndex;
-        const isFreq = selectedInput.frequencyWaveformIndex == hsData.selectedWaveformIndex;
+        const isRaw = selectedInput.rawWaveformIndex == pgData.selectedWaveformIndex;
+        const isFreq = selectedInput.frequencyWaveformIndex == pgData.selectedWaveformIndex;
 
         let waveformType: audio.WaveformType;
         if (isRaw) {
@@ -340,26 +340,26 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
         }
 
         updateInputListSelectedItem(
-            hsData.inputListData, 
+            pgData.inputListData, 
             selectedInputIndex,
             waveformType
         );
     } else {
         updateInputListSelectedItem(
-            hsData.inputListData, 
+            pgData.inputListData, 
             -1,
         )
     }
 }
 
-const hsRender = (hsData: HSData, _deltaTime: number) => {
-    drawScene(hsData);
+const pgRender = (pgData: PgData, _deltaTime: number) => {
+    drawScene(pgData);
 }
 
 export {
-    type HSData,
+    type PgData,
 
-    hsInitialise,
-    hsUpdate,
-    hsRender,
+    pgInitialise,
+    pgUpdate,
+    pgRender,
 };

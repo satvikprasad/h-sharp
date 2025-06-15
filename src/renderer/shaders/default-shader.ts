@@ -195,7 +195,7 @@ namespace DefaultShader {
         );
 
         if (program == null) {
-            throw Error(`Exiting as h-sharp was unable to initialise the default shader program.`);
+            throw Error(`Exiting...unable to initialise the default shader program.`);
         }
 
         return getData(gl, program);

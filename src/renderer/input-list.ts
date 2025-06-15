@@ -1,6 +1,5 @@
 import { vec3 } from "gl-matrix";
 import * as audio from "./audio";
-import { HSData } from "./h-sharp";
 
 interface InputListData {
     inputListElement: HTMLUListElement;

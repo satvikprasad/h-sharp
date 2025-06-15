@@ -7,7 +7,7 @@ mkdir -p dist/bin
 pushd wasm
 zig build
 popd
-cp ./wasm/zig-out/bin/h-sharp.wasm ./dist/bin/
+cp ./wasm/zig-out/bin/peggiator.wasm ./dist/bin/
 
 echo -e "\033[0;32mCompiling typescript..."
 ./node_modules/.bin/tsc # Compile typescript
