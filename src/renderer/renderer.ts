@@ -1,5 +1,5 @@
 import { ILocalAPI } from "../../interface";
-import { type HSData, hsInitialise, hsRender, hsUpdate } from "./h-sharp";
+import { PgData, pgInitialise, pgRender, pgUpdate } from "./peggy";
 import { initialiseLocalSystem } from "./local";
 import { initialiseWASM } from "./wasm";
 
@@ -51,7 +51,7 @@ const main = (): void => {
 
         let wasmData = await initialiseWASM(local.fs);
 
-        let hsData = await hsInitialise(
+        let pgData = await pgInitialise(
             local, 
             gl,
             canvas,
@@ -67,9 +67,9 @@ const main = (): void => {
         let then = 0;
 
         const tick: FrameRequestCallback = (now: number) => {
-            hsUpdate(hsData, deltaTime);
+            pgUpdate(pgData, deltaTime);
 
-            hsRender(hsData, deltaTime);
+            pgRender(pgData, deltaTime);
 
             now *= 0.001; // Convert to seconds.
             deltaTime = now - then;

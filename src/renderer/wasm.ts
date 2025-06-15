@@ -138,7 +138,7 @@ const initialiseWASM = async (
 ): Promise<WASMData> => {
     let memory: WebAssembly.Memory | null = null;
 
-    const source = await fs.readFileSync("bin/h-sharp.wasm") 
+    const source = await fs.readFileSync("bin/peggiator.wasm") 
     
     if (typeof(source) == "string") {
         throw Error(

@@ -1,5 +1,5 @@
 import { mat4, vec2, vec3, vec4 } from "gl-matrix";
-import { type HSData } from "./h-sharp";
+import { type PgData } from "./peggy";
 import { renderWaveform } from "./objects/waveform";
 import { CameraData } from "./objects/camera";
 import { renderGridlines } from "./objects/gridlines";
@@ -44,11 +44,10 @@ const initialiseScene = (
 }
 
 const drawScene = (
-    hsData: HSData,
-) => {
-    const gl = hsData.gl;
-    const sceneData = hsData.sceneData;
-    const audioData = hsData.audioData;
+    pgData: PgData,
+) => { const gl = pgData.gl;
+    const sceneData = pgData.sceneData;
+    const audioData = pgData.audioData;
 
     let canvas: HTMLCanvasElement = document.querySelector("#gl-canvas")!;
 
@@ -68,7 +67,7 @@ const drawScene = (
     // Render transparent objects intended for the 
     // background
     renderGridlines(gl, 
-        sceneData, hsData.gridlinesShaderData,
+        sceneData, pgData.gridlinesShaderData,
         [0.5, 0.5, 0.5, 1.0],
         0.01, 
         1.0,
@@ -76,30 +75,30 @@ const drawScene = (
 
     gl.depthMask(true);
 
-    const screenWidthHeightRatio = hsData.canvas.getBoundingClientRect().height / hsData.canvas.getBoundingClientRect().width;
+    const screenWidthHeightRatio = pgData.canvas.getBoundingClientRect().height / pgData.canvas.getBoundingClientRect().width;
 
     audioData.waveforms.forEach((waveform, i) => {
-        const center: vec3 = hsData.waveformPositions[i];
+        const center: vec3 = pgData.waveformPositions[i];
 
         renderWaveform(
             gl, 
             sceneData,
-            hsData.waveformShaderData,
+            pgData.waveformShaderData,
             audio.getWaveformBuffer(audioData, waveform),
             center,
             audio.getWaveformMaximum(audioData, waveform)
         );
 
         // Draw selection surface
-        const screenSpaceCenter = hsData.waveformPositionsScreenSpace[i];
-        const color: vec4 = (hsData.selectedWaveformIndex == i) ? 
+        const screenSpaceCenter = pgData.waveformPositionsScreenSpace[i];
+        const color: vec4 = (pgData.selectedWaveformIndex == i) ? 
             [1.0, 0.0, 0.0, 1.0] : [1.0, 1.0, 1.0, 1.0];
 
         // Ensure clipped if off screen.
         if (Math.abs(screenSpaceCenter[2]) < 1.0) {
             renderSquare(
                 gl, 
-                hsData.squareShaderData,
+                pgData.squareShaderData,
                 vec2.fromValues(screenSpaceCenter[0], screenSpaceCenter[1]),
                 [0.015*screenWidthHeightRatio, 0.015],
                 color
