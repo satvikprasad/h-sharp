@@ -10,6 +10,21 @@ function createInputItem(input: audio.Input): HTMLLIElement {
     let inputItem = document.createElement("li");
     inputItem.className = "input-item";
 
+    let waveformList = document.createElement("ul");
+    waveformList.classList.add("waveform-list");
+    {
+        const raw = document.createElement("li");
+        raw.innerText = "Raw Waveform";
+
+        const freq = document.createElement("li");
+        freq.innerText = "Frequency Waveform";
+
+        waveformList.append(raw, freq);
+    }
+
+    let paneDiv = document.createElement("div");
+    paneDiv.classList.add("pane");
+
     let inputItemText = document.createElement("span");
     inputItemText.className = "input-name";
     inputItemText.innerText = input.name;
@@ -17,32 +32,35 @@ function createInputItem(input: audio.Input): HTMLLIElement {
     let inputItemPlayButton = document.createElement("button");
     inputItemPlayButton.className = "play-pause-btn";
 
-    let inputItemPlayButtonIcon = document.createElement("span");
-    inputItemPlayButtonIcon.className = "icon";
-    inputItemPlayButtonIcon.innerText = "⏸";
-
-    inputItemPlayButton.onclick = (e) => {
-        if (input.togglePlayPause) {
-            if (input.togglePlayPause()) {
-                inputItemPlayButtonIcon.innerText = "⏸";
-                return;
-            };
-
-            inputItemPlayButtonIcon.innerText = "▶";
-        }
-    };
-
     switch (input.inputType) {
         case audio.InputType.Audio:
+            let inputItemPlayButtonIcon = document.createElement("span");
+            inputItemPlayButtonIcon.className = "icon";
+            inputItemPlayButtonIcon.innerText = "⏸";
+
+            inputItemPlayButton.onclick = (_) => {
+                if (input.togglePlayPause) {
+                    if (input.togglePlayPause()) {
+                        inputItemPlayButtonIcon.innerText = "⏸";
+                        return;
+                    };
+
+                    inputItemPlayButtonIcon.innerText = "▶";
+                }
+            };
+
             inputItemPlayButton.append(inputItemPlayButtonIcon);
             break;
 
         case audio.InputType.SystemAudio: 
+            inputItemPlayButton.append(document.createElement("span"));
         default:
             break;
     }
 
-    inputItem.append(inputItemText, inputItemPlayButton);
+    paneDiv.append(inputItemText, inputItemPlayButton);
+
+    inputItem.append(paneDiv, waveformList);
 
     return inputItem;
 }
@@ -145,19 +163,30 @@ function initialiseInputList(
     };
 }
 
-function updateInputList(
+function updateInputListSelectedItem(
     inputListData: InputListData,
     selectedInputIndex: number,
+    selectedWaveformType?: audio.WaveformType,
 ) {
-    for (let i = 1; i < inputListData.inputListElement.children.length; ++i) {
-        const child = inputListData.inputListElement.children[i];
+    for (let i = 1; i < inputListData.inputListElement.children.length - 1; ++i) {
+        const inputItem = inputListData.inputListElement.children[i];
+        const waveformList = inputItem.children[1];
 
-        child.classList.remove("selected");
+        for (let i = 0; i < waveformList.children.length; ++i) {
+            waveformList.children[i].className = "";
+        }
     }
 
     if (selectedInputIndex != -1) {
-        inputListData.inputListElement.children[selectedInputIndex + 1]
-            .classList.add("selected");
+        if (selectedWaveformType == undefined) {
+            throw Error("selectedWaveformType is required if selectedInputIndex != -1");
+        }
+
+        const selectedInput = inputListData.inputListElement.children[selectedInputIndex + 1];
+
+        const waveformList = selectedInput.children[1];
+
+        waveformList.children[selectedWaveformType].className = "selected";
     }
 }
 
@@ -165,5 +194,5 @@ export {
     type InputListData,
 
     initialiseInputList,
-    updateInputList,
+    updateInputListSelectedItem,
 };

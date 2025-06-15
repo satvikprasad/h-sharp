@@ -3,7 +3,7 @@ import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
 
-import { initialiseInputList, InputListData, updateInputList } from "./input-list";
+import { initialiseInputList, InputListData, updateInputListSelectedItem } from "./input-list";
 
 import { CNum } from "./math/number";
 
@@ -22,6 +22,7 @@ import { GridlinesShader } from "./shaders/gridlines-shader";
 import { SquareShader } from "./shaders/square-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { WASMData } from "./wasm";
+import { warn } from "console";
 
 interface InputData {
     mouseWheel: {
@@ -322,14 +323,34 @@ const hsUpdate = (hsData: HSData, deltaTime: number) => {
     updateInputs(hsData);
     updateScene(hsData);
 
-    const selectedInputIndex = hsData.selectedWaveformIndex != -1 ? 
-        hsData.audioData.waveforms[hsData.selectedWaveformIndex].inputIndex : 
-        -1;
+    if (hsData.selectedWaveformIndex != -1) {
+        const selectedInputIndex =  
+            hsData.audioData.waveforms[hsData.selectedWaveformIndex].inputIndex;
+        const selectedInput = hsData.audioData.inputs[selectedInputIndex];
 
-    updateInputList(
-        hsData.inputListData, 
-        selectedInputIndex
-    );
+        const isRaw = selectedInput.rawWaveformIndex == hsData.selectedWaveformIndex;
+        const isFreq = selectedInput.frequencyWaveformIndex == hsData.selectedWaveformIndex;
+
+        let waveformType: audio.WaveformType;
+        if (isRaw) {
+            waveformType = audio.WaveformType.Raw;
+        } else if (isFreq) {
+            waveformType = audio.WaveformType.Frequency;
+        } else {
+            throw Error("Selected waveform was neither raw or freq.");
+        }
+
+        updateInputListSelectedItem(
+            hsData.inputListData, 
+            selectedInputIndex,
+            waveformType
+        );
+    } else {
+        updateInputListSelectedItem(
+            hsData.inputListData, 
+            -1,
+        )
+    }
 }
 
 const hsRender = (hsData: HSData, _deltaTime: number) => {

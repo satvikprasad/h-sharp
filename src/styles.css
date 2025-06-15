@@ -42,7 +42,10 @@ body, html {
     flex-direction: column;
 
     /* width: 20px; */
+    /********/
     width: 200px;
+    min-width: 200px;
+    /********/
 }
 
 #input-list:hover {
@@ -130,18 +133,29 @@ body, html {
 }
 
 .input-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
     width: 100%;
+    padding: 8px 10px;
     box-sizing: border-box;
 }
 
-.input-item.selected {
-    color: pink;
-    width: 50%;
-};
+.input-item .pane {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.input-item .waveform-list {
+    list-style-type: none;
+    padding-left: 0;
+    padding-right: 20px;
+}
+
+.input-item .waveform-list .selected {
+    border: 1px solid #ffffff;
+    border-radius: 2px;
+    padding: 2px 4px;
+}
 
 .input-name {
     flex: 1;
