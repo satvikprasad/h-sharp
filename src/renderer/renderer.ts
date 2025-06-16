@@ -1,5 +1,5 @@
 import { ILocalAPI } from "../../interface";
-import { PgData, pgInitialise, pgRender, pgUpdate } from "./peggy";
+import { PgData, pgInitialise, pgRender, pgUpdate } from "./pg";
 import { initialiseLocalSystem } from "./local";
 import { initialiseWASM } from "./wasm";
 
