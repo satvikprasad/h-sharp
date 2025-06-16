@@ -36,7 +36,7 @@ app.whenReady().then(() => {
     let win = createWindow();
 
     // Begin system audio capture
-    const systemAudioCapturer = spawn(path.join(__dirname, '../bin/listener'));
+    const systemAudioCapturer = spawn(path.join(__dirname, '../bin/peggiator-listener'));
 
     systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
         if (hasWindow) {

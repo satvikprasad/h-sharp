@@ -162,10 +162,6 @@ struct Listener: @unchecked Sendable {
             throw ListenerError("Could not find shareable content.")
         }
 
-        if mainDisplay == nil {
-            throw ListenerError("Could not find main display.")
-        }
-
         let filter = SCContentFilter(display: mainDisplay!, excludingWindows: [])
         let config = Listener.getListenerConfiguration(display: mainDisplay!)
 

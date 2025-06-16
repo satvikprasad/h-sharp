@@ -1,9 +1,51 @@
-import { ILocalAPI } from "../../interface";
+import { IFileSystemAPI, ILocalAPI } from "../../interface";
 import { PgData, pgInitialise, pgRender, pgUpdate } from "./pg";
 import { initialiseLocalSystem } from "./local";
 import { initialiseWASM } from "./wasm";
 
-const main = (): void => {
+async function initialise(
+    gl: WebGLRenderingContext,
+    local: ILocalAPI,
+    container: HTMLDivElement,
+    canvas: HTMLCanvasElement
+): Promise<void> {
+    const canvasSize = await local.frame.getSize();
+    container.setAttribute("width", String(canvasSize[0]));
+    container.setAttribute("height", String(canvasSize[0]));
+
+    let wasmData = await initialiseWASM(local.fs);
+
+    let pgData = await pgInitialise(
+        local,
+        gl,
+        canvas,
+        wasmData,
+        window.local != undefined
+    )
+
+    // Resize canvas to width of view
+    // Resize viewport
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    let deltaTime = 0;
+    let then = 0;
+
+    const tick: FrameRequestCallback = (now: number) => {
+        pgUpdate(pgData, deltaTime);
+
+        pgRender(pgData, deltaTime);
+
+        now *= 0.001; // Convert to seconds.
+        deltaTime = now - then;
+        then = now;
+
+        requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+}
+
+function main (): void {
     const container: HTMLDivElement | null = document.querySelector(".container");
     if (container == null) {
         throw Error("Could not find main container.");
@@ -14,6 +56,7 @@ const main = (): void => {
     if (canvas == null) {
         throw Error("Could not find canvas element");
     }
+
     // Get gl context
     const gl: WebGLRenderingContext | null = canvas.getContext(
         "webgl2", {
@@ -43,45 +86,9 @@ const main = (): void => {
         gl.viewport(0, 0, dim.width, dim.height);
     });
 
-    const initialise = async () => {
-        // Resize the canvas.
-        const canvasSize = await local.frame.getSize();
-        container.setAttribute("width", String(canvasSize[0]));
-        container.setAttribute("height", String(canvasSize[0]));
-
-        let wasmData = await initialiseWASM(local.fs);
-
-        let pgData = await pgInitialise(
-            local, 
-            gl,
-            canvas,
-            wasmData,
-            window.local != undefined
-        )
-
-        // Resize canvas to width of view
-        // Resize viewport
-        gl.viewport(0, 0, canvas.width, canvas.height);
-
-        let deltaTime = 0;
-        let then = 0;
-
-        const tick: FrameRequestCallback = (now: number) => {
-            pgUpdate(pgData, deltaTime);
-
-            pgRender(pgData, deltaTime);
-
-            now *= 0.001; // Convert to seconds.
-            deltaTime = now - then;
-            then = now;
-
-            requestAnimationFrame(tick);
-        }
-
-        requestAnimationFrame(tick);
-    };
-
-    initialise().then(() => {});
+    initialise(gl, local, container, canvas).then(() => {
+        console.log("Exiting...");
+    });
 };
 
 main();

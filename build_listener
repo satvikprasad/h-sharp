@@ -1,9 +1,7 @@
 #!/bin/bash
 pushd ./listener/macos/
-
 swift build -c release --product listener
-
 popd
 
-mkdir ./bin
+mkdir -p ./bin
 cp ./listener/macos/.build/release/listener ./bin/listener
