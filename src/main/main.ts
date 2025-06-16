@@ -27,7 +27,7 @@ const createWindow = () => {
 
     hasWindow = true;
 
-    win.loadFile(path.join(__dirname, '../index.html'));
+    win.loadFile(path.join(__dirname, '../../dist/index.html'));
 
     return win
 }
@@ -36,7 +36,7 @@ app.whenReady().then(() => {
     let win = createWindow();
 
     // Begin system audio capture
-    const systemAudioCapturer = spawn(path.join(__dirname, '../bin/peggiator-listener'));
+    const systemAudioCapturer = spawn(path.join(__dirname, '../../bin/peggiator-listener'));
 
     systemAudioCapturer.stdout.on('data', (chunk: Buffer<Uint8Array>) => {
         if (hasWindow) {
@@ -72,6 +72,7 @@ app.whenReady().then(() => {
         return getSize(win);
     });
 
+    // TODO: Streamline this stuff
     ipcMain.handle('fs.readFileRelPath', (_event, ...args: any) => {
         let p = path.join(__dirname, "../", ...args);
         let buf = fs.readFileSync(p, { encoding: "utf8" });        
@@ -86,7 +87,14 @@ app.whenReady().then(() => {
     ipcMain.handle('fs.readFileSync', (_event, ...args: any) => {
         console.log(`Using working directory ${cwd()}`);
 
-        let p = path.join(__dirname, "../", args[0]);
+        if (args[0].startsWith("file:")) {
+            const url: string = args[0];
+            const path = url.slice(7);
+
+            return fs.readFileSync(path);
+        }
+
+        let p = path.join(__dirname, "../../dist/", args[0]);
         let options = args[1];
 
         if (options) {
@@ -94,6 +102,20 @@ app.whenReady().then(() => {
         } 
 
         return new Uint8Array(fs.readFileSync(p));
+    });
+
+    ipcMain.handle('fs.readFileFromURL', (_event, ...args: any) => {
+        const url: string = args[0];
+
+        if (url.startsWith("data:")) {
+            // We have a data URL
+            const data = url.split(',')[1];
+            const bytes = Buffer.from(data, "base64");
+
+            return bytes.toString();
+        }
+
+        return fs.readFileSync(url);
     });
 });
 

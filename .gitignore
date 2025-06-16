@@ -143,5 +143,4 @@ bin/
 wasm/zig-out
 wasm/.zig-cache/
 
-server/*.js
-server/*.js.map
+src/**/*.js

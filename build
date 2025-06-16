@@ -1,4 +1,10 @@
 ./prebuild
 
-echo -e "\033[0;Building vite..."
+if [ $# -eq 0 ]; then 
+echo Building vite for browser...
 ./node_modules/.bin/vite build
+elif [ $1 = "electron" ]; then
+echo Building vite for electron...
+./node_modules/.bin/vite build --base=./
+fi 
+
