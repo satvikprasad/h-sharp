@@ -14,7 +14,7 @@ layout(location = 0) out vec4 outColor;
 
 // Constants for fade out
 const float FADE_START = 2.0;  // Distance at which fade starts
-const float FADE_END = 30.0;   // Distance at which fade ends
+const float FADE_END = 15.0;   // Distance at which fade ends
 
 float computeDepth(vec3 worldPos) {
     vec4 clip_space_pos = fragProj * fragView * 

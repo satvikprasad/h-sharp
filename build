@@ -28,7 +28,7 @@ find "src/renderer/shaders/source" -name \*.glsl -exec cp {} "dist/shaders/sourc
 
 # Copy auxiliary apps
 echo -e "\033[0;32mCopying auxiliary plugins"
-cp bin/* ./dist/bin
+cp ./listener/macos/.build/release/listener ./dist/bin/peggiator-listener
 
 # Source environment variables
 if [ -f .env ]; then
