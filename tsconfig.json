@@ -2,8 +2,8 @@
     "compilerOptions": {
         "strict": true,
         "target": "es6",
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "Node16",
+        "moduleResolution": "node16",
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
@@ -11,10 +11,14 @@
         "useUnknownInCatchVariables": true,
         "esModuleInterop": true,
         "removeComments": true,
-        "esModuleInterop": true,
         "noImplicitOverride": true,
         "noImplicitAny": false,
-        "outDir": "dist"
+        "outDir": "dist",
+        "noEmit": true,
+        "types": [
+            "vite/client",
+            "node"
+        ]
     },
-    "exclude": [ "node_modules", "server" ]
+    "exclude": [ "node_modules", "vite.config.ts" ]
 }

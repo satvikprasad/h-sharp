@@ -28,6 +28,10 @@ export interface IFileSystemAPI {
         path: string[]
     ) => Promise<string>,
 
+    readFileFromURL: (
+        url: string
+    ) => Promise<string>,
+
     readFileSync: (
         path: string, options?: Object
     ) => Promise<string | Uint8Array>,

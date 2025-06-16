@@ -23,6 +23,14 @@ const initialiseLocalSystem = (): ILocalAPI => {
 
                 return res.text(); 
             },
+
+            async readFileFromURL(url: string): Promise<string> {
+                console.log(url);
+
+                let res = await fetch(url);
+                return res.text();
+            },
+
             async readFileSync(path, options): Promise<string | Uint8Array> {
                 let res = await fetch(path);
 

@@ -4,4 +4,4 @@ swift build -c release --product listener
 popd
 
 mkdir -p ./bin
-cp ./listener/macos/.build/release/listener ./bin/listener
+cp ./listener/macos/.build/release/listener ./bin/peggiator-listener

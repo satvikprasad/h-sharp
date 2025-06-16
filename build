@@ -1,37 +1,10 @@
-#!/bin/bash
-echo -e "\033[0;32mCleaning dist..."
-rm -rf dist
+./prebuild
 
-echo -e "\033[0;32mCompiling WASM"
-mkdir -p dist/bin
-pushd wasm
-zig build
-popd
-cp ./wasm/zig-out/bin/peggiator.wasm ./dist/bin/
+if [ $# -eq 0 ]; then 
+echo Building vite for browser...
+./node_modules/.bin/vite build
+elif [ $1 = "electron" ]; then
+echo Building vite for electron...
+./node_modules/.bin/vite build --base=./
+fi 
 
-echo -e "\033[0;32mCompiling typescript..."
-./node_modules/.bin/tsc # Compile typescript
-./node_modules/.bin/tsc --p server/tsconfig.json
-
-echo -e "\033[0;32mBundling..."
-./node_modules/.bin/webpack # Bundle renderer.ts
-
-# Copy html to dist
-echo -e "\033[0;32mCopying source..."
-cp src/index.html dist/
-cp src/styles.css dist/
-
-# Copy shaders
-echo -e "\033[0;32mCopying shaders..."
-mkdir -p "dist/shaders" "dist/shaders/source"
-find "src/renderer/shaders/source" -name \*.glsl -exec cp {} "dist/shaders/source" \;
-
-# Copy auxiliary apps
-echo -e "\033[0;32mCopying auxiliary plugins"
-cp ./listener/macos/.build/release/listener ./dist/bin/peggiator-listener
-
-# Source environment variables
-if [ -f .env ]; then
-    echo -e "\033[32mSourcing environment...\033[0m"
-    source .env
-fi

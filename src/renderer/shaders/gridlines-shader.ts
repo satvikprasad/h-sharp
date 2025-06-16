@@ -2,6 +2,9 @@ import { vec4 } from "gl-matrix";
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
+import vertexURL from './source/gridlines-vertex.glsl?url';
+import fragmentURL from './source/gridlines-fragment.glsl?url';
+
 // TODO: Convert all Array<number> operations here to 
 // Float32Array operations.
 
@@ -90,8 +93,8 @@ namespace GridlinesShader {
     ): Promise<Data> => {
         const program = await initShaderProgram(
             gl,
-            "gridlines-vertex.glsl",
-            "gridlines-fragment.glsl",
+            vertexURL,
+            fragmentURL,
             fs
         );
 

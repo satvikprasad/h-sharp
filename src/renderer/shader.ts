@@ -13,12 +13,12 @@ const initShaderProgram = async (
     fsRelPath: string,
     fs: IFileSystemAPI,
 ): Promise<WebGLProgram | null> => {
-    let vsSource = await fs.readFileRelPath(
-        ["shaders/source", vsRelPath]
+    let vsSource = await fs.readFileFromURL(
+        vsRelPath
     );
 
-    let fsSource = await fs.readFileRelPath(
-        ["shaders/source", fsRelPath]
+    let fsSource = await fs.readFileFromURL(
+        fsRelPath
     );
 
     const vertexShader = loadShader(
