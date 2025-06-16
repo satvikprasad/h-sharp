@@ -140,7 +140,7 @@ const initialiseWASM = async (
 ): Promise<WASMData> => {
     let memory: WebAssembly.Memory | null = null;
 
-    const source = await fs.readFileSync(wasmURL) 
+    const source = await fs.readFileSync(wasmURL);
     
     if (typeof(source) == "string") {
         throw Error(

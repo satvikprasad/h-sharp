@@ -35,5 +35,11 @@ contextBridge.exposeInMainWorld('local', {
         ) => ipcRenderer.invoke(
             'fs.readFileSync', path, options
         ),
+
+        readFileFromURL: (
+            url: string
+        ) => ipcRenderer.invoke(
+            'fs.readFileFromURL', url
+        )
     }
 });

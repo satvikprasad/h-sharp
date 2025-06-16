@@ -5,8 +5,8 @@
     "scripts": {
         "browser": "./prebuild && vite",
         "build": "./build",
-        "debug": "npm run build && electron --enable-logging --inspect=9229 dist/main/main.js",
-        "start": "npm run build && electron --enable-logging dist/main/main.js",
+        "debug": "./build electron && electron --enable-logging --inspect=9229 src/main/main.js",
+        "start": "./build electron && electron --enable-logging src/main/main.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
