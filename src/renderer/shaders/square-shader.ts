@@ -1,6 +1,9 @@
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
+import vertexURL from "./source/square-vertex.glsl?url";
+import fragmentURL from "./source/square-fragment.glsl?url";
+
 // TODO: Convert all Array<number> operations here to 
 // Float32Array operations.
 
@@ -110,8 +113,8 @@ namespace SquareShader {
     ): Promise<Data> => {
         const program = await initShaderProgram(
             gl,
-            "square-vertex.glsl",
-            "square-fragment.glsl",
+            vertexURL,
+            fragmentURL,
             fs
         );
 

@@ -117,6 +117,7 @@ function addAddInputHandler(
             }
 
             const src = URL.createObjectURL(target.files[0]);
+            console.log(src);
 
             const newInput = await audio.addInput(
                 audioData, 

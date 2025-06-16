@@ -1,4 +1,5 @@
 import * as wasm from "./wasm";
+import workletUrl from './worklets/audio-processor?worker&url';
 
 enum WaveformType {
     Raw,
@@ -157,7 +158,7 @@ async function addInput(
             audioElement.play();
 
             await audioContext.audioWorklet.addModule(
-                "./renderer/worklets/audio-processor.js"
+                workletUrl
             );
 
             const processorNode = new AudioWorkletNode(

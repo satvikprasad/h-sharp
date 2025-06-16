@@ -1,5 +1,7 @@
 import { IFileSystemAPI } from "../../interface";
 
+import wasmURL from '../../bin/peggiator.wasm?url';
+
 type TAudioComputeLogScaleAmplitude = (
     N: number,
     k: number,
@@ -138,7 +140,7 @@ const initialiseWASM = async (
 ): Promise<WASMData> => {
     let memory: WebAssembly.Memory | null = null;
 
-    const source = await fs.readFileSync("bin/peggiator.wasm") 
+    const source = await fs.readFileSync(wasmURL) 
     
     if (typeof(source) == "string") {
         throw Error(

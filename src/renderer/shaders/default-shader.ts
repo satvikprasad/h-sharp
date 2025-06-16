@@ -1,6 +1,9 @@
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
+import vertexURL from './source/default-vertex.glsl?url';
+import fragmentURL from './source/default-fragment.glsl?url';
+
 namespace DefaultShader {
     export interface Data {
         program: WebGLProgram;
@@ -189,8 +192,8 @@ namespace DefaultShader {
     ): Promise<Data> => {
         const program = await initShaderProgram(
             gl,
-            "default-vertex.glsl",
-            "default-fragment.glsl",
+            vertexURL,
+            fragmentURL,
             fs,
         );
 

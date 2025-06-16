@@ -1,6 +1,9 @@
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
+import vertexURL from './source/waveform-vertex.glsl?url';
+import fragmentURL from './source/waveform-fragment.glsl?url'
+
 // TODO: Convert all Array<number> operations here to 
 // Float32Array operations.
 
@@ -343,8 +346,8 @@ namespace WaveformShader {
     ): Promise<Data> => {
         const program = await initShaderProgram(
             gl,
-            "waveform-vertex.glsl",
-            "waveform-fragment.glsl",
+            vertexURL,
+            fragmentURL,
             fs
         );
 
