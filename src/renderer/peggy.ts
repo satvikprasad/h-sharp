@@ -35,6 +35,9 @@ interface InputData {
 
     leftMouseDown: boolean;
     rightMouseDown: boolean;
+
+    keyDown: { [key: string] : boolean };
+    keyPressed: { [key: string] : boolean };
 };
 
 interface PgData {
@@ -76,6 +79,9 @@ const initialiseCanvas = (_canvas: HTMLCanvasElement): InputData => {
         
         leftMouseDown: false,
         rightMouseDown: false,
+
+        keyDown: {},
+        keyPressed: {},
     };
 }
 
@@ -89,6 +95,22 @@ const pgInitialise = async (
     const audioData = audio.create(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
+
+    document.onkeydown = function (e) {
+        const key = e.key;
+
+        if (!inputData.keyDown[key]) {
+            inputData.keyPressed[key] = true;
+        }
+
+        inputData.keyDown[key] = true;
+    };
+
+    document.onkeyup = function (e) {
+        const key = e.key;
+
+        inputData.keyDown[key] = false;
+    }
 
     // Listen to mouse events
     canvas.addEventListener('wheel', (event) => {
@@ -221,6 +243,17 @@ function updateCameraData(
 
 const updateScene = (pgData: PgData) => {
     let sceneData = pgData.sceneData;
+
+    if (pgData.inputData.keyPressed["e"]) {
+        // Center the camera.
+        sceneData.cameraData.xRot = 0;
+        sceneData.cameraData.yRot = 0;
+        sceneData.cameraData.radius = 1;
+
+        pgData.inputData.mouseWheel.deltaX = 0;
+        pgData.inputData.mouseWheel.deltaY = 0;
+    }
+
     sceneData.viewMat = updateCameraData(
         sceneData.cameraData, 
         pgData.inputData, 
@@ -349,7 +382,14 @@ const pgUpdate = (pgData: PgData, deltaTime: number) => {
             pgData.inputListData, 
             -1,
         )
-    }
+    }   
+
+    // Update keyPressed dictionary
+    Object.entries(pgData.inputData.keyPressed).forEach((kv) => {
+        if(kv[1] == false) return;
+
+        pgData.inputData.keyPressed[kv[0]] = false;
+    });
 }
 
 const pgRender = (pgData: PgData, _deltaTime: number) => {
