@@ -17,10 +17,7 @@ import {
     drawScene, 
     initialiseScene 
 } from "./scene";
-import { DefaultShader } from "./shaders/default-shader";
-import { GridlinesShader } from "./shaders/gridlines-shader";
-import { SquareShader } from "./shaders/square-shader";
-import { WaveformShader } from "./shaders/waveform-shader";
+import * as shader from './shader'
 import { WASMData } from "./wasm";
 
 interface InputData {
@@ -49,10 +46,10 @@ interface PgData {
 
     gl: WebGLRenderingContext;
     
-    defaultShaderData: DefaultShader.Data;
-    waveformShaderData: WaveformShader.Data;
-    gridlinesShaderData: GridlinesShader.Data;
-    squareShaderData: SquareShader.Data;
+    defaultShaderData: shader.DefaultShader.Data;
+    waveformShaderData: shader.WaveformShader.Data;
+    gridlinesShaderData: shader.GridlinesShader.Data;
+    squareShaderData: shader.SquareShader.Data;
 
     // TODO: Think about moving this to SceneData
     waveformPositions: vec3[];
@@ -165,19 +162,19 @@ const pgInitialise = async (
         });
 
     // Initialise shaders
-    const defaultShaderData = await DefaultShader.initialise(
+    const defaultShaderData = await shader.DefaultShader.initialise(
         gl, local.fs
     );
 
-    const waveformShaderData = await WaveformShader.initialise(
+    const waveformShaderData = await shader.WaveformShader.initialise(
         gl, local.fs, 100
     );
 
-    const gridlinesShaderData = await GridlinesShader.initialise(
+    const gridlinesShaderData = await shader.GridlinesShader.initialise(
         gl, local.fs
     );
 
-    const squareShaderData = await SquareShader.initialise(
+    const squareShaderData = await shader.SquareShader.initialise(
         gl, local.fs
     );
 

@@ -1,5 +1,10 @@
 import { type IFileSystemAPI } from "../../interface";
 
+import { DefaultShader } from "./shaders/default-shader";
+import { WaveformShader } from "./shaders/waveform-shader";
+import { SquareShader } from "./shaders/square-shader";
+import { GridlinesShader } from "./shaders/gridlines-shader";
+
 // Stores a shader program and it's
 // attrib and uniform locations
 const initShaderProgram = async (
@@ -89,4 +94,11 @@ const loadShader = (
     return shader;
 }
 
-export { initShaderProgram };
+export { 
+    initShaderProgram,
+
+    DefaultShader,
+    WaveformShader,
+    GridlinesShader,
+    SquareShader
+ };
