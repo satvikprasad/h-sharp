@@ -5,6 +5,8 @@ echo Building vite for browser...
 ./node_modules/.bin/vite build
 elif [ $1 = "electron" ]; then
 echo Building vite for electron...
+echo -e "\033[0;32mCompiling electron typescript..."
+./node_modules/.bin/tsc src/main/main.ts src/preload/preload.ts --target es2015 --moduleResolution NodeNext --module NodeNext
 ./node_modules/.bin/vite build --base=./
 fi 
 
