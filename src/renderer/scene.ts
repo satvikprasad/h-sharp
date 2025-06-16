@@ -69,7 +69,7 @@ const drawScene = (
     renderGridlines(gl, 
         sceneData, pgData.gridlinesShaderData,
         [0.5, 0.5, 0.5, 1.0],
-        0.01, 
+        0.04, 
         1.0,
     );
 
