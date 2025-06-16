@@ -10,4 +10,4 @@ popd
 cp ./wasm/zig-out/bin/peggiator.wasm ./bin/
 
 echo -e "\033[0;32mCompiling typescript..."
-/node_modules/.bin/tsc # Compile typescript
+./node_modules/.bin/tsc # Compile typescript
