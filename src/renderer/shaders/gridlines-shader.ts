@@ -1,11 +1,10 @@
-import { vec4 } from "gl-matrix";
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
-import vertexURL from './source/gridlines-vertex.glsl?url';
-import fragmentURL from './source/gridlines-fragment.glsl?url';
+import vertexURL from "./source/gridlines-vertex.glsl?url";
+import fragmentURL from "./source/gridlines-fragment.glsl?url";
 
-// TODO: Convert all Array<number> operations here to 
+// TODO: Convert all Array<number> operations here to
 // Float32Array operations.
 
 namespace GridlinesShader {
@@ -19,56 +18,38 @@ namespace GridlinesShader {
             scale: WebGLUniformLocation;
             width: WebGLUniformLocation;
         };
-    };
+    }
 
-    const getData = (
-        gl: WebGLRenderingContext,
-        program: WebGLProgram,
-    ) => {
-        const projMatLoc = gl.getUniformLocation(
-            program,
-            "uProjMat"
-        );
+    const getData = (gl: WebGLRenderingContext, program: WebGLProgram) => {
+        const projMatLoc = gl.getUniformLocation(program, "uProjMat");
 
         if (!projMatLoc) {
             throw Error(`Could not find uniform location\
             for uProjMat`);
         }
 
-        const viewMatLoc = gl.getUniformLocation(
-            program,
-            "uViewMat"
-        );
+        const viewMatLoc = gl.getUniformLocation(program, "uViewMat");
 
         if (!viewMatLoc) {
             throw Error(`Could not find uniform location\
             for uViewMat`);
         }
 
-        const colorLoc = gl.getUniformLocation(
-            program,
-            "uColor"
-        );
+        const colorLoc = gl.getUniformLocation(program, "uColor");
 
         if (!colorLoc) {
             throw Error(`Could not find uniform location\
             for uColor`);
         }
 
-        const scaleLoc = gl.getUniformLocation(
-            program,
-            "uScale"
-        );
+        const scaleLoc = gl.getUniformLocation(program, "uScale");
 
         if (!scaleLoc) {
             throw Error(`Could not find uniform location\
             for uScale`);
         }
 
-        const widthLoc = gl.getUniformLocation(
-            program,
-            "uWidth"
-        );
+        const widthLoc = gl.getUniformLocation(program, "uWidth");
 
         if (!widthLoc) {
             throw Error(`Could not find uniform location\
@@ -85,18 +66,13 @@ namespace GridlinesShader {
                 width: widthLoc,
             },
         };
-    }
+    };
 
     export const initialise = async (
         gl: WebGLRenderingContext,
-        fs: IFileSystemAPI,
+        fs: IFileSystemAPI
     ): Promise<Data> => {
-        const program = await initShaderProgram(
-            gl,
-            vertexURL,
-            fragmentURL,
-            fs
-        );
+        const program = await initShaderProgram(gl, vertexURL, fragmentURL, fs);
 
         if (program == null) {
             throw Error(
@@ -105,7 +81,7 @@ namespace GridlinesShader {
         }
 
         return getData(gl, program);
-    }
-};
+    };
+}
 
 export { GridlinesShader };

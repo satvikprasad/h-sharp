@@ -1,10 +1,10 @@
 import { IFileSystemAPI } from "../../../interface";
 import { initShaderProgram } from "../shader";
 
-import vertexURL from './source/waveform-vertex.glsl?url';
-import fragmentURL from './source/waveform-fragment.glsl?url'
+import vertexURL from "./source/waveform-vertex.glsl?url";
+import fragmentURL from "./source/waveform-fragment.glsl?url";
 
-// TODO: Convert all Array<number> operations here to 
+// TODO: Convert all Array<number> operations here to
 // Float32Array operations.
 
 namespace WaveformShader {
@@ -24,28 +24,28 @@ namespace WaveformShader {
         };
 
         buffers: VertexBuffer;
-    };
+    }
 
     export interface VertexBuffer {
-        position: WebGLBuffer,
-        color: WebGLBuffer,
-        value: WebGLBuffer,
+        position: WebGLBuffer;
+        color: WebGLBuffer;
+        value: WebGLBuffer;
 
-        indices: WebGLBuffer,
-        indexCount: number,
-    };
+        indices: WebGLBuffer;
+        indexCount: number;
+    }
 
     export const generateValues = (
         fidelity: number,
         frequencyBuffer?: Float32Array,
-        max?: number,
+        max?: number
     ): Float32Array => {
         let values: Array<number> = [];
 
-        let norm = 0
-        
+        let norm = 0;
+
         if (max) {
-            norm = max
+            norm = max;
         } else {
             if (frequencyBuffer) {
                 norm = Math.max(...frequencyBuffer);
@@ -55,16 +55,14 @@ namespace WaveformShader {
         // No frequency buffer provided
         for (let k = 0; k <= fidelity; ++k) {
             if (frequencyBuffer) {
-                let i = Math.floor(
-                    k/fidelity * frequencyBuffer.length
-                );
+                let i = Math.floor((k / fidelity) * frequencyBuffer.length);
 
                 i = Math.min(frequencyBuffer.length, i);
 
                 // Push normalised value.
                 values.push(
                     0,
-                    frequencyBuffer[i]/norm // Normalising         
+                    frequencyBuffer[i] / norm // Normalising
                 );
             } else {
                 values.push(0);
@@ -73,65 +71,55 @@ namespace WaveformShader {
         }
 
         return new Float32Array(values);
-    }
+    };
 
-    const generateVertices = (
-        fidelity: number,
-    ): Float32Array => {
+    const generateVertices = (fidelity: number): Float32Array => {
         let positions: Array<number> = [];
 
         // No frequency buffer provided
         for (let k = 0; k <= fidelity; ++k) {
-            let x = k/fidelity * 2.0 - 1.0;
+            let x = (k / fidelity) * 2.0 - 1.0;
 
-            positions.push(
-                x, 0.0, 0.0, 
-                x, 0.0, 0.0
-            );
+            positions.push(x, 0.0, 0.0, x, 0.0, 0.0);
         }
 
         return new Float32Array(positions);
-    }
+    };
 
-    const generateColors = (
-        fidelity: number
-    ): Float32Array => {
+    const generateColors = (fidelity: number): Float32Array => {
         let colors: Array<number> = [];
 
         for (let k = 0; k <= fidelity; ++k) {
-            let t = k/fidelity;
+            let t = k / fidelity;
 
             colors.push(1.0, 1.0, t, 1.0);
             colors.push(1.0, 1.0, t, 1.0);
         }
 
         return new Float32Array(colors);
-    }
+    };
 
     const generateIndices = (
         fidelity: number
-    ): { 
-        indices: Uint16Array,
-            indexCount: number
+    ): {
+        indices: Uint16Array;
+        indexCount: number;
     } => {
         let indices: Array<number> = [];
 
         for (let k = 0; k < fidelity; ++k) {
             // 2*k is the base, 2*k + 1 is the tip
-            indices.push(2*k, 2*k + 1, 2*k + 2);
-            indices.push(2*k + 1, 2*k + 2, 2*k + 3);
+            indices.push(2 * k, 2 * k + 1, 2 * k + 2);
+            indices.push(2 * k + 1, 2 * k + 2, 2 * k + 3);
         }
 
-        return { 
+        return {
             indices: new Uint16Array(indices),
             indexCount: indices.length,
-        }
-    }
+        };
+    };
 
-    const initValueBuffer = (
-        gl: WebGLRenderingContext,
-        fidelity: number
-    ) => {
+    const initValueBuffer = (gl: WebGLRenderingContext, fidelity: number) => {
         const valueBuffer = gl.createBuffer();
 
         gl.bindBuffer(gl.ARRAY_BUFFER, valueBuffer);
@@ -143,11 +131,11 @@ namespace WaveformShader {
         );
 
         return valueBuffer;
-    }
+    };
 
     const initColorBuffer = (
         gl: WebGLRenderingContext,
-        fidelity: number,
+        fidelity: number
     ): WebGLBuffer => {
         const colorBuffer = gl.createBuffer();
 
@@ -160,31 +148,31 @@ namespace WaveformShader {
         );
 
         return colorBuffer;
-    }
+    };
 
     const initPositionBuffer = (
         gl: WebGLRenderingContext,
-        fidelity: number,
+        fidelity: number
     ): WebGLBuffer => {
         const posBuffer = gl.createBuffer();
 
         gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
 
         gl.bufferData(
-            gl.ARRAY_BUFFER, 
-            generateVertices(fidelity), 
+            gl.ARRAY_BUFFER,
+            generateVertices(fidelity),
             gl.STATIC_DRAW
         );
 
         return posBuffer;
-    }
+    };
 
     const initIndexBuffer = (
         gl: WebGLRenderingContext,
-        fidelity: number,
+        fidelity: number
     ): {
-        indexBuffer: WebGLBuffer,
-            indexCount: number,
+        indexBuffer: WebGLBuffer;
+        indexCount: number;
     } => {
         const indexBuffer = gl.createBuffer();
 
@@ -198,15 +186,15 @@ namespace WaveformShader {
             gl.STATIC_DRAW
         );
 
-        return { 
-            indexBuffer: indexBuffer, 
-            indexCount: indexOut.indexCount 
+        return {
+            indexBuffer: indexBuffer,
+            indexCount: indexOut.indexCount,
         };
-    }
+    };
 
     export const initBuffers = (
         gl: WebGLRenderingContext,
-        fidelity: number,
+        fidelity: number
     ): VertexBuffer => {
         let indexOut = initIndexBuffer(gl, fidelity);
 
@@ -217,7 +205,7 @@ namespace WaveformShader {
             indices: indexOut.indexBuffer,
             indexCount: indexOut.indexCount,
         };
-    }
+    };
 
     export const setPositionAttribute = (
         gl: WebGLRenderingContext,
@@ -236,7 +224,7 @@ namespace WaveformShader {
         );
 
         gl.enableVertexAttribArray(data.attribLocations.vertexPosition);
-    }
+    };
 
     export const setColorAttribute = (
         gl: WebGLRenderingContext,
@@ -255,7 +243,7 @@ namespace WaveformShader {
         );
 
         gl.enableVertexAttribArray(data.attribLocations.vertexColor);
-    }
+    };
 
     export const setValueAttribute = (
         gl: WebGLRenderingContext,
@@ -273,30 +261,19 @@ namespace WaveformShader {
             0
         );
 
-        gl.enableVertexAttribArray(
-            data.attribLocations.vertexValue
-        );
-    }
+        gl.enableVertexAttribArray(data.attribLocations.vertexValue);
+    };
 
     export const getData = (
         gl: WebGLRenderingContext,
         program: WebGLProgram,
-        fidelity: number,
+        fidelity: number
     ) => {
-        const projMatLoc = gl.getUniformLocation(
-            program,
-            "uProjectionMatrix"
-        );
+        const projMatLoc = gl.getUniformLocation(program, "uProjectionMatrix");
 
-        const viewMatLoc = gl.getUniformLocation(
-            program,
-            "uViewMatrix"
-        );
+        const viewMatLoc = gl.getUniformLocation(program, "uViewMatrix");
 
-        const modelMatLoc = gl.getUniformLocation(
-            program,
-            "uModelMatrix"
-        );
+        const modelMatLoc = gl.getUniformLocation(program, "uModelMatrix");
 
         if (!projMatLoc) {
             throw Error(`Could not find uniform location\
@@ -320,14 +297,8 @@ namespace WaveformShader {
                     program,
                     "aVertexPosition"
                 ),
-                vertexColor: gl.getAttribLocation(
-                    program,
-                    "aVertexColor"
-                ),
-                vertexValue: gl.getAttribLocation(
-                    program,
-                    "aVertexValue"
-                ),
+                vertexColor: gl.getAttribLocation(program, "aVertexColor"),
+                vertexValue: gl.getAttribLocation(program, "aVertexValue"),
             },
             uniformLocations: {
                 projMat: projMatLoc,
@@ -337,19 +308,14 @@ namespace WaveformShader {
 
             buffers: initBuffers(gl, fidelity),
         };
-    }
+    };
 
     export const initialise = async (
         gl: WebGLRenderingContext,
         fs: IFileSystemAPI,
-        fidelity: number,
+        fidelity: number
     ): Promise<Data> => {
-        const program = await initShaderProgram(
-            gl,
-            vertexURL,
-            fragmentURL,
-            fs
-        );
+        const program = await initShaderProgram(gl, vertexURL, fragmentURL, fs);
 
         if (program == null) {
             throw Error(
@@ -358,7 +324,7 @@ namespace WaveformShader {
         }
 
         return getData(gl, program, fidelity);
-    }
-};
+    };
+}
 
 export { WaveformShader };

@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -52,7 +53,8 @@ body, html {
     width: 200px;
 }
 
-#input-list li, #input-list h2 {
+#input-list li,
+#input-list h2 {
     /* color: transparent; */
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     font-size: 10pt;
@@ -74,7 +76,8 @@ body, html {
     margin: 0;
 }
 
-#input-list:hover li, #input-list:hover h2 {
+#input-list:hover li,
+#input-list:hover h2 {
     color: #e0e0e0;
 }
 
@@ -162,7 +165,8 @@ body, html {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: calc(100% - 40px); /* Account for the play/pause button width */
+    max-width: calc(100% - 40px);
+    /* Account for the play/pause button width */
 }
 
 .play-pause-btn {
@@ -185,4 +189,3 @@ body, html {
 .play-pause-btn.playing .icon {
     display: inline;
 }
-

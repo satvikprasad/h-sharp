@@ -10,7 +10,7 @@ interface InputItemProps {
 }
 
 interface InputListProps {
-    inputListData: InputListData,
+    inputListData: InputListData;
     audioData: audio.AudioData;
     waveformPositions: vec3[];
 }
@@ -79,7 +79,11 @@ function InputItem({
     );
 }
 
-function InputList({ inputListData, audioData, waveformPositions }: InputListProps) : React.JSX.Element {
+function InputList({
+    inputListData,
+    audioData,
+    waveformPositions,
+}: InputListProps): React.JSX.Element {
     const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
     const [selectedInputIndex, setSelectedInputIndex] = useState<number>(-1);
@@ -159,7 +163,7 @@ interface InputListData {
     setSelectedWaveformType: React.Dispatch<
         React.SetStateAction<audio.WaveformType | -1>
     > | null;
-};
+}
 
 function initialiseInputList(
     audioData: audio.AudioData,
@@ -173,8 +177,9 @@ function initialiseInputList(
 
     const root = ReactDOM.createRoot(inputList);
 
+    // Mutated by InputList to expose setters for the following.
     let inputListData: InputListData = {
-        setSelectedInputIndex: null, 
+        setSelectedInputIndex: null,
         setSelectedWaveformType: null,
     };
 

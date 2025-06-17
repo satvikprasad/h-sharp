@@ -86,8 +86,7 @@ function main(): void {
         gl.viewport(0, 0, dim.width, dim.height);
     });
 
-    initialise(gl, local, container, canvas).then(() => {
-    });
+    initialise(gl, local, container, canvas).then(() => {});
 }
 
 main();

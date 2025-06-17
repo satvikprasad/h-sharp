@@ -16,12 +16,12 @@ declare var AudioWorkletProcessor: {
 };
 
 type AudioParamDescriptor = {
-    name: string,
-    automationRate: AutomationRate,
-    minValue: number,
-    maxValue: number,
-    defaultValue: number
-}
+    name: string;
+    automationRate: AutomationRate;
+    minValue: number;
+    maxValue: number;
+    defaultValue: number;
+};
 
 interface AudioWorkletProcessorConstructor {
     new (options?: AudioWorkletNodeOptions): AudioWorkletProcessorImpl;
@@ -30,5 +30,5 @@ interface AudioWorkletProcessorConstructor {
 
 declare function registerProcessor(
     name: string,
-    processorCtor: AudioWorkletProcessorConstructor,
+    processorCtor: AudioWorkletProcessorConstructor
 ): void;

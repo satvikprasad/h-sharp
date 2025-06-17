@@ -3,8 +3,9 @@ class AudioProcessor extends AudioWorkletProcessor {
     private currentChunk: Float32Array = new Float32Array(512);
     private currentChunkLength = 0;
 
-    process(inputs: Float32Array[][], 
-        outputs: Float32Array[][], 
+    process(
+        inputs: Float32Array[][],
+        outputs: Float32Array[][],
         parameters: Record<string, Float32Array>
     ) {
         if (inputs[0][0].length != 128) {
@@ -23,7 +24,7 @@ class AudioProcessor extends AudioWorkletProcessor {
             const copy = new Float32Array(this.currentChunk);
 
             this.port.postMessage(copy, {
-                transfer: [copy.buffer]
+                transfer: [copy.buffer],
             });
 
             this.currentChunk.set(inputs[0][0]);
@@ -32,6 +33,6 @@ class AudioProcessor extends AudioWorkletProcessor {
 
         return true;
     }
-};
+}
 
-registerProcessor("audio-processor", AudioProcessor)
+registerProcessor("audio-processor", AudioProcessor);

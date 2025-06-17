@@ -6,7 +6,7 @@ const renderSquare = (
     shader: SquareShader.Data,
     pos: vec2,
     scale: vec2,
-    color: vec4,
+    color: vec4
 ) => {
     gl.useProgram(shader.program);
 
@@ -16,6 +16,6 @@ const renderSquare = (
     gl.uniform2fv(shader.uniformLocations.scale, scale);
     gl.uniform4fv(shader.uniformLocations.color, color);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-}
+};
 
 export { renderSquare };
