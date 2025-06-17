@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix";
-import * as audio from "./audio";
+import * as audio from "../audio";
 import ReactDOM from "react-dom/client";
 import React, { useReducer, useState } from "react";
 

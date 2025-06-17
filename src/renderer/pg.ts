@@ -3,7 +3,7 @@ import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
 
-import { initialiseInputList, InputListData, updateInputListSelectedItem } from "./input-list";
+import { initialiseInputList, InputListData, updateInputListSelectedItem } from "./components/input-list";
 
 import * as pgMath from "./math";
 
