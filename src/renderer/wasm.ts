@@ -14,12 +14,10 @@ type TAudioUpdateFrequencyWaveform = (
 ) => void;
 
 type TAudioUpdateWaveform = (waveformPtr: number) => void;
-
 type TAudioDestroyWaveform = (waveformPtr: number) => void;
-
 type TAudioGetWaveformBuffer = (waveformPtr: number) => number;
-
 type TAudioGetWaveformMaximum = (waveformPtr: number) => number;
+type TAudioComputeWaveformDecibel = (waveformPtr: number) => number;
 
 interface IAudio {
     computeLogScaleAmplitude: TAudioComputeLogScaleAmplitude;
@@ -29,6 +27,7 @@ interface IAudio {
     destroyWaveform: TAudioDestroyWaveform;
     getWaveformBuffer: TAudioGetWaveformBuffer;
     getWaveformMaximum: TAudioGetWaveformMaximum;
+    computeWaveformDecibel: TAudioComputeWaveformDecibel;
 }
 
 interface WASMData {
@@ -156,6 +155,9 @@ const initialiseWASM = async (fs: IFileSystemAPI): Promise<WASMData> => {
 
         getWaveformMaximum: result.instance.exports
             .audioGetWaveformMaximum as TAudioGetWaveformMaximum,
+
+        computeWaveformDecibel: result.instance.exports
+            .audioComputeWaveformDecibel as TAudioComputeWaveformDecibel,
     };
 
     return {

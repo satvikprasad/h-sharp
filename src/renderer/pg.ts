@@ -6,6 +6,7 @@ import * as audio from "./audio";
 import {
     initialiseInputList,
     InputListData,
+    updateInputListDecibels,
     updateInputListSelectedItem,
 } from "./components/input-list";
 
@@ -355,6 +356,11 @@ const pgUpdate = (pgData: PgData, deltaTime: number) => {
         pgData.audioData.inputs,
         pgData.audioData.waveforms,
         pgData.selectedWaveformIndex
+    );
+
+    updateInputListDecibels(
+        pgData.inputListData, 
+        pgData.audioData.decibelValues
     );
 
     // Update keyPressed dictionary

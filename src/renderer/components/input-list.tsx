@@ -1,10 +1,12 @@
 import { vec3 } from "gl-matrix";
 import * as audio from "../audio";
 import ReactDOM from "react-dom/client";
-import React, { useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
+import { DecibelMeter } from "./decibel-meter";
 
 interface InputItemProps {
     input: audio.Input;
+    decibelValue: number;
     selected: boolean;
     selectedWaveformType: audio.WaveformType | -1;
 }
@@ -17,6 +19,7 @@ interface InputListProps {
 
 function InputItem({
     input,
+    decibelValue,
     selected,
     selectedWaveformType,
 }: InputItemProps): React.JSX.Element {
@@ -51,6 +54,7 @@ function InputItem({
                     <></>
                 )}
             </div>
+            <DecibelMeter value={decibelValue} />
             <ul className="waveform-list">
                 <li
                     className={
@@ -91,8 +95,11 @@ function InputList({
         audio.WaveformType | -1
     >(-1);
 
+    const [decibels, setDecibels] = useState<number[]>([]);
+
     inputListData.setSelectedWaveformType = setSelectedWaveformType;
     inputListData.setSelectedInputIndex = setSelectedInputIndex;
+    inputListData.setDecibels = setDecibels;
 
     function addInput() {
         let input = document.createElement("input");
@@ -146,6 +153,7 @@ function InputList({
                     <InputItem
                         key={i}
                         input={input}
+                        decibelValue={decibels[i]}
                         selected={selectedInputIndex == i}
                         selectedWaveformType={selectedWaveformType}
                     />
@@ -163,6 +171,7 @@ interface InputListData {
     setSelectedWaveformType: React.Dispatch<
         React.SetStateAction<audio.WaveformType | -1>
     > | null;
+    setDecibels: React.Dispatch<React.SetStateAction<number[]>> | null;
 }
 
 function initialiseInputList(
@@ -181,6 +190,7 @@ function initialiseInputList(
     let inputListData: InputListData = {
         setSelectedInputIndex: null,
         setSelectedWaveformType: null,
+        setDecibels: null,
     };
 
     root.render(
@@ -230,4 +240,17 @@ function updateInputListSelectedItem(
     inputListData.setSelectedWaveformType(selectedWaveformType);
 }
 
-export { type InputListData, initialiseInputList, updateInputListSelectedItem };
+function updateInputListDecibels(inputListData: InputListData, decibels: number[]) {
+    if (!inputListData.setDecibels) {
+        console.log("WARNING: decibels setter was null.")
+        return;
+    }
+
+    inputListData.setDecibels(
+        decibels.map((v) => {
+            return v;
+        })
+    );
+}
+
+export { type InputListData, initialiseInputList, updateInputListSelectedItem, updateInputListDecibels };

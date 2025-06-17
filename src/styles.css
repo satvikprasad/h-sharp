@@ -189,3 +189,9 @@ html {
 .play-pause-btn.playing .icon {
     display: inline;
 }
+
+.db-rectangle {
+    background-color: red;
+    height: 10px;
+    width: 0%;
+}
