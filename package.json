@@ -13,19 +13,19 @@
     "license": "ISC",
     "description": "",
     "devDependencies": {
-        "@babel/core": "^7.27.4",
-        "@babel/preset-env": "^7.27.2",
-        "@babel/preset-typescript": "^7.27.1",
         "@types/express": "^5.0.2",
         "@types/node": "^22.15.31",
-        "babel-loader": "^10.0.0",
+        "@types/react": "^19.1.8",
+        "@types/react-dom": "^19.1.6",
+        "@vitejs/plugin-react": "^4.5.2",
         "electron": "^36.2.1",
         "typescript": "^5.8.3",
         "vite": "^6.3.5"
     },
     "dependencies": {
-        "express": "^5.1.0",
         "gl-matrix": "^3.4.3",
-        "path-browserify": "^1.0.1"
+        "path-browserify": "^1.0.1",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0"
     }
 }

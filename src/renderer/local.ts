@@ -25,8 +25,6 @@ const initialiseLocalSystem = (): ILocalAPI => {
             },
 
             async readFileFromURL(url: string): Promise<string> {
-                console.log(url);
-
                 let res = await fetch(url);
                 return res.text();
             },

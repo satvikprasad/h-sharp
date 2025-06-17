@@ -36,7 +36,8 @@ interface Input {
      * togglePlayPause, returns true if audio began playing, false if it is paused.
      * @returns boolean 
      */
-    togglePlayPause?: () => boolean;
+    audioElement?: HTMLAudioElement;
+    isPlaying?: boolean;
 };
 
 interface AudioData {
@@ -58,9 +59,10 @@ function pushNewInput(
     sampleRate: number,
     lsb: number,
     inputType: InputType,
-    togglePlayPause?: () => boolean,
+    audioElement?: HTMLAudioElement,
+    isPlaying?: boolean,
 ): Input {
-    if (inputType == InputType.Audio && !togglePlayPause) {
+    if (inputType == InputType.Audio && (!audioElement || !isPlaying)) {
         throw Error("togglePlayPause is required for inputType = InputType.Audio");
     }
 
@@ -91,7 +93,8 @@ function pushNewInput(
         rawWaveformIndex,
         frequencyWaveformIndex,
         inputType,
-        togglePlayPause
+        audioElement,
+        isPlaying,
     }
 
     audioData.inputs.push(newInput);
@@ -174,15 +177,8 @@ async function addInput(
                 audioContext.sampleRate,
                 0.019,
                 InputType.Audio,
-                () => {
-                    if (audioElement.paused) {
-                        audioElement.play();
-                        return true;
-                    } 
-
-                    audioElement.pause();
-                    return false;
-                }
+                audioElement,
+                true
             );
 
             processorNode.port.onmessage = (e) => {
@@ -263,6 +259,20 @@ function updateSystemAudioData(
         .set(sysAudioBuffer);
 }
 
+function inputTogglePlaying(input: Input) {
+    if (input.inputType != InputType.Audio) {
+        throw Error("Tried to toggle play/pause on non-Audio input.")
+    }
+
+    if (input.isPlaying!) {
+        input.audioElement!.pause();
+    } else {
+        input.audioElement!.play();
+    }
+
+    input.isPlaying! = !input.isPlaying!;
+}
+
 function getWaveformFromInput(
     audioData: AudioData,
     input: Input,
@@ -322,6 +332,7 @@ function getWaveformMaximum(
 export { 
     type AudioData,
     type Input,
+    type WaveformData,
 
     InputType,
     WaveformType,
@@ -335,5 +346,7 @@ export {
     addInput,
  
     getWaveformBuffer,
-    getWaveformMaximum
+    getWaveformMaximum,
+
+    inputTogglePlaying,
 };

@@ -21,7 +21,7 @@ async function initialise(
         canvas,
         wasmData,
         window.local != undefined
-    )
+    );
 
     // Resize canvas to width of view
     // Resize viewport
@@ -40,30 +40,30 @@ async function initialise(
         then = now;
 
         requestAnimationFrame(tick);
-    }
+    };
 
     requestAnimationFrame(tick);
 }
 
-function main (): void {
-    const container: HTMLDivElement | null = document.querySelector(".container");
+function main(): void {
+    const container: HTMLDivElement | null =
+        document.querySelector(".container");
     if (container == null) {
         throw Error("Could not find main container.");
     }
-        
+
     // Get canvas
-    const canvas: HTMLCanvasElement | null = document.querySelector("#gl-canvas");
+    const canvas: HTMLCanvasElement | null =
+        document.querySelector("#gl-canvas");
     if (canvas == null) {
         throw Error("Could not find canvas element");
     }
 
     // Get gl context
-    const gl: WebGLRenderingContext | null = canvas.getContext(
-        "webgl2", {
-            alpha: false,
-            antialias: true,
-        }
-    );
+    const gl: WebGLRenderingContext | null = canvas.getContext("webgl2", {
+        alpha: false,
+        antialias: true,
+    });
 
     if (gl == null) {
         throw Error(`Unable to initialise WebGL.\
@@ -80,15 +80,14 @@ function main (): void {
     }
 
     local.frame.onResized((dim) => {
-        container.setAttribute("width", String(dim.width))
-        container.setAttribute("height", String(dim.height))
+        container.setAttribute("width", String(dim.width));
+        container.setAttribute("height", String(dim.height));
 
         gl.viewport(0, 0, dim.width, dim.height);
     });
 
     initialise(gl, local, container, canvas).then(() => {
-        console.log("Exiting...");
     });
-};
+}
 
 main();

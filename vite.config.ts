@@ -1,4 +1,7 @@
-import type { UserConfig } from 'vite'
+import type { UserConfig } from 'vite';
+
+import react from '@vitejs/plugin-react';
 
 export default {
-} satisfies UserConfig
+    plugins: [react()]
+} satisfies UserConfig;
