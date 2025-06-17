@@ -53,7 +53,8 @@ interface PgData {
 
     // TODO: Think about moving this to SceneData
     waveformPositions: vec3[];
-    waveformPositionsScreenSpace: vec3[];
+    waveformScreenSpacePositions: vec3[];
+
     selectedWaveformIndex: number;
 
     // Temporaries
@@ -197,7 +198,7 @@ const pgInitialise = async (
         inputListData,
 
         waveformPositions,
-        waveformPositionsScreenSpace: [],
+        waveformScreenSpacePositions: [],
         selectedWaveformIndex: -1,
 
         gl,
@@ -251,6 +252,12 @@ const updateScene = (pgData: PgData) => {
         pgData.inputData.mouseWheel.deltaY = 0;
     }
 
+    if (pgData.inputData.keyPressed["c"]) {
+        pgData.waveformPositions.forEach((_, i) => {
+            pgData.waveformPositions[i][2] = 0.0;
+        });
+    }
+
     sceneData.viewMat = updateCameraData(
         sceneData.cameraData,
         pgData.inputData,
@@ -258,7 +265,7 @@ const updateScene = (pgData: PgData) => {
     );
 
     // Update camera rotation
-    // Update position of waveforms.
+    // Update screen space position of waveforms.
     pgData.audioData.waveforms.forEach((_, i) => {
         const pos = pgData.waveformPositions[i];
 
@@ -266,7 +273,7 @@ const updateScene = (pgData: PgData) => {
         vec3.transformMat4(screenSpacePos, pos, sceneData.viewMat);
         vec3.transformMat4(screenSpacePos, screenSpacePos, sceneData.projMat);
 
-        pgData.waveformPositionsScreenSpace[i] = screenSpacePos;
+        pgData.waveformScreenSpacePositions[i] = screenSpacePos;
     });
 
     const screenWidthHeightRatio =
@@ -275,7 +282,7 @@ const updateScene = (pgData: PgData) => {
 
     if (pgData.inputData.leftMouseDown) {
         pgData.audioData.waveforms.forEach((_, i) => {
-            const screenSpacePos: vec3 = pgData.waveformPositionsScreenSpace[i];
+            const screenSpacePos: vec3 = pgData.waveformScreenSpacePositions[i];
             const mousePos: vec2 = pgData.inputData.normalisedMousePos;
             const halfDim: vec2 = [0.015 * screenWidthHeightRatio, 0.015];
 
@@ -304,7 +311,7 @@ const updateScene = (pgData: PgData) => {
             vec3.fromValues(
                 pgData.inputData.normalisedMousePos[0],
                 pgData.inputData.normalisedMousePos[1],
-                pgData.waveformPositionsScreenSpace[
+                pgData.waveformScreenSpacePositions[
                     pgData.selectedWaveformIndex
                 ][2]
             ),
@@ -359,7 +366,7 @@ const pgUpdate = (pgData: PgData, deltaTime: number) => {
     );
 
     updateInputListDecibels(
-        pgData.inputListData, 
+        pgData.inputListData,
         pgData.audioData.decibelValues
     );
 
