@@ -12,40 +12,31 @@ interface SceneData {
     viewMat: mat4;
 
     cameraData: CameraData;
-};
+}
 
-const initialiseScene = (
-    gl: WebGLRenderingContext
-): SceneData => {
+const initialiseScene = (gl: WebGLRenderingContext): SceneData => {
     const fov = (100 * Math.PI) / 180;
     const aspect = gl.canvas.width / gl.canvas.height;
     const zNear = 0.1;
     const zFar = 100.0;
 
-    return { 
-        projMat: mat4.perspective(
-            mat4.create(),
-            fov,
-            aspect,
-            zNear,
-            zFar
-        ), 
+    return {
+        projMat: mat4.perspective(mat4.create(), fov, aspect, zNear, zFar),
         viewMat: mat4.create(),
 
         cameraData: {
-            xRot: 15/180 * Math.PI,
+            xRot: (15 / 180) * Math.PI,
             yRot: 0,
 
             radius: 6,
 
             focus: vec3.fromValues(0, 0, 1.5),
-        }
-    }
-}
+        },
+    };
+};
 
-const drawScene = (
-    pgData: PgData,
-) => { const gl = pgData.gl;
+const drawScene = (pgData: PgData) => {
+    const gl = pgData.gl;
     const sceneData = pgData.sceneData;
     const audioData = pgData.audioData;
 
@@ -64,24 +55,28 @@ const drawScene = (
 
     gl.depthMask(false);
 
-    // Render transparent objects intended for the 
+    // Render transparent objects intended for the
     // background
-    renderGridlines(gl, 
-        sceneData, pgData.gridlinesShaderData,
+    renderGridlines(
+        gl,
+        sceneData,
+        pgData.gridlinesShaderData,
         [0.2, 0.3, 0.5, 1.0],
-        0.04, 
-        1.0,
+        0.04,
+        1.0
     );
 
     gl.depthMask(true);
 
-    const screenWidthHeightRatio = pgData.canvas.getBoundingClientRect().height / pgData.canvas.getBoundingClientRect().width;
+    const screenWidthHeightRatio =
+        pgData.canvas.getBoundingClientRect().height /
+        pgData.canvas.getBoundingClientRect().width;
 
     audioData.waveforms.forEach((waveform, i) => {
         const center: vec3 = pgData.waveformPositions[i];
 
         renderWaveform(
-            gl, 
+            gl,
             sceneData,
             pgData.waveformShaderData,
             audio.getWaveformBuffer(audioData, waveform),
@@ -91,16 +86,18 @@ const drawScene = (
 
         // Draw selection surface
         const screenSpaceCenter = pgData.waveformPositionsScreenSpace[i];
-        const color: vec4 = (pgData.selectedWaveformIndex == i) ? 
-            [1.0, 0.0, 0.0, 1.0] : [1.0, 1.0, 1.0, 1.0];
+        const color: vec4 =
+            pgData.selectedWaveformIndex == i
+                ? [1.0, 0.0, 0.0, 1.0]
+                : [1.0, 1.0, 1.0, 1.0];
 
         // Ensure clipped if off screen.
         if (Math.abs(screenSpaceCenter[2]) < 1.0) {
             renderSquare(
-                gl, 
+                gl,
                 pgData.squareShaderData,
                 vec2.fromValues(screenSpaceCenter[0], screenSpaceCenter[1]),
-                [0.015*screenWidthHeightRatio, 0.015],
+                [0.015 * screenWidthHeightRatio, 0.015],
                 color
             );
         }
@@ -109,9 +106,4 @@ const drawScene = (
     gl.depthMask(false);
 };
 
-export { 
-    type SceneData, 
-
-    drawScene, 
-    initialiseScene 
-};
+export { type SceneData, drawScene, initialiseScene };

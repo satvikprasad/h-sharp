@@ -11,31 +11,19 @@ const initShaderProgram = async (
     gl: WebGLRenderingContext,
     vsRelPath: string,
     fsRelPath: string,
-    fs: IFileSystemAPI,
+    fs: IFileSystemAPI
 ): Promise<WebGLProgram | null> => {
-    let vsSource = await fs.readFileFromURL(
-        vsRelPath
-    );
+    let vsSource = await fs.readFileFromURL(vsRelPath);
 
-    let fsSource = await fs.readFileFromURL(
-        fsRelPath
-    );
+    let fsSource = await fs.readFileFromURL(fsRelPath);
 
-    const vertexShader = loadShader(
-        gl, 
-        gl.VERTEX_SHADER, 
-        vsSource
-    );
+    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
 
     if (vertexShader == null) {
         throw Error(`Could not load vertex shader ${vsRelPath}`);
     }
 
-    const fragShader = loadShader(
-        gl, 
-        gl.FRAGMENT_SHADER, 
-        fsSource
-    );
+    const fragShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
     if (fragShader == null) {
         throw Error(`Could not load vertex shader ${vsRelPath}`);
@@ -59,9 +47,8 @@ const initShaderProgram = async (
         return null;
     }
 
-
     return shaderProgram;
-}
+};
 
 const loadShader = (
     gl: WebGLRenderingContext,
@@ -71,9 +58,7 @@ const loadShader = (
     const shader = gl.createShader(shadType);
 
     if (shader == null) {
-        throw Error(
-            `gl.createShader(${shadType}) returned null`
-        );
+        throw Error(`gl.createShader(${shadType}) returned null`);
     }
 
     gl.shaderSource(shader, source);
@@ -92,13 +77,12 @@ const loadShader = (
     }
 
     return shader;
-}
+};
 
-export { 
+export {
     initShaderProgram,
-
     DefaultShader,
     WaveformShader,
     GridlinesShader,
-    SquareShader
- };
+    SquareShader,
+};

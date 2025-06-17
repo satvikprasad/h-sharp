@@ -8,7 +8,7 @@ const renderGridlines = (
     shader: GridlinesShader.Data,
     color: vec4,
     width: number,
-    density: number,
+    density: number
 ) => {
     gl.useProgram(shader.program);
 
@@ -26,24 +26,17 @@ const renderGridlines = (
 
     gl.uniform4f(
         shader.uniformLocations.color,
-        color[0], color[1], color[2], color[3]
+        color[0],
+        color[1],
+        color[2],
+        color[3]
     );
 
-    gl.uniform1f(
-        shader.uniformLocations.scale,
-        density
-    );
+    gl.uniform1f(shader.uniformLocations.scale, density);
 
-    gl.uniform1f(
-        shader.uniformLocations.width,
-        width
-    );
+    gl.uniform1f(shader.uniformLocations.width, width);
 
-    gl.drawArrays(
-        gl.TRIANGLES,
-        0,
-        6,
-    );
-}
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+};
 
 export { renderGridlines };

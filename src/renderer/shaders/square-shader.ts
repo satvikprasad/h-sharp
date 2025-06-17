@@ -4,7 +4,7 @@ import { initShaderProgram } from "../shader";
 import vertexURL from "./source/square-vertex.glsl?url";
 import fragmentURL from "./source/square-fragment.glsl?url";
 
-// TODO: Convert all Array<number> operations here to 
+// TODO: Convert all Array<number> operations here to
 // Float32Array operations.
 
 namespace SquareShader {
@@ -16,13 +16,13 @@ namespace SquareShader {
         };
 
         uniformLocations: {
-            position: WebGLUniformLocation
+            position: WebGLUniformLocation;
             scale: WebGLUniformLocation;
             color: WebGLUniformLocation;
         };
 
         positionBuffer: WebGLBuffer;
-    };
+    }
 
     export const setPositionAttribute = (
         gl: WebGLRenderingContext,
@@ -41,36 +41,27 @@ namespace SquareShader {
         );
 
         gl.enableVertexAttribArray(data.attribLocations.vertexPosition);
-    }
+    };
 
     export const getData = (
         gl: WebGLRenderingContext,
-        program: WebGLProgram,
+        program: WebGLProgram
     ): Data => {
-        const positionLoc = gl.getUniformLocation(
-            program,
-            "uPosition"
-        );
+        const positionLoc = gl.getUniformLocation(program, "uPosition");
 
         if (!positionLoc) {
             throw Error(`Could not find uniform location\
             for uPosition`);
         }
 
-        const scaleLoc = gl.getUniformLocation(
-            program,
-            "uScale"
-        );
+        const scaleLoc = gl.getUniformLocation(program, "uScale");
 
         if (!scaleLoc) {
             throw Error(`Could not find uniform location\
             for uScale`);
         }
 
-        const colorLoc = gl.getUniformLocation(
-            program,
-            "uColor"
-        );
+        const colorLoc = gl.getUniformLocation(program, "uColor");
 
         if (!colorLoc) {
             throw Error(`Could not find uniform location\
@@ -83,20 +74,18 @@ namespace SquareShader {
         gl.bufferData(
             gl.ARRAY_BUFFER,
             new Float32Array([
-                -1, -1, 0,
-                -1, 1, 0,
-                1, 1, 0,
-                1, 1, 0,
-                1, -1, 0,
-                -1, -1, 0
+                -1, -1, 0, -1, 1, 0, 1, 1, 0, 1, 1, 0, 1, -1, 0, -1, -1, 0,
             ]),
-           gl.STATIC_DRAW
+            gl.STATIC_DRAW
         );
 
         return {
             program: program,
             attribLocations: {
-                vertexPosition: gl.getAttribLocation(program, "aVertexPosition"),
+                vertexPosition: gl.getAttribLocation(
+                    program,
+                    "aVertexPosition"
+                ),
             },
             uniformLocations: {
                 position: positionLoc,
@@ -105,18 +94,13 @@ namespace SquareShader {
             },
             positionBuffer: positionBuffer,
         };
-    }
+    };
 
     export const initialise = async (
         gl: WebGLRenderingContext,
-        fs: IFileSystemAPI,
+        fs: IFileSystemAPI
     ): Promise<Data> => {
-        const program = await initShaderProgram(
-            gl,
-            vertexURL,
-            fragmentURL,
-            fs
-        );
+        const program = await initShaderProgram(gl, vertexURL, fragmentURL, fs);
 
         if (program == null) {
             throw Error(
@@ -125,9 +109,7 @@ namespace SquareShader {
         }
 
         return getData(gl, program);
-    }
-};
+    };
+}
 
-export { 
-    SquareShader 
-};
+export { SquareShader };
