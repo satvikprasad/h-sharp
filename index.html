@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Peggiator</title>
-        <meta charset="UTF-8" />
-        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'">
-        <link rel="stylesheet" type="text/css" href="src/styles.css">
-    </head>
-    <body>
-        <div class="container">
-            <ul id="input-list">
-                <h2 class="text-accented">Audio Inputs</h2>
-                <button id="add-input">Add Input</button>
-            </ul>
-            <canvas id="gl-canvas" width="640" height="480"></canvas>
-        </div>
-        <script src="src/renderer/renderer.ts" type="module"></script>
-    </body>
+
+<head>
+    <title>Peggiator</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'">
+    <link rel="stylesheet" type="text/css" href="src/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <ul id="input-list">
+            <h2 class="text-accented">Audio Inputs</h2>
+            <button id="add-input">Add Input</button>
+        </ul>
+        <canvas id="gl-canvas" width="640" height="480"></canvas>
+    </div>
+    <script src="src/renderer/renderer.ts" type="module"></script>
+</body>
+
 </html>
 

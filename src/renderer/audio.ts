@@ -44,6 +44,7 @@ interface AudioData {
     readonly rawBufferFidelity: number;
 
     inputs: Input[];
+    decibelValues: number[];
     waveforms: WaveformData[];
 
     withSystemAudio: boolean;
@@ -105,7 +106,11 @@ function pushNewInput(
     return newInput;
 }
 
-function updateInput(audioData: AudioData, input: Input): void {
+function updateInput(
+    audioData: AudioData, 
+    input: Input,
+    inputIndex: number
+): void {
     switch (input.inputType) {
         case InputType.SystemAudio:
         case InputType.Audio:
@@ -117,6 +122,11 @@ function updateInput(audioData: AudioData, input: Input): void {
                 input.lsb
             );
 
+            audioData.decibelValues[inputIndex] = audioData.methods.computeWaveformDecibel(getWaveformFromInput(
+                audioData,
+                input,
+                WaveformType.Raw
+            ).ptr);
             break;
         case InputType.Uninitialised:
         case InputType.MIDI:
@@ -216,6 +226,7 @@ function create(wasmData: wasm.WASMData, withSystemAudio: boolean): AudioData {
     let audioData: AudioData = {
         rawBufferFidelity: 512,
         inputs: inputs,
+        decibelValues: [],
         withSystemAudio: withSystemAudio,
         memory: wasmData.memory,
         methods: wasmData.audio,
@@ -236,8 +247,8 @@ function create(wasmData: wasm.WASMData, withSystemAudio: boolean): AudioData {
 }
 
 function update(audioData: AudioData): void {
-    audioData.inputs.forEach((input) => {
-        updateInput(audioData, input);
+    audioData.inputs.forEach((input, i) => {
+        updateInput(audioData, input, i);
     });
 
     updateWaveforms(audioData);

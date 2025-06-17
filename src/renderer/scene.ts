@@ -85,7 +85,7 @@ const drawScene = (pgData: PgData) => {
         );
 
         // Draw selection surface
-        const screenSpaceCenter = pgData.waveformPositionsScreenSpace[i];
+        const screenSpaceCenter = pgData.waveformScreenSpacePositions[i];
         const color: vec4 =
             pgData.selectedWaveformIndex == i
                 ? [1.0, 0.0, 0.0, 1.0]
