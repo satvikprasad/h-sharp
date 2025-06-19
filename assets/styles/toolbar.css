@@ -84,10 +84,10 @@
 
 .toolbar-subitem .toolbar-sublist li {
     padding: 8px 16px;
+    width: inherit;
 }
 
-.toolbar-subitem .toolbar-sublist .selected {
+.toolbar-subitem .toolbar-sublist li.selected {
     border: 1px solid #ffffff;
     border-radius: 2px;
-    padding: 2px 4px;
 }

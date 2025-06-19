@@ -70,3 +70,8 @@
 .db-rectangle.hidden {
     display: none;
 }
+
+.toolbar-subitem .toolbar-sublist li.selected {
+    border: 1px solid #ffffff;
+    border-radius: 2px;
+}
