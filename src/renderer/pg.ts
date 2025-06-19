@@ -8,10 +8,20 @@ import { createViewMatFromCamera } from "./objects/camera";
 
 import { CameraData } from "./objects/camera";
 
-import { type SceneData, drawScene, initialiseScene } from "./scene";
+import {
+    type SceneData,
+    centerViewport,
+    drawScene,
+    initialiseScene,
+} from "./scene";
 import * as shader from "./shader";
 import { WASMData } from "./wasm";
-import { initialiseToolbar, ToolbarData, updateToolbar } from "./components/toolbar";
+import {
+    initialiseToolbar,
+    ToolbarData,
+    updateToolbar,
+} from "./components/toolbar";
+import { ClientRequest } from "http";
 
 interface InputData {
     mouseWheel: {
@@ -182,10 +192,21 @@ const pgInitialise = async (
     }
 
     // const inputListData = initialiseInputList(audioData, waveformPositions);
-    const toolbarData = initialiseToolbar({
-        audioData,
-        waveformPositions,
-    });
+    const toolbarData = initialiseToolbar(
+        {
+            audioData,
+            waveformPositions,
+        },
+        {
+            centerViewportHandler: () => {
+                // TODO: Remove repititions of this.
+                centerViewport(sceneData, true, inputData);
+            },
+            centerObjectsHandler: () => {
+                centerObjects(waveformPositions);
+            },
+        }
+    );
 
     const pgData: PgData = {
         audioData,
@@ -236,23 +257,21 @@ function updateCameraData(
     return viewMat;
 }
 
+function centerObjects(waveformPositions: vec3[]) {
+    waveformPositions.forEach((_, i) => {
+        waveformPositions[i][2] = 0.0;
+    });
+}
+
 const updateScene = (pgData: PgData) => {
     let sceneData = pgData.sceneData;
 
     if (pgData.inputData.keyPressed["e"]) {
-        // Center the camera.
-        sceneData.cameraData.xRot = 0;
-        sceneData.cameraData.yRot = 0;
-        sceneData.cameraData.radius = 1;
-
-        pgData.inputData.mouseWheel.deltaX = 0;
-        pgData.inputData.mouseWheel.deltaY = 0;
+        centerViewport(sceneData, true, pgData.inputData);
     }
 
     if (pgData.inputData.keyPressed["c"]) {
-        pgData.waveformPositions.forEach((_, i) => {
-            pgData.waveformPositions[i][2] = 0.0;
-        });
+        centerObjects(pgData.waveformPositions);
     }
 
     sceneData.viewMat = updateCameraData(
@@ -374,4 +393,4 @@ const pgRender = (pgData: PgData, _deltaTime: number) => {
     drawScene(pgData);
 };
 
-export { type PgData, pgInitialise, pgUpdate, pgRender };
+export { type PgData, type InputData, pgInitialise, pgUpdate, pgRender };

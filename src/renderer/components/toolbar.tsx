@@ -1,18 +1,34 @@
 import React from "react";
-import ReactDOM from "react-dom/client"
-import { initialiseInputList, InputList, InputListData, updateInputListDecibels, updateInputListSelectedItem } from "./input-list";
+import ReactDOM from "react-dom/client";
+import {
+    initialiseInputList,
+    InputList,
+    InputListData,
+    updateInputListDecibels,
+    updateInputListSelectedItem,
+} from "./input-list";
 
-import * as audio from "../audio"
+import "@styles/toolbar.css";
+
+import * as audio from "../audio";
 import { vec3 } from "gl-matrix";
+import { ControlListData, initialiseControlList } from "./control-list";
 
 interface ToolbarData {
     inputListData: InputListData;
-};
+    controlListData: ControlListData;
+}
 
-function initialiseToolbar(inputListParameters: {
-    audioData: audio.AudioData,
-    waveformPositions: vec3[]
-}): ToolbarData {
+function initialiseToolbar(
+    inputListParameters: {
+        audioData: audio.AudioData;
+        waveformPositions: vec3[];
+    },
+    controlListParameters: {
+        centerViewportHandler: () => void;
+        centerObjectsHandler: () => void;
+    }
+): ToolbarData {
     let toolbar = document.getElementById("toolbar");
 
     if (!toolbar) {
@@ -26,14 +42,21 @@ function initialiseToolbar(inputListParameters: {
         inputListParameters.waveformPositions
     );
 
+    const [controlListData, controlListFragment] = initialiseControlList(
+        controlListParameters.centerViewportHandler,
+        controlListParameters.centerObjectsHandler
+    );
+
     root.render(
         <div>
-            { inputListFragment }
+            {inputListFragment}
+            {controlListFragment}
         </div>
     );
 
     return {
-        inputListData
+        inputListData,
+        controlListData,
     };
 }
 

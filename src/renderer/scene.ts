@@ -1,5 +1,5 @@
 import { mat4, vec2, vec3, vec4 } from "gl-matrix";
-import { type PgData } from "./pg";
+import { InputData, type PgData } from "./pg";
 import { renderWaveform } from "./objects/waveform";
 import { CameraData } from "./objects/camera";
 import { renderGridlines } from "./objects/gridlines";
@@ -12,6 +12,27 @@ interface SceneData {
     viewMat: mat4;
 
     cameraData: CameraData;
+}
+
+function centerViewport(
+    sceneData: SceneData,
+    mutateInputs?: boolean,
+    inputData?: InputData
+) {
+    sceneData.cameraData.xRot = 0;
+    sceneData.cameraData.yRot = 0;
+    sceneData.cameraData.radius = 1;
+
+    if (mutateInputs) {
+        if (!inputData) {
+            throw Error(
+                "centerViewport: inputData is required if mutating inputs"
+            );
+        }
+
+        inputData.mouseWheel.deltaX = 0;
+        inputData.mouseWheel.deltaY = 0;
+    }
 }
 
 const initialiseScene = (gl: WebGLRenderingContext): SceneData => {
@@ -106,4 +127,4 @@ const drawScene = (pgData: PgData) => {
     gl.depthMask(false);
 };
 
-export { type SceneData, drawScene, initialiseScene };
+export { type SceneData, drawScene, initialiseScene, centerViewport };

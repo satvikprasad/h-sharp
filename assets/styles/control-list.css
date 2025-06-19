@@ -1,0 +1,21 @@
+.control-list .button-container {
+    display: flex;
+    align-items: center;
+}
+
+.control-list button {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 10pt;
+    display: flex;
+}
+
+.control-list .key-hint {
+    margin-left: auto;
+}
+
+.control-list button:hover {
+    background-color: #1a1a1a;
+    color: #8fbaff;
+}
