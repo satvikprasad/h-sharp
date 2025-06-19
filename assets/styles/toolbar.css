@@ -1,6 +1,6 @@
 .toolbar-item {
     list-style-type: none;
-    padding: 0;
+    padding: 1px;
     margin: 0;
     overflow: hidden;
 
@@ -16,6 +16,15 @@
     min-width: 200px;
 
     transition: width 0.3s ease;
+    transition: border-color 0.1s ease;  
+
+    border-color: #1a1a1a;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.toolbar-item:hover {
+    border-color: #ffffff;
 }
 
 .toolbar-item.hidden {

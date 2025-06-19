@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
     initialiseInputList,
@@ -13,10 +13,100 @@ import "@styles/toolbar.css";
 import * as audio from "../audio";
 import { vec3 } from "gl-matrix";
 import { ControlListData, initialiseControlList } from "./control-list";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+    closestCenter,
+    DndContext,
+    DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
 
 interface ToolbarData {
     inputListData: InputListData;
     controlListData: ControlListData;
+}
+
+function ToolbarItem({
+    id,
+    children,
+}: { id: number } & React.PropsWithChildren): React.JSX.Element {
+    const { attributes, listeners, setNodeRef, transform, transition } =
+        useSortable({ id });
+
+    const style = {
+        transform: transform ? `translate3d(0, ${transform.y}px, 0)` : "",
+        transition,
+    };
+
+    console.log(style);
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            {children}
+        </div>
+    );
+}
+
+function Toolbar({
+    itemFragments,
+}: {
+    itemFragments: React.JSX.Element[];
+}): React.JSX.Element {
+    const [items, setItems] = useState(itemFragments.map((_, i) => i));
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {delay: 100, tolerance: 0},
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+
+        if (over == null) {
+            return;
+        }
+
+        if (active.id != over.id) {
+            setItems((items) => {
+                const oldIndex = items.indexOf(active.id as number);
+                const newIndex = items.indexOf(over.id as number);
+
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    }
+
+    return (
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+        >
+            <SortableContext
+                items={items}
+                strategy={verticalListSortingStrategy}
+            >
+                {items.map((id) => (
+                    <ToolbarItem key={id} id={id}>
+                        {itemFragments[id]}
+                    </ToolbarItem>
+                ))}
+            </SortableContext>
+        </DndContext>
+    );
 }
 
 function initialiseToolbar(
@@ -48,10 +138,7 @@ function initialiseToolbar(
     );
 
     root.render(
-        <div>
-            {inputListFragment}
-            {controlListFragment}
-        </div>
+        <Toolbar itemFragments={[controlListFragment, inputListFragment]}/>
     );
 
     return {
