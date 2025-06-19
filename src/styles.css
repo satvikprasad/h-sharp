@@ -72,9 +72,6 @@ html {
     transition: color 0.3s ease, background-color 0.3s ease;
 }
 
-#input-list h2 {
-    margin: 0;
-}
 
 #input-list:hover li,
 #input-list:hover h2 {
@@ -129,10 +126,10 @@ html {
     transform: translateX(-50%);
 }
 
-h2.text-accented {
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
+#input-list .header {
     align-self: center;
+    padding: 10px;
+    margin: 0;
 }
 
 .input-item {

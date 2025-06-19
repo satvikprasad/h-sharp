@@ -146,7 +146,7 @@ function InputList({
 
     return (
         <ul id="input-list">
-            <h2 className="text-accented">Audio Inputs</h2>
+            <h2 className="header">Audio Inputs</h2>
             {audioData.inputs.map((input, i) => {
                 // TODO: Make this key unique.
                 return (
@@ -177,15 +177,7 @@ interface InputListData {
 function initialiseInputList(
     audioData: audio.AudioData,
     waveformPositions: vec3[]
-) {
-    let inputList: HTMLElement | null = document.getElementById("input-list");
-
-    if (!inputList) {
-        throw Error("Could not find list of inputs in DOM.");
-    }
-
-    const root = ReactDOM.createRoot(inputList);
-
+): [InputListData, React.JSX.Element] {
     // Mutated by InputList to expose setters for the following.
     let inputListData: InputListData = {
         setSelectedInputIndex: null,
@@ -193,15 +185,14 @@ function initialiseInputList(
         setDecibels: null,
     };
 
-    root.render(
+    return [
+        inputListData,
         <InputList
             inputListData={inputListData}
             audioData={audioData}
             waveformPositions={waveformPositions}
-        />
-    );
-
-    return inputListData;
+        />,
+    ];
 }
 
 function updateInputListSelectedItem(
@@ -253,4 +244,4 @@ function updateInputListDecibels(inputListData: InputListData, decibels: number[
     );
 }
 
-export { type InputListData, initialiseInputList, updateInputListSelectedItem, updateInputListDecibels };
+export { type InputListData, initialiseInputList, updateInputListSelectedItem, updateInputListDecibels, InputList };

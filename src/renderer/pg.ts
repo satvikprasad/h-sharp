@@ -2,14 +2,6 @@ import { mat4, vec2, vec3 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
-
-import {
-    initialiseInputList,
-    InputListData,
-    updateInputListDecibels,
-    updateInputListSelectedItem,
-} from "./components/input-list";
-
 import * as pgMath from "./math";
 
 import { createViewMatFromCamera } from "./objects/camera";
@@ -19,6 +11,7 @@ import { CameraData } from "./objects/camera";
 import { type SceneData, drawScene, initialiseScene } from "./scene";
 import * as shader from "./shader";
 import { WASMData } from "./wasm";
+import { initialiseToolbar, ToolbarData, updateToolbar } from "./components/toolbar";
 
 interface InputData {
     mouseWheel: {
@@ -42,7 +35,7 @@ interface PgData {
     sceneData: SceneData;
     inputData: InputData;
     wasmData: WASMData;
-    inputListData: InputListData;
+    toolbarData: ToolbarData;
 
     gl: WebGLRenderingContext;
 
@@ -188,14 +181,18 @@ const pgInitialise = async (
         waveformPositions[1] = [0.0, 0.0, 2.0];
     }
 
-    const inputListData = initialiseInputList(audioData, waveformPositions);
+    // const inputListData = initialiseInputList(audioData, waveformPositions);
+    const toolbarData = initialiseToolbar({
+        audioData,
+        waveformPositions,
+    });
 
     const pgData: PgData = {
         audioData,
         sceneData,
         inputData,
         wasmData,
-        inputListData,
+        toolbarData,
 
         waveformPositions,
         waveformScreenSpacePositions: [],
@@ -358,17 +355,12 @@ const pgUpdate = (pgData: PgData, deltaTime: number) => {
     updateInputs(pgData);
     updateScene(pgData);
 
-    updateInputListSelectedItem(
-        pgData.inputListData,
-        pgData.audioData.inputs,
-        pgData.audioData.waveforms,
-        pgData.selectedWaveformIndex
-    );
-
-    updateInputListDecibels(
-        pgData.inputListData,
-        pgData.audioData.decibelValues
-    );
+    // TODO: Should we just pass the entire state here?
+    updateToolbar(pgData.toolbarData, {
+        audioData: pgData.audioData,
+        decibels: pgData.audioData.decibelValues,
+        selectedWaveformIndex: pgData.selectedWaveformIndex,
+    });
 
     // Update keyPressed dictionary
     Object.entries(pgData.inputData.keyPressed).forEach((kv) => {
