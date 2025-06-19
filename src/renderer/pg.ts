@@ -2,23 +2,26 @@ import { mat4, vec2, vec3 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
-
-import {
-    initialiseInputList,
-    InputListData,
-    updateInputListDecibels,
-    updateInputListSelectedItem,
-} from "./components/input-list";
-
 import * as pgMath from "./math";
 
 import { createViewMatFromCamera } from "./objects/camera";
 
 import { CameraData } from "./objects/camera";
 
-import { type SceneData, drawScene, initialiseScene } from "./scene";
+import {
+    type SceneData,
+    centerViewport,
+    drawScene,
+    initialiseScene,
+} from "./scene";
 import * as shader from "./shader";
 import { WASMData } from "./wasm";
+import {
+    initialiseToolbar,
+    ToolbarData,
+    updateToolbar,
+} from "./components/toolbar";
+import { ClientRequest } from "http";
 
 interface InputData {
     mouseWheel: {
@@ -42,7 +45,7 @@ interface PgData {
     sceneData: SceneData;
     inputData: InputData;
     wasmData: WASMData;
-    inputListData: InputListData;
+    toolbarData: ToolbarData;
 
     gl: WebGLRenderingContext;
 
@@ -188,14 +191,29 @@ const pgInitialise = async (
         waveformPositions[1] = [0.0, 0.0, 2.0];
     }
 
-    const inputListData = initialiseInputList(audioData, waveformPositions);
+    // const inputListData = initialiseInputList(audioData, waveformPositions);
+    const toolbarData = initialiseToolbar(
+        {
+            audioData,
+            waveformPositions,
+        },
+        {
+            centerViewportHandler: () => {
+                // TODO: Remove repititions of this.
+                centerViewport(sceneData, true, inputData);
+            },
+            centerObjectsHandler: () => {
+                centerObjects(waveformPositions);
+            },
+        }
+    );
 
     const pgData: PgData = {
         audioData,
         sceneData,
         inputData,
         wasmData,
-        inputListData,
+        toolbarData,
 
         waveformPositions,
         waveformScreenSpacePositions: [],
@@ -239,23 +257,21 @@ function updateCameraData(
     return viewMat;
 }
 
+function centerObjects(waveformPositions: vec3[]) {
+    waveformPositions.forEach((_, i) => {
+        waveformPositions[i][2] = 0.0;
+    });
+}
+
 const updateScene = (pgData: PgData) => {
     let sceneData = pgData.sceneData;
 
     if (pgData.inputData.keyPressed["e"]) {
-        // Center the camera.
-        sceneData.cameraData.xRot = 0;
-        sceneData.cameraData.yRot = 0;
-        sceneData.cameraData.radius = 1;
-
-        pgData.inputData.mouseWheel.deltaX = 0;
-        pgData.inputData.mouseWheel.deltaY = 0;
+        centerViewport(sceneData, true, pgData.inputData);
     }
 
     if (pgData.inputData.keyPressed["c"]) {
-        pgData.waveformPositions.forEach((_, i) => {
-            pgData.waveformPositions[i][2] = 0.0;
-        });
+        centerObjects(pgData.waveformPositions);
     }
 
     sceneData.viewMat = updateCameraData(
@@ -358,17 +374,12 @@ const pgUpdate = (pgData: PgData, deltaTime: number) => {
     updateInputs(pgData);
     updateScene(pgData);
 
-    updateInputListSelectedItem(
-        pgData.inputListData,
-        pgData.audioData.inputs,
-        pgData.audioData.waveforms,
-        pgData.selectedWaveformIndex
-    );
-
-    updateInputListDecibels(
-        pgData.inputListData,
-        pgData.audioData.decibelValues
-    );
+    // TODO: Should we just pass the entire state here?
+    updateToolbar(pgData.toolbarData, {
+        audioData: pgData.audioData,
+        decibels: pgData.audioData.decibelValues,
+        selectedWaveformIndex: pgData.selectedWaveformIndex,
+    });
 
     // Update keyPressed dictionary
     Object.entries(pgData.inputData.keyPressed).forEach((kv) => {
@@ -382,4 +393,4 @@ const pgRender = (pgData: PgData, _deltaTime: number) => {
     drawScene(pgData);
 };
 
-export { type PgData, pgInitialise, pgUpdate, pgRender };
+export { type PgData, type InputData, pgInitialise, pgUpdate, pgRender };

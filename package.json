@@ -23,6 +23,8 @@
         "vite": "^6.3.5"
     },
     "dependencies": {
+        "@dnd-kit/core": "^6.3.1",
+        "@dnd-kit/sortable": "^10.0.0",
         "gl-matrix": "^3.4.3",
         "path-browserify": "^1.0.1",
         "react": "^19.1.0",

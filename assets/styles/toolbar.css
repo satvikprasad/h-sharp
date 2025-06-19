@@ -1,0 +1,93 @@
+.toolbar-item {
+    list-style-type: none;
+    padding: 1px;
+    margin: 0;
+    overflow: hidden;
+
+    background-color: #000000;
+
+    text-align: center;
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    width: 200px;
+    min-width: 200px;
+
+    transition: width 0.3s ease;
+    transition: border-color 0.1s ease;  
+
+    border-color: #1a1a1a;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.toolbar-item:hover {
+    border-color: #ffffff;
+}
+
+.toolbar-item.hidden {
+    display: none;
+}
+
+/* Global styles for any li inside a toolbar-item */
+.toolbar-item li {
+    /* color: transparent; */
+    font-family: 'Arial';
+    font-size: 10pt;
+    background-color: #000000;
+    white-space: nowrap;
+    user-select: none;
+    text-align: left;
+    -webkit-user-select: none;
+    cursor: pointer;
+    width: 100%;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.toolbar-item li:hover {
+    background-color: #1a1a1a;
+}
+
+.toolbar-item .header {
+    display: flex;
+    padding: 0px 10px;
+    font-size: 10pt;
+    align-items: center;
+}
+
+.toolbar-item .header h2 {
+    font-size: 10pt;
+}
+
+.toolbar-subitem {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 16px;
+    margin: 0px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.toolbar-subitem .pane {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.toolbar-subitem .toolbar-sublist {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.toolbar-subitem .toolbar-sublist li {
+    padding: 8px 16px;
+    width: inherit;
+}
+
+.toolbar-subitem .toolbar-sublist li.selected {
+    border: 1px solid #ffffff;
+    border-radius: 2px;
+}

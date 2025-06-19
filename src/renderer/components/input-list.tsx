@@ -4,6 +4,8 @@ import ReactDOM from "react-dom/client";
 import React, { useEffect, useReducer, useState } from "react";
 import { DecibelMeter } from "./decibel-meter";
 
+import "@styles/input-list.css";
+
 interface InputItemProps {
     input: audio.Input;
     decibelValue: number;
@@ -28,7 +30,7 @@ function InputItem({
     );
 
     return (
-        <li className="input-item">
+        <li className="toolbar-subitem">
             <div className="pane">
                 <span className="input-name">{input.name}</span>
                 {input.inputType == audio.InputType.Audio ? (
@@ -55,7 +57,7 @@ function InputItem({
                 )}
             </div>
             <DecibelMeter value={decibelValue} />
-            <ul className="waveform-list">
+            <ul className="toolbar-sublist">
                 <li
                     className={
                         selected &&
@@ -118,6 +120,7 @@ function InputList({
             }
 
             const src = URL.createObjectURL(target.files[0]);
+            console.log(src);
 
             const newInput = await audio.addInput(
                 audioData,
@@ -145,8 +148,13 @@ function InputList({
     }
 
     return (
-        <ul id="input-list">
-            <h2 className="text-accented">Audio Inputs</h2>
+        <ul className="toolbar-item">
+            <div className="header">
+                <h2>Audio Inputs</h2>
+                <button className="add-input" onClick={addInput}>
+                    +
+                </button>
+            </div>
             {audioData.inputs.map((input, i) => {
                 // TODO: Make this key unique.
                 return (
@@ -159,9 +167,6 @@ function InputList({
                     />
                 );
             })}
-            <button id="add-input" onClick={addInput}>
-                Add Input
-            </button>
         </ul>
     );
 }
@@ -177,15 +182,7 @@ interface InputListData {
 function initialiseInputList(
     audioData: audio.AudioData,
     waveformPositions: vec3[]
-) {
-    let inputList: HTMLElement | null = document.getElementById("input-list");
-
-    if (!inputList) {
-        throw Error("Could not find list of inputs in DOM.");
-    }
-
-    const root = ReactDOM.createRoot(inputList);
-
+): [InputListData, React.JSX.Element] {
     // Mutated by InputList to expose setters for the following.
     let inputListData: InputListData = {
         setSelectedInputIndex: null,
@@ -193,15 +190,14 @@ function initialiseInputList(
         setDecibels: null,
     };
 
-    root.render(
+    return [
+        inputListData,
         <InputList
             inputListData={inputListData}
             audioData={audioData}
             waveformPositions={waveformPositions}
-        />
-    );
-
-    return inputListData;
+        />,
+    ];
 }
 
 function updateInputListSelectedItem(
@@ -253,4 +249,4 @@ function updateInputListDecibels(inputListData: InputListData, decibels: number[
     );
 }
 
-export { type InputListData, initialiseInputList, updateInputListSelectedItem, updateInputListDecibels };
+export { type InputListData, initialiseInputList, updateInputListSelectedItem, updateInputListDecibels, InputList };
