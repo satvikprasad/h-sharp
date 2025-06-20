@@ -1,4 +1,4 @@
-import { mat4, vec2, vec3 } from "gl-matrix";
+import { mat4, vec2, vec3, vec4 } from "gl-matrix";
 import type { ILocalAPI } from "../../interface";
 
 import * as audio from "./audio";
@@ -205,6 +205,9 @@ const pgInitialise = async (
             centerObjectsHandler: () => {
                 centerObjects(waveformPositions);
             },
+            updateGridColorHandler: (newColor: vec4) => {
+                sceneData.gridColor = vec4.copy(vec4.create(), newColor);
+            }
         }
     );
 

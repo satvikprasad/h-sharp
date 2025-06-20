@@ -17,7 +17,7 @@
     width: 20px;
     height: 20px;
 
-    margin-left: auto;
+    margin-left: 8px;
 
     transition: all 0.3s ease;
     cursor: pointer;
@@ -69,9 +69,4 @@
 
 .db-rectangle.hidden {
     display: none;
-}
-
-.toolbar-subitem .toolbar-sublist li.selected {
-    border: 1px solid #ffffff;
-    border-radius: 2px;
 }
