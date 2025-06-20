@@ -2,6 +2,7 @@
     list-style-type: none;
     padding: 1px;
     margin: 0;
+    padding-bottom: 8px;
     overflow: hidden;
 
     background-color: #000000;
@@ -55,6 +56,26 @@
     padding: 0px 10px;
     font-size: 10pt;
     align-items: center;
+    transition: transform 0.1s ease;
+}
+
+.toolbar-item .header .dragger {
+    margin-left: auto;
+    margin-top: 3px;
+}
+
+.toolbar-item .header .dragger svg {
+    color: white;
+    width: 20px;
+}
+
+.toolbar-item .header .dragger:hover {
+    transform: scale(1.1);
+    margin-top: 4px;
+}
+
+.toolbar-item .header .dragger:active {
+    transform: scale(1);
 }
 
 .toolbar-item .header h2 {

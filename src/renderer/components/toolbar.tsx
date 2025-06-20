@@ -11,7 +11,7 @@ import {
 import "@styles/toolbar.css";
 
 import * as audio from "../audio";
-import { vec3 } from "gl-matrix";
+import { vec3, vec4 } from "gl-matrix";
 import { ControlListData, initialiseControlList } from "./control-list";
 import {
     arrayMove,
@@ -37,36 +37,61 @@ interface ToolbarData {
 
 function ToolbarItem({
     id,
-    children,
-}: { id: number } & React.PropsWithChildren): React.JSX.Element {
+    fragment,
+}: {
+    id: number;
+    fragment: [() => React.JSX.Element, () => React.JSX.Element];
+}): React.JSX.Element {
     const { attributes, listeners, setNodeRef, transform, transition } =
         useSortable({ id });
 
     const style = {
-        transform: transform ? `translate3d(0, ${transform.y}px, 0)` : "",
+        transform: transform
+            ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+            : "",
         transition,
     };
 
-    console.log(style);
-
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            {children}
-        </div>
+        <ul
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            className="toolbar-item"
+        >
+            <div className="header">
+                {fragment[0]()}
+                <div className="dragger" {...listeners}>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-6"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+                        />
+                    </svg>
+                </div>
+            </div>
+            <div className="contents">{fragment[1]()}</div>
+        </ul>
     );
 }
 
 function Toolbar({
     itemFragments,
 }: {
-    itemFragments: React.JSX.Element[];
+    itemFragments: [() => React.JSX.Element, () => React.JSX.Element][];
 }): React.JSX.Element {
     const [items, setItems] = useState(itemFragments.map((_, i) => i));
 
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {delay: 100, tolerance: 0},
-        }),
+        useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -100,9 +125,11 @@ function Toolbar({
                 strategy={verticalListSortingStrategy}
             >
                 {items.map((id) => (
-                    <ToolbarItem key={id} id={id}>
-                        {itemFragments[id]}
-                    </ToolbarItem>
+                    <ToolbarItem
+                        key={id}
+                        id={id}
+                        fragment={itemFragments[id]}
+                    />
                 ))}
             </SortableContext>
         </DndContext>
@@ -117,6 +144,7 @@ function initialiseToolbar(
     controlListParameters: {
         centerViewportHandler: () => void;
         centerObjectsHandler: () => void;
+        updateGridColorHandler: (newColor: vec4) => void;
     }
 ): ToolbarData {
     let toolbar = document.getElementById("toolbar");
@@ -134,11 +162,12 @@ function initialiseToolbar(
 
     const [controlListData, controlListFragment] = initialiseControlList(
         controlListParameters.centerViewportHandler,
-        controlListParameters.centerObjectsHandler
+        controlListParameters.centerObjectsHandler,
+        controlListParameters.updateGridColorHandler
     );
 
     root.render(
-        <Toolbar itemFragments={[controlListFragment, inputListFragment]}/>
+        <Toolbar itemFragments={[controlListFragment, inputListFragment]} />
     );
 
     return {

@@ -1,9 +1,9 @@
-.control-list .button-container {
+ .button-container {
     display: flex;
     align-items: center;
 }
 
-.control-list button {
+button {
     background-color: transparent;
     border: none;
     color: white;
@@ -11,11 +11,49 @@
     display: flex;
 }
 
-.control-list .key-hint {
+.key-hint {
     margin-left: auto;
 }
 
-.control-list button:hover {
+button:hover {
     background-color: #1a1a1a;
     color: #8fbaff;
+}
+
+.color-picker-container {
+    padding: 8px 22px;
+    width: inherit;
+    position: relative;
+}
+
+.color-picker {
+    max-width: inherit;
+    height: 160px;
+    margin-top: 16px;
+}
+
+.pane {
+    font-size: 10pt;
+    text-align: left;
+    display: flex;
+}
+
+.color-preview {
+    min-width: 20px;
+    min-height: 20px;
+    border: white;
+    border-radius: 20%;
+    border-style: solid;
+    border-width: 1px;
+    margin-left: 70%;
+
+    transition: transform 0.1s ease;
+}
+
+.color-preview:hover {
+    transform: scale(1.2);
+}
+
+.color-preview:active {
+    transform: scale(1);
 }

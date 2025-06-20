@@ -1,7 +1,6 @@
 import { vec3 } from "gl-matrix";
 import * as audio from "../audio";
-import ReactDOM from "react-dom/client";
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useReducer, useState } from "react";
 import { DecibelMeter } from "./decibel-meter";
 
 import "@styles/input-list.css";
@@ -89,86 +88,98 @@ function InputList({
     inputListData,
     audioData,
     waveformPositions,
-}: InputListProps): React.JSX.Element {
-    const [, forceUpdate] = useReducer((x) => x + 1, 0);
+}: InputListProps): [() => React.JSX.Element, () => React.JSX.Element] {
+    return [
+        (): React.JSX.Element => {
+            const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
-    const [selectedInputIndex, setSelectedInputIndex] = useState<number>(-1);
-    const [selectedWaveformType, setSelectedWaveformType] = useState<
-        audio.WaveformType | -1
-    >(-1);
+            function addInput() {
+                let input = document.createElement("input");
+                input.type = "file";
+                input.accept = "audio/*";
 
-    const [decibels, setDecibels] = useState<number[]>([]);
+                input.onchange = async (e) => {
+                    let target: HTMLInputElement | null =
+                        e.target as HTMLInputElement;
 
-    inputListData.setSelectedWaveformType = setSelectedWaveformType;
-    inputListData.setSelectedInputIndex = setSelectedInputIndex;
-    inputListData.setDecibels = setDecibels;
+                    if (!target) {
+                        throw Error(
+                            "Could not cast target to HTMLInputElement."
+                        );
+                    }
 
-    function addInput() {
-        let input = document.createElement("input");
-        input.type = "file";
-        input.accept = "audio/*";
+                    if (!target.files) {
+                        throw Error("Did not read any files.");
+                    }
 
-        input.onchange = async (e) => {
-            let target: HTMLInputElement | null = e.target as HTMLInputElement;
+                    const src = URL.createObjectURL(target.files[0]);
+                    console.log(src);
 
-            if (!target) {
-                throw Error("Could not cast target to HTMLInputElement.");
+                    const newInput = await audio.addInput(
+                        audioData,
+                        `File: ${target.files[0].name}`,
+                        audio.InputType.Audio,
+                        src
+                    );
+
+                    waveformPositions[newInput.rawWaveformIndex] = [
+                        2 * (audioData.waveforms.length - 2),
+                        0,
+                        0.0,
+                    ];
+
+                    waveformPositions[newInput.frequencyWaveformIndex] = [
+                        2 * (audioData.waveforms.length - 1),
+                        0,
+                        0.0,
+                    ];
+
+                    forceUpdate();
+                };
+
+                input.click();
             }
 
-            if (!target.files) {
-                throw Error("Did not read any files.");
-            }
-
-            const src = URL.createObjectURL(target.files[0]);
-            console.log(src);
-
-            const newInput = await audio.addInput(
-                audioData,
-                `File: ${target.files[0].name}`,
-                audio.InputType.Audio,
-                src
+            return (
+                <>
+                    <h2>Audio Inputs</h2>
+                    <button className="add-input" onClick={addInput}>
+                        +
+                    </button>
+                </>
             );
+        },
+        () => {
+            const [selectedInputIndex, setSelectedInputIndex] =
+                useState<number>(-1);
+            const [selectedWaveformType, setSelectedWaveformType] = useState<
+                audio.WaveformType | -1
+            >(-1);
 
-            waveformPositions[newInput.rawWaveformIndex] = [
-                2 * (audioData.waveforms.length - 2),
-                0,
-                0.0,
-            ];
+            const [decibels, setDecibels] = useState<number[]>([]);
 
-            waveformPositions[newInput.frequencyWaveformIndex] = [
-                2 * (audioData.waveforms.length - 1),
-                0,
-                0.0,
-            ];
+            inputListData.setSelectedWaveformType = setSelectedWaveformType;
+            inputListData.setSelectedInputIndex = setSelectedInputIndex;
+            inputListData.setDecibels = setDecibels;
 
-            forceUpdate();
-        };
-
-        input.click();
-    }
-
-    return (
-        <ul className="toolbar-item">
-            <div className="header">
-                <h2>Audio Inputs</h2>
-                <button className="add-input" onClick={addInput}>
-                    +
-                </button>
-            </div>
-            {audioData.inputs.map((input, i) => {
-                // TODO: Make this key unique.
-                return (
-                    <InputItem
-                        key={i}
-                        input={input}
-                        decibelValue={decibels[i]}
-                        selected={selectedInputIndex == i}
-                        selectedWaveformType={selectedWaveformType}
-                    />
-                );
-            })}
-        </ul>
-    );
+            return (
+                <>
+                    {audioData.inputs.map((input, i) => {
+                        // TODO: Make this key unique.
+                        return (
+                            <InputItem
+                                key={i}
+                                input={input}
+                                decibelValue={decibels[i]}
+                                selected={selectedInputIndex == i}
+                                selectedWaveformType={selectedWaveformType}
+                            />
+                        );
+                    })}
+                </>
+            );
+        },
+    ];
 }
 
 interface InputListData {
@@ -182,9 +193,9 @@ interface InputListData {
 function initialiseInputList(
     audioData: audio.AudioData,
     waveformPositions: vec3[]
-): [InputListData, React.JSX.Element] {
+): [InputListData, [() => React.JSX.Element, () => React.JSX.Element]] {
     // Mutated by InputList to expose setters for the following.
-    let inputListData: InputListData = {
+    const inputListData: InputListData = {
         setSelectedInputIndex: null,
         setSelectedWaveformType: null,
         setDecibels: null,
@@ -192,11 +203,7 @@ function initialiseInputList(
 
     return [
         inputListData,
-        <InputList
-            inputListData={inputListData}
-            audioData={audioData}
-            waveformPositions={waveformPositions}
-        />,
+        InputList({ inputListData, audioData, waveformPositions }),
     ];
 }
 
@@ -236,9 +243,12 @@ function updateInputListSelectedItem(
     inputListData.setSelectedWaveformType(selectedWaveformType);
 }
 
-function updateInputListDecibels(inputListData: InputListData, decibels: number[]) {
+function updateInputListDecibels(
+    inputListData: InputListData,
+    decibels: number[]
+) {
     if (!inputListData.setDecibels) {
-        console.log("WARNING: decibels setter was null.")
+        console.log("WARNING: decibels setter was null.");
         return;
     }
 
@@ -249,4 +259,10 @@ function updateInputListDecibels(inputListData: InputListData, decibels: number[
     );
 }
 
-export { type InputListData, initialiseInputList, updateInputListSelectedItem, updateInputListDecibels, InputList };
+export {
+    type InputListData,
+    initialiseInputList,
+    updateInputListSelectedItem,
+    updateInputListDecibels,
+    InputList,
+};
