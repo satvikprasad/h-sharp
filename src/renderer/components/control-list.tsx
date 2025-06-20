@@ -67,7 +67,9 @@ function ControlListColorPicker({
                 <RgbaColorPicker
                     className="color-picker"
                     color={color}
-                    onChange={() => {
+                    onChange={(color) => {
+                        setColor(color);
+
                         onChange(
                             vec4.fromValues(
                                 color.r / 255,

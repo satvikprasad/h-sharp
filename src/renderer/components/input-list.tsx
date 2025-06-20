@@ -94,9 +94,19 @@ function InputList({
             const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
             function addInput() {
-                let input = document.createElement("input");
-                input.type = "file";
-                input.accept = "audio/*";
+                let input = document.getElementById("hidden-input");
+
+                if (input == null) {
+                    throw Error("No input element found.");
+                }
+
+                input.onclick = async(e) => {
+                    console.log("clicked")
+                }
+
+                input.onsubmit = async(e) => {
+                    console.log("sdkf");
+                }
 
                 input.onchange = async (e) => {
                     let target: HTMLInputElement | null =
@@ -146,6 +156,11 @@ function InputList({
                     <button className="add-input" onClick={addInput}>
                         +
                     </button>
+                    <input
+                        type="file"
+                        accept="audio/*"
+                        id="hidden-input"
+                    />
                 </>
             );
         },

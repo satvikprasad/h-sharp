@@ -38,6 +38,10 @@ button:hover {
     display: flex;
 }
 
+#hidden-input {
+    display: none;
+}
+
 .color-preview {
     min-width: 20px;
     min-height: 20px;
