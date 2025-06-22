@@ -101,11 +101,9 @@ function InputList({
                 }
 
                 input.onclick = async(e) => {
-                    console.log("clicked")
                 }
 
                 input.onsubmit = async(e) => {
-                    console.log("sdkf");
                 }
 
                 input.onchange = async (e) => {

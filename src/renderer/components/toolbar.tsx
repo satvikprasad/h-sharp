@@ -12,7 +12,7 @@ import "@styles/toolbar.css";
 
 import * as audio from "../audio";
 import { vec3, vec4 } from "gl-matrix";
-import { ControlListData, initialiseControlList } from "./control-list";
+import { ControlEvent, ControlListData, initialiseControlList } from "./control-list";
 import {
     arrayMove,
     SortableContext,
@@ -142,9 +142,7 @@ function initialiseToolbar(
         waveformPositions: vec3[];
     },
     controlListParameters: {
-        centerViewportHandler: () => void;
-        centerObjectsHandler: () => void;
-        updateGridColorHandler: (newColor: vec4) => void;
+        controlHandler: (event: ControlEvent) => void;
     }
 ): ToolbarData {
     let toolbar = document.getElementById("toolbar");
@@ -160,11 +158,7 @@ function initialiseToolbar(
         inputListParameters.waveformPositions
     );
 
-    const [controlListData, controlListFragment] = initialiseControlList(
-        controlListParameters.centerViewportHandler,
-        controlListParameters.centerObjectsHandler,
-        controlListParameters.updateGridColorHandler
-    );
+    const [controlListData, controlListFragment] = initialiseControlList(controlListParameters.controlHandler);
 
     root.render(
         <Toolbar itemFragments={[controlListFragment, inputListFragment]} />

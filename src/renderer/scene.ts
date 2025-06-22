@@ -14,6 +14,7 @@ interface SceneData {
     cameraData: CameraData;
 
     gridColor: vec4;
+    gridWidth: number;
 }
 
 function centerViewport(
@@ -55,7 +56,8 @@ const initialiseScene = (gl: WebGLRenderingContext): SceneData => {
 
             focus: vec3.fromValues(0, 0, 1.5),
         },
-        gridColor: vec4.create().fill(1.0)
+        gridColor: vec4.create().fill(1.0),
+        gridWidth: 0.04,
     };
 };
 
@@ -86,7 +88,7 @@ const drawScene = (pgData: PgData) => {
         sceneData,
         pgData.gridlinesShaderData,
         sceneData.gridColor,
-        0.04,
+        sceneData.gridWidth,
         1.0
     );
 
