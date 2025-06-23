@@ -32,7 +32,7 @@ function InputItem({
         <li className="toolbar-subitem">
             <div className="pane">
                 <span className="input-name">{input.name}</span>
-                {input.inputType == audio.InputType.Audio ? (
+                {input.inputType == "Audio" ? (
                     <button
                         className="play-pause-btn"
                         onClick={(_) => {
@@ -59,23 +59,21 @@ function InputItem({
             <ul className="toolbar-sublist">
                 <li
                     className={
-                        selected &&
-                        selectedWaveformType == audio.WaveformType.Raw
+                        selected && selectedWaveformType == "Raw"
                             ? "selected"
                             : ""
                     }
-                    key={audio.WaveformType.Raw}
+                    key={"Raw"}
                 >
                     Raw Waveform
                 </li>
                 <li
                     className={
-                        selected &&
-                        selectedWaveformType == audio.WaveformType.Frequency
+                        selected && selectedWaveformType == "Frequency"
                             ? "selected"
                             : ""
                     }
-                    key={audio.WaveformType.Frequency}
+                    key={"Frequency"}
                 >
                     Frequency Waveform
                 </li>
@@ -100,11 +98,9 @@ function InputList({
                     throw Error("No input element found.");
                 }
 
-                input.onclick = async(e) => {
-                }
+                input.onclick = async (e) => {};
 
-                input.onsubmit = async(e) => {
-                }
+                input.onsubmit = async (e) => {};
 
                 input.onchange = async (e) => {
                     let target: HTMLInputElement | null =
@@ -126,7 +122,7 @@ function InputList({
                     const newInput = await audio.addInput(
                         audioData,
                         `File: ${target.files[0].name}`,
-                        audio.InputType.Audio,
+                        "Audio",
                         src
                     );
 
@@ -154,11 +150,7 @@ function InputList({
                     <button className="add-input" onClick={addInput}>
                         +
                     </button>
-                    <input
-                        type="file"
-                        accept="audio/*"
-                        id="hidden-input"
-                    />
+                    <input type="file" accept="audio/*" id="hidden-input" />
                 </>
             );
         },
@@ -247,9 +239,9 @@ function updateInputListSelectedItem(
 
     let selectedWaveformType: audio.WaveformType | -1 = -1;
     if (selectedInput.rawWaveformIndex == selectedWaveformIndex) {
-        selectedWaveformType = audio.WaveformType.Raw;
+        selectedWaveformType = "Raw";
     } else if (selectedInput.frequencyWaveformIndex == selectedWaveformIndex) {
-        selectedWaveformType = audio.WaveformType.Frequency;
+        selectedWaveformType = "Frequency";
     }
 
     inputListData.setSelectedInputIndex(selectedInputIndex);

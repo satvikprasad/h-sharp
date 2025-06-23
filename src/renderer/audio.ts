@@ -1,17 +1,9 @@
 import * as wasm from "./wasm";
 import workletUrl from "./worklets/audio-processor?worker&url";
 
-enum WaveformType {
-    Raw,
-    Frequency,
-}
+type WaveformType = "Raw" | "Frequency";
 
-enum InputType {
-    Uninitialised = 0,
-    SystemAudio,
-    Audio,
-    MIDI,
-}
+type InputType = "Uninitialised" | "SystemAudio" | "Audio" | "MIDI";
 
 interface WaveformData {
     ptr: number;
@@ -63,9 +55,9 @@ function pushNewInput(
     audioElement?: HTMLAudioElement,
     isPlaying?: boolean
 ): Input {
-    if (inputType == InputType.Audio && (!audioElement || !isPlaying)) {
+    if (inputType == "Audio" && (!audioElement || !isPlaying)) {
         throw Error(
-            "togglePlayPause is required for inputType = InputType.Audio"
+            "togglePlayPause is required for inputType = 'Audio'"
         );
     }
 
@@ -107,29 +99,28 @@ function pushNewInput(
 }
 
 function updateInput(
-    audioData: AudioData, 
+    audioData: AudioData,
     input: Input,
     inputIndex: number
 ): void {
     switch (input.inputType) {
-        case InputType.SystemAudio:
-        case InputType.Audio:
+        case "SystemAudio":
+        case "Audio":
             audioData.methods.updateFrequencyWaveform(
-                getWaveformFromInput(audioData, input, WaveformType.Raw).ptr,
-                getWaveformFromInput(audioData, input, WaveformType.Frequency)
+                getWaveformFromInput(audioData, input, "Raw").ptr,
+                getWaveformFromInput(audioData, input, "Frequency")
                     .ptr,
                 input.lsa,
                 input.lsb
             );
 
-            audioData.decibelValues[inputIndex] = audioData.methods.computeWaveformDecibel(getWaveformFromInput(
-                audioData,
-                input,
-                WaveformType.Raw
-            ).ptr);
+            audioData.decibelValues[inputIndex] =
+                audioData.methods.computeWaveformDecibel(
+                    getWaveformFromInput(audioData, input, "Raw").ptr
+                );
             break;
-        case InputType.Uninitialised:
-        case InputType.MIDI:
+        case "Uninitialised":
+        case "MIDI":
             break;
     }
 }
@@ -155,7 +146,7 @@ async function addInput(
     let newInput: Input;
 
     switch (inputType) {
-        case InputType.Audio:
+        case "Audio":
             {
                 if (src == undefined) {
                     throw Error(
@@ -190,7 +181,7 @@ async function addInput(
                     name,
                     audioContext.sampleRate,
                     0.019,
-                    InputType.Audio,
+                    "Audio",
                     audioElement,
                     true
                 );
@@ -200,7 +191,7 @@ async function addInput(
                         getWaveformFromInput(
                             audioData,
                             newInput,
-                            WaveformType.Raw
+                            "Raw"
                         ).ptr
                     );
 
@@ -239,7 +230,7 @@ function create(wasmData: wasm.WASMData, withSystemAudio: boolean): AudioData {
             "System Audio",
             48000,
             0.019,
-            InputType.SystemAudio
+            "SystemAudio"
         );
     }
 
@@ -268,17 +259,17 @@ function updateSystemAudioData(
 
     let input = audioData.inputs[0];
 
-    if (input.inputType != InputType.SystemAudio) {
+    if (input.inputType != "SystemAudio") {
         throw Error("First input was not system audio.");
     }
 
-    getWaveformBufferFromInputIndex(audioData, 0, WaveformType.Raw).set(
+    getWaveformBufferFromInputIndex(audioData, 0, "Raw").set(
         sysAudioBuffer
     );
 }
 
 function inputTogglePlaying(input: Input) {
-    if (input.inputType != InputType.Audio) {
+    if (input.inputType != "Audio") {
         throw Error("Tried to toggle play/pause on non-Audio input.");
     }
 
@@ -299,10 +290,10 @@ function getWaveformFromInput(
     let index = -1;
 
     switch (waveformType) {
-        case WaveformType.Raw:
+        case "Raw":
             index = input.rawWaveformIndex;
             break;
-        case WaveformType.Frequency:
+        case "Frequency":
             index = input.frequencyWaveformIndex;
             break;
         default:

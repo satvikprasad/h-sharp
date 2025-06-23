@@ -126,7 +126,11 @@ function ControlListSlider({
     max,
     initialValue,
 }: ControlListSliderProps) {
-    const [value, setValue] = useState<number>(100*(initialValue-min)/(max-min));
+    const maxGranularity = 10**2;
+
+    const [value, setValue] = useState<number>(
+        (maxGranularity * (initialValue - min)) / (max - min)
+    );
 
     useEffect(() => {
         console.log(value);
@@ -138,7 +142,7 @@ function ControlListSlider({
             <input
                 type="range"
                 min={0}
-                max={100}
+                max={maxGranularity}
                 value={value}
                 onInput={(event) => {
                     const val = parseFloat(event.currentTarget.value);
@@ -146,8 +150,8 @@ function ControlListSlider({
                     setValue(val);
 
                     handler({
-                        type: "UpdateGridWidth",
-                        data: ((max - min) * val) / 100 + min,
+                        type: eventType,
+                        data: ((max - min) * val) / maxGranularity + min,
                     });
                 }}
             />

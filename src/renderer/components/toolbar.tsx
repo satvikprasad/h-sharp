@@ -11,7 +11,7 @@ import {
 import "@styles/toolbar.css";
 
 import * as audio from "../audio";
-import { vec3, vec4 } from "gl-matrix";
+import { vec3 } from "gl-matrix";
 import { ControlEvent, ControlListData, initialiseControlList } from "./control-list";
 import {
     arrayMove,
@@ -47,7 +47,7 @@ function ToolbarItem({
 
     const style = {
         transform: transform
-            ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+            ? `translate3d(0, ${transform.y}px, 0)`
             : "",
         transition,
     };
