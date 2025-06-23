@@ -1,42 +1,60 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "@styles/control-list.css";
 import { RgbaColor, RgbaColorPicker } from "react-colorful";
 import { vec4 } from "gl-matrix";
 
-type ControlHandler = () => void;
+type ControlEventType =
+    | "CenterObjects"
+    | "UpdateGridWidth"
+    | "CenterViewport"
+    | "UpdateGridColor";
+
+interface ControlEvent {
+    type: ControlEventType;
+    data?: number | vec4;
+}
 
 interface ControlListData {}
 
 interface ControlListProps {
-    centerViewportHandler: ControlHandler;
-    centerObjectsHandler: ControlHandler;
-    updateGridColorHandler: (newColor: vec4) => void;
+    controlHandler: (event: ControlEvent) => void;
 }
 
 interface ControlListButtonProps {
     name: string;
     keyHint: string;
-    handler: ControlHandler;
+    eventType: ControlEventType;
+    handler: (event: ControlEvent) => void;
 }
 
-function ControlListButton({ name, keyHint, handler }: ControlListButtonProps) {
+function ControlListButton({
+    name,
+    keyHint,
+    handler,
+    eventType,
+}: ControlListButtonProps) {
+    function controlHandler() {
+        handler({
+            type: eventType,
+        });
+    }
+
     return (
         <div className="button-container toolbar-subitem">
-            <button onClick={handler}>{name}</button>
+            <button onClick={controlHandler}>{name}</button>
             <span className="key-hint">[{keyHint}]</span>
         </div>
     );
 }
 
 interface ControlListColorPickerProps {
-    onChange: (newColor: vec4) => void;
-
+    handler: (event: ControlEvent) => void;
     initialColor: vec4;
 }
 
 function ControlListColorPicker({
-    onChange,
+    handler,
     initialColor,
 }: ControlListColorPickerProps) {
     const [colorPickerVisible, setColorPickerVisible] =
@@ -70,14 +88,15 @@ function ControlListColorPicker({
                     onChange={(color) => {
                         setColor(color);
 
-                        onChange(
-                            vec4.fromValues(
+                        handler({
+                            type: "UpdateGridColor",
+                            data: vec4.fromValues(
                                 color.r / 255,
                                 color.g / 255,
                                 color.b / 255,
                                 color.a
-                            )
-                        );
+                            ),
+                        });
                     }}
                 />
             ) : (
@@ -87,10 +106,61 @@ function ControlListColorPicker({
     );
 }
 
+interface ControlListSliderProps {
+    name: string;
+    handler: (event: ControlEvent) => void;
+    eventType: ControlEventType;
+
+    // TODO: Don't hardcode these initial values
+    initialValue: number;
+
+    min: number;
+    max: number;
+}
+
+function ControlListSlider({
+    name,
+    handler,
+    eventType,
+    min,
+    max,
+    initialValue,
+}: ControlListSliderProps) {
+    const maxGranularity = 10**2;
+
+    const [value, setValue] = useState<number>(
+        (maxGranularity * (initialValue - min)) / (max - min)
+    );
+
+    useEffect(() => {
+        console.log(value);
+    }, [value]);
+
+    return (
+        <div className="toolbar-subitem slider">
+            <span>{name}</span>
+            <input
+                type="range"
+                min={0}
+                max={maxGranularity}
+                value={value}
+                onInput={(event) => {
+                    const val = parseFloat(event.currentTarget.value);
+
+                    setValue(val);
+
+                    handler({
+                        type: eventType,
+                        data: ((max - min) * val) / maxGranularity + min,
+                    });
+                }}
+            />
+        </div>
+    );
+}
+
 function ControlList({
-    centerViewportHandler,
-    centerObjectsHandler,
-    updateGridColorHandler,
+    controlHandler,
 }: ControlListProps): [() => React.JSX.Element, () => React.JSX.Element] {
     return [
         () => <h2>Controls</h2>,
@@ -98,17 +168,27 @@ function ControlList({
             <>
                 <ControlListButton
                     name="Center Viewport"
-                    handler={centerViewportHandler}
+                    handler={controlHandler}
                     keyHint="e"
+                    eventType="CenterViewport"
                 />
                 <ControlListButton
                     name="Center Objects"
                     keyHint="c"
-                    handler={centerObjectsHandler}
+                    handler={controlHandler}
+                    eventType="CenterObjects"
                 />
                 <ControlListColorPicker
-                    onChange={updateGridColorHandler}
+                    handler={controlHandler}
                     initialColor={vec4.fromValues(1.0, 1.0, 1.0, 1.0)}
+                />
+                <ControlListSlider
+                    name="Grid Width"
+                    handler={controlHandler}
+                    eventType="UpdateGridWidth"
+                    min={0.02}
+                    max={0.1}
+                    initialValue={0.04}
                 />
             </>
         ),
@@ -116,18 +196,9 @@ function ControlList({
 }
 
 function initialiseControlList(
-    centerViewportHandler: ControlHandler,
-    centerObjectsHandler: ControlHandler,
-    updateGridColorHandler: (newColor: vec4) => void
+    controlHandler: (event: ControlEvent) => void
 ): [ControlListData, [() => React.JSX.Element, () => React.JSX.Element]] {
-    return [
-        {},
-        ControlList({
-            centerViewportHandler,
-            centerObjectsHandler,
-            updateGridColorHandler,
-        }),
-    ];
+    return [{}, ControlList({ controlHandler })];
 }
 
-export { type ControlListData, initialiseControlList };
+export { type ControlListData, type ControlEvent, initialiseControlList };

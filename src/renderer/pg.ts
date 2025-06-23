@@ -198,16 +198,27 @@ const pgInitialise = async (
             waveformPositions,
         },
         {
-            centerViewportHandler: () => {
-                // TODO: Remove repititions of this.
-                centerViewport(sceneData, true, inputData);
+            controlHandler: (event) => {
+                    console.log(event.type);
+
+                switch (event.type) {
+                    case "CenterObjects":
+                        centerObjects(waveformPositions);
+                        break;
+                    case "UpdateGridWidth":
+                        sceneData.gridWidth = event.data as number;
+                        break;
+                    case "CenterViewport":
+                        centerViewport(sceneData, true, inputData);
+                        break;
+                    case "UpdateGridColor":
+                        sceneData.gridColor = vec4.copy(
+                            vec4.create(),
+                            event.data as vec4
+                        );
+                        break;
+                }
             },
-            centerObjectsHandler: () => {
-                centerObjects(waveformPositions);
-            },
-            updateGridColorHandler: (newColor: vec4) => {
-                sceneData.gridColor = vec4.copy(vec4.create(), newColor);
-            }
         }
     );
 

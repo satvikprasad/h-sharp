@@ -89,6 +89,7 @@
     margin: 0px;
     max-width: 100%;
     overflow: hidden;
+    font-size: 10pt;
 }
 
 .toolbar-subitem .pane {
