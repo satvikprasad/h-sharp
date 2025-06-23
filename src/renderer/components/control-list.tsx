@@ -9,7 +9,7 @@ type ControlEventType =
     | "UpdateGridWidth"
     | "CenterViewport"
     | "UpdateGridColor"
-    | "PrintEditor";
+    | "ToggleEditor";
 
 interface ControlEvent {
     type: ControlEventType;
@@ -40,6 +40,22 @@ function ControlListButton({
             type: eventType,
         });
     }
+
+    function handleKeyPress(event: KeyboardEvent) {
+        if (event.repeat) return;
+
+        if (event.key == keyHint) {
+            controlHandler();
+        }
+    }
+
+    useEffect(() => {
+        document.addEventListener("keydown", handleKeyPress, true);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyPress);
+        };
+    });
 
     return (
         <div className="button-container toolbar-subitem">
@@ -192,10 +208,10 @@ function ControlList({
                     initialValue={0.04}
                 />
                 <ControlListButton
-                    name="Print Editor"
-                    keyHint=""
+                    name="Toggle Editor"
+                    keyHint="j"
                     handler={controlHandler}
-                    eventType="PrintEditor"
+                    eventType="ToggleEditor"
                 />
             </>
         ),

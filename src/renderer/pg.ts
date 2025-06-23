@@ -225,8 +225,15 @@ const pgInitialise = async (
                             event.data as vec4
                         );
                         break;
-                    case "PrintEditor":
-                        editorPrint(editorData);
+                    case "ToggleEditor":
+                        const editorContainer =
+                            document.getElementById("editor-container")!;
+
+                        if (editorContainer.classList.contains("hidden")) {
+                            editorContainer.classList.remove("hidden");
+                        } else {
+                            editorContainer.classList.add("hidden");
+                        }
                         break;
                 }
             },
@@ -290,14 +297,6 @@ function centerObjects(waveformPositions: vec3[]) {
 
 const updateScene = (pgData: PgData) => {
     let sceneData = pgData.sceneData;
-
-    if (pgData.inputData.keyPressed["e"]) {
-        centerViewport(sceneData, true, pgData.inputData);
-    }
-
-    if (pgData.inputData.keyPressed["c"]) {
-        centerObjects(pgData.waveformPositions);
-    }
 
     sceneData.viewMat = updateCameraData(
         sceneData.cameraData,
