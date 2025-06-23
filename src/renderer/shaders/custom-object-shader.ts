@@ -29,8 +29,6 @@ namespace CustomObjectShader {
             viewMat: WebGLUniformLocation;
             modelMat: WebGLUniformLocation;
         };
-
-        buffers: VertexBuffer;
     }
 
     export interface VertexBuffer {
@@ -81,7 +79,7 @@ namespace CustomObjectShader {
         return [indexBuffer, count];
     };
 
-    const initBuffers = (
+    export const initialiseBuffers = (
         gl: WebGLRenderingContext,
         buffers: InputBuffers
     ): VertexBuffer => {
@@ -135,8 +133,7 @@ namespace CustomObjectShader {
 
     export const getData = (
         gl: WebGLRenderingContext,
-        program: WebGLProgram,
-        buffers: InputBuffers
+        program: WebGLProgram
     ): Data => {
         const projMatLoc = gl.getUniformLocation(program, "uProjectionMatrix");
 
@@ -173,15 +170,12 @@ namespace CustomObjectShader {
                 viewMat: viewMatLoc,
                 modelMat: modelMatLoc,
             },
-
-            buffers: initBuffers(gl, buffers),
         };
     };
 
     export const initialise = async (
         gl: WebGLRenderingContext,
-        fs: IFileSystemAPI,
-        buffers: InputBuffers
+        fs: IFileSystemAPI
     ): Promise<Data> => {
         const program = await initShaderProgram(gl, vertexURL, fragmentURL, fs);
 
@@ -191,7 +185,7 @@ namespace CustomObjectShader {
             );
         }
 
-        return getData(gl, program, buffers);
+        return getData(gl, program);
     };
 
     export function getDefaultCustomScripting(): string {

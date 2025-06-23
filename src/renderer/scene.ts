@@ -6,6 +6,7 @@ import { renderGridlines } from "./objects/gridlines";
 
 import * as audio from "./audio";
 import { renderSquare } from "./objects/square";
+import { renderCustomObject } from "./objects/custom-object";
 
 interface SceneData {
     projMat: mat4;
@@ -127,6 +128,17 @@ const drawScene = (pgData: PgData) => {
                 color
             );
         }
+
+        pgData.customObjects.forEach((obj) => {
+            renderCustomObject(
+                gl,
+                sceneData,
+                pgData.customObjectShaderData,
+                obj,
+                audio.getWaveformBuffer(audioData, waveform),
+                center
+            );
+        });
     });
 
     gl.depthMask(false);

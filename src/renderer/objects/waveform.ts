@@ -35,8 +35,6 @@ const renderWaveform = (
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, shader.buffers.indices);
 
-    gl.useProgram(shader.program);
-
     gl.uniformMatrix4fv(
         shader.uniformLocations.projMat,
         false,

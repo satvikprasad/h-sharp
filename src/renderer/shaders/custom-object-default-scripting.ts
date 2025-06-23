@@ -6,12 +6,13 @@ const generateVertices = (
     let vertices: number[] = [];
 
     for (let k = 0; k <= fidelity; ++k) {
-        let i = Math.floor((k / fidelity) * frequencyBuffer.length);
+        let i = Math.floor((k / fidelity) * (frequencyBuffer.length - 1));
 
         i = Math.min(frequencyBuffer.length, i);
 
         // Push normalised value.
-        vertices.push(0, frequencyBuffer[i], 0);
+        vertices.push(k/fidelity, 0, 0);
+        vertices.push(k/fidelity, 1, 0);
     }
 
     return new Float32Array(vertices);
