@@ -9,7 +9,9 @@ type ControlEventType =
     | "UpdateGridWidth"
     | "CenterViewport"
     | "UpdateGridColor"
-    | "ToggleEditor";
+    | "ToggleEditor"
+    | "CreateCustomObject"
+    | "LoadCustomObject";
 
 interface ControlEvent {
     type: ControlEventType;
@@ -24,9 +26,9 @@ interface ControlListProps {
 
 interface ControlListButtonProps {
     name: string;
-    keyHint: string;
     eventType: ControlEventType;
     handler: (event: ControlEvent) => void;
+    keyHint?: string;
 }
 
 function ControlListButton({
@@ -50,6 +52,8 @@ function ControlListButton({
     }
 
     useEffect(() => {
+        if (!keyHint) return;
+
         document.addEventListener("keydown", handleKeyPress, true);
 
         return () => {
@@ -60,7 +64,7 @@ function ControlListButton({
     return (
         <div className="button-container toolbar-subitem">
             <button onClick={controlHandler}>{name}</button>
-            <span className="key-hint">[{keyHint}]</span>
+            {keyHint ? <span className="key-hint">[{keyHint}]</span> : <></>}
         </div>
     );
 }
@@ -181,40 +185,64 @@ function ControlList({
 }: ControlListProps): [() => React.JSX.Element, () => React.JSX.Element] {
     return [
         () => <h2>Controls</h2>,
-        () => (
-            <>
-                <ControlListButton
-                    name="Center Viewport"
-                    handler={controlHandler}
-                    keyHint="e"
-                    eventType="CenterViewport"
-                />
-                <ControlListButton
-                    name="Center Objects"
-                    keyHint="c"
-                    handler={controlHandler}
-                    eventType="CenterObjects"
-                />
-                <ControlListColorPicker
-                    handler={controlHandler}
-                    initialColor={vec4.fromValues(1.0, 1.0, 1.0, 1.0)}
-                />
-                <ControlListSlider
-                    name="Grid Width"
-                    handler={controlHandler}
-                    eventType="UpdateGridWidth"
-                    min={0.02}
-                    max={0.1}
-                    initialValue={0.04}
-                />
-                <ControlListButton
-                    name="Toggle Editor"
-                    keyHint="j"
-                    handler={controlHandler}
-                    eventType="ToggleEditor"
-                />
-            </>
-        ),
+        () => {
+            const [creatingObject, setCreatingObject] =
+                useState<boolean>(false);
+
+            return (
+                <>
+                    <ControlListButton
+                        name="Center Viewport"
+                        handler={controlHandler}
+                        keyHint="e"
+                        eventType="CenterViewport"
+                    />
+                    <ControlListButton
+                        name="Center Objects"
+                        keyHint="c"
+                        handler={controlHandler}
+                        eventType="CenterObjects"
+                    />
+                    <ControlListColorPicker
+                        handler={controlHandler}
+                        initialColor={vec4.fromValues(1.0, 1.0, 1.0, 1.0)}
+                    />
+                    <ControlListSlider
+                        name="Grid Width"
+                        handler={controlHandler}
+                        eventType="UpdateGridWidth"
+                        min={0.02}
+                        max={0.1}
+                        initialValue={0.04}
+                    />
+                    <ControlListButton
+                        name="Toggle Editor"
+                        keyHint="j"
+                        handler={controlHandler}
+                        eventType="ToggleEditor"
+                    />
+                    {!creatingObject ? (
+                        <ControlListButton
+                            name="Create Custom Object"
+                            handler={(event: ControlEvent) => {
+                                controlHandler(event);
+                                setCreatingObject(true);
+                            }}
+                            eventType="CreateCustomObject"
+                        />
+                    ) : (
+                        <ControlListButton
+                            name="Load Custom Object"
+                            handler={(event: ControlEvent) => {
+                                controlHandler(event);
+                                setCreatingObject(false);
+                            }}
+                            eventType="LoadCustomObject"
+                        />
+                    )}
+                </>
+            );
+        },
     ];
 }
 

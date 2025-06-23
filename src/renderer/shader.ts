@@ -4,6 +4,7 @@ import { DefaultShader } from "./shaders/default-shader";
 import { WaveformShader } from "./shaders/waveform-shader";
 import { SquareShader } from "./shaders/square-shader";
 import { GridlinesShader } from "./shaders/gridlines-shader";
+import { CustomObjectShader } from "./shaders/custom-object-shader";
 
 // Stores a shader program and it's
 // attrib and uniform locations
@@ -85,4 +86,5 @@ export {
     WaveformShader,
     GridlinesShader,
     SquareShader,
+    CustomObjectShader
 };

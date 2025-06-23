@@ -21,7 +21,7 @@ import {
     ToolbarData,
     updateToolbar,
 } from "./components/toolbar";
-import { editorPrint, initialiseEditor } from "./src/renderer/editor";
+import { editorInject, editorTranspile, forceEditorHidden, forceEditorVisible, initialiseEditor, toggleEditorVisible } from "./src/renderer/editor";
 
 interface InputData {
     mouseWheel: {
@@ -53,6 +53,8 @@ interface PgData {
     waveformShaderData: shader.WaveformShader.Data;
     gridlinesShaderData: shader.GridlinesShader.Data;
     squareShaderData: shader.SquareShader.Data;
+
+    customShaders: shader.CustomObjectShader.Data[];
 
     // TODO: Think about moving this to SceneData
     waveformPositions: vec3[];
@@ -226,14 +228,48 @@ const pgInitialise = async (
                         );
                         break;
                     case "ToggleEditor":
-                        const editorContainer =
-                            document.getElementById("editor-container")!;
+                        toggleEditorVisible(editorData);
+                        break;
+                    case "CreateCustomObject":
+                        forceEditorVisible(editorData);
 
-                        if (editorContainer.classList.contains("hidden")) {
-                            editorContainer.classList.remove("hidden");
-                        } else {
-                            editorContainer.classList.add("hidden");
-                        }
+                        editorInject(
+                            editorData,
+                            shader.CustomObjectShader.getDefaultCustomScripting()
+                        );
+
+                        break;
+                    case "LoadCustomObject":
+                        forceEditorHidden(editorData);
+
+                        const win = window as typeof window & {
+                            frequencyBuffer: Float32Array;
+                            customObjectResults: shader.CustomObjectShader.InputBuffers;
+                        };
+
+                        win.frequencyBuffer = new Float32Array(512).fill(0.0);
+
+                        const toCall = `
+                        ${editorTranspile(editorData)}
+window.customObjectResults = {
+    vertices: generateVertices(window.frequencyBuffer),
+    colors: generateColors(window.frequencyBuffer),
+    indices: generateIndices(window.frequencyBuffer),
+}
+                        `;
+
+                        eval(toCall);
+
+                        console.log(win.customObjectResults);
+
+                        shader.CustomObjectShader.initialise(
+                            gl,
+                            local.fs,
+                            win.customObjectResults
+                        ).then(newShader => {
+                            pgData.customShaders.push(newShader);
+                        });
+
                         break;
                 }
             },
@@ -257,6 +293,7 @@ const pgInitialise = async (
         waveformShaderData,
         gridlinesShaderData,
         squareShaderData,
+        customShaders: [],
 
         time: 0,
         deltaTime: 0,

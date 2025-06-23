@@ -1,9 +1,10 @@
 import * as monaco from "monaco-editor";
-import * as ts from "typescript"
+import * as ts from "typescript";
 
 interface EditorData {
     editor: monaco.editor.IStandaloneCodeEditor;
-};
+    container: HTMLElement;
+}
 
 const value = `function generateColors(fidelity: number): Float32Array {
     let colors: number[] = [];
@@ -32,22 +33,49 @@ function initialiseEditor(): EditorData {
     });
 
     return {
-        editor
+        editor,
+        container: editorContainer,
     };
 }
 
-function editorPrint(editorData: EditorData) {
-    const editor = editorData.editor;
+function toggleEditorVisible(editorData: EditorData) {
+    const container = editorData.container;
 
-    const code = `
-        ${ts.transpile(editor.getValue())}
-
-        console.log(generateColors(1000));
-    `;
-
-    eval(code);
-
-    console.log(code);
+    if (container.classList.contains("hidden")) {
+        forceEditorVisible(editorData);
+    } else {
+        forceEditorHidden(editorData);
+    }
 }
 
-export { initialiseEditor, editorPrint };
+function forceEditorVisible(editorData: EditorData) {
+    const container = editorData.container;
+
+    container.classList.remove("hidden");
+}
+
+function forceEditorHidden(editorData: EditorData) {
+    const container = editorData.container;
+
+    container.classList.add("hidden");
+}
+
+function editorInject(editorData: EditorData, value: string) {
+    editorData.editor.setValue(value);
+}
+
+function editorTranspile(editorData: EditorData): string {
+    return ts.transpile(editorData.editor.getValue());
+}
+
+export {
+    type EditorData,
+
+    initialiseEditor,
+    toggleEditorVisible,
+    forceEditorVisible,
+    forceEditorHidden,
+
+    editorInject,
+    editorTranspile,
+};
