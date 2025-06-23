@@ -21,7 +21,6 @@ import {
     ToolbarData,
     updateToolbar,
 } from "./components/toolbar";
-import { ClientRequest } from "http";
 
 interface InputData {
     mouseWheel: {
@@ -199,7 +198,7 @@ const pgInitialise = async (
         },
         {
             controlHandler: (event) => {
-                    console.log(event.type);
+                console.log(event.type);
 
                 switch (event.type) {
                     case "CenterObjects":
