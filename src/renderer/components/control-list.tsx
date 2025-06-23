@@ -8,7 +8,8 @@ type ControlEventType =
     | "CenterObjects"
     | "UpdateGridWidth"
     | "CenterViewport"
-    | "UpdateGridColor";
+    | "UpdateGridColor"
+    | "PrintEditor";
 
 interface ControlEvent {
     type: ControlEventType;
@@ -126,7 +127,7 @@ function ControlListSlider({
     max,
     initialValue,
 }: ControlListSliderProps) {
-    const maxGranularity = 10**2;
+    const maxGranularity = 10 ** 2;
 
     const [value, setValue] = useState<number>(
         (maxGranularity * (initialValue - min)) / (max - min)
@@ -189,6 +190,12 @@ function ControlList({
                     min={0.02}
                     max={0.1}
                     initialValue={0.04}
+                />
+                <ControlListButton
+                    name="Print Editor"
+                    keyHint=""
+                    handler={controlHandler}
+                    eventType="PrintEditor"
                 />
             </>
         ),

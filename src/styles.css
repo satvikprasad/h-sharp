@@ -28,6 +28,11 @@ html {
     min-width: 200px;
 }
 
+#editor-container {
+    min-width: 20%;
+    height: 100%;
+}
+
 .play-pause-btn {
     background: none;
     border: none;

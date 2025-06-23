@@ -21,6 +21,7 @@ import {
     ToolbarData,
     updateToolbar,
 } from "./components/toolbar";
+import { editorPrint, initialiseEditor } from "./src/renderer/editor";
 
 interface InputData {
     mouseWheel: {
@@ -92,11 +93,15 @@ const pgInitialise = async (
     wasmData: WASMData,
     isNative: boolean
 ): Promise<PgData> => {
+    const editorData = initialiseEditor();
     const audioData = audio.create(wasmData, isNative);
     const sceneData = initialiseScene(gl);
     const inputData = initialiseCanvas(canvas);
 
+    let hoverTarget: EventTarget = document.body;
     document.onkeydown = function (e) {
+        if (hoverTarget != canvas) return;
+
         const key = e.key;
 
         if (!inputData.keyDown[key]) {
@@ -107,10 +112,16 @@ const pgInitialise = async (
     };
 
     document.onkeyup = function (e) {
+        if (hoverTarget != canvas) return;
+
         const key = e.key;
 
         inputData.keyDown[key] = false;
     };
+
+    document.addEventListener("mouseover", (event) => {
+        hoverTarget = event.target ?? document.body;
+    });
 
     // Listen to mouse events
     canvas.addEventListener("wheel", (event) => {
@@ -198,8 +209,6 @@ const pgInitialise = async (
         },
         {
             controlHandler: (event) => {
-                console.log(event.type);
-
                 switch (event.type) {
                     case "CenterObjects":
                         centerObjects(waveformPositions);
@@ -215,6 +224,9 @@ const pgInitialise = async (
                             vec4.create(),
                             event.data as vec4
                         );
+                        break;
+                    case "PrintEditor":
+                        editorPrint(editorData);
                         break;
                 }
             },

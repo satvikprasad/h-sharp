@@ -4,7 +4,7 @@
 <head>
     <title>Peggiator</title>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval'">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'">
     <link rel="stylesheet" type="text/css" href="src/styles.css">
     <link rel="icon" type="image/x-icon" href="./public/favicon.ico"/>
 </head>
@@ -15,6 +15,7 @@
             <!--React root-->
         </div>
         <canvas id="gl-canvas" width="640" height="480"></canvas>
+        <div id="editor-container"></div>
     </div>
     <script src="src/renderer/renderer.ts" type="module"></script>
 </body>
